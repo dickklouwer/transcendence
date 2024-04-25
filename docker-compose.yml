@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  nestjs:
+    build: ./containers/nestjs
+    image: nestjs
+    container_name: nestjs
+    env_file: .env
+    init: true  # Ensures quick shutdown by sending SIGTERM to child processes
+    restart: on-failure
+    ports:
+      - "4242:4242"
+    volumes:
+      - ./containers/nestjs/:/nestjs/code/
+    depends_on:
+      - svelte  # Ensures that Svelte service is started before this service
+      - db     # Ensures that the database service is started before this service
+
+  svelte:
+    build: ./containers/svelte
+    image: svelte
+    container_name: svelte
+    env_file: .env
+    init: true
+    restart: on-failure
+    ports:
+      - "2424:2424"
+    volumes:
+      - ./containers/svelte/:/svelte/code/
+
+  db:
+    image: postgres:alpine
+    container_name: db
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+
+volumes:
+  db_volume:
