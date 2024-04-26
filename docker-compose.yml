@@ -14,20 +14,20 @@ services:
     volumes:
       - ./containers/nestjs/:/nestjs/code/
     depends_on:
-      #- svelte  # Ensures that Svelte service is started before this service
+      - svelte  # Ensures that Svelte service is started before this service
       - db     # Ensures that the database service is started before this service
 
-  # svelte:
-  #   build: ./containers/svelte
-  #   image: svelte
-  #   container_name: svelte
-  #   env_file: .env
-  #   init: true
-  #   restart: on-failure
-  #   ports:
-  #     - "2424:2424"
-  #   volumes:
-  #     - ./containers/svelte/:/svelte/code/
+  svelte:
+    build: ./containers/svelte
+    image: svelte
+    container_name: svelte
+    env_file: .env
+    init: true
+    restart: on-failure
+    ports:
+      - "2424:2424"
+    volumes:
+      - ./containers/svelte/:/svelte/code/
 
   db:
     image: postgres

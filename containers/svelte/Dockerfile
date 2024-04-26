@@ -1,16 +1,19 @@
-FROM node
+FROM node:latest
 
-# Set the working directory for the frontend service
-WORKDIR /svelte
+# Set the working directory
+WORKDIR /app
 
-# Copy package.json and package-lock.json to the container
-COPY package*.json /svelte/
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
-# Install project dependencies using npm ci, which is better for fixed versions
+# Install dependencies
 RUN npm install
 
-# Copy the frontend code into the container
+# Copy the rest of your app's source code
 COPY . .
 
-# Command to copy node_modules to a mounted volume and start the Svelte app in development mode
-CMD ["npm", "run", "start:dev"]
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Command to run your app
+CMD ["npm", "run", "dev"]
