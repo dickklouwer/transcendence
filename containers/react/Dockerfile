@@ -10,8 +10,6 @@ COPY . .
 
 RUN npm run build
 
-RUN npm install -g serve
-
-CMD ["serve", "-s", "build", "-l", "2424"]
-
 EXPOSE 2424
+
+CMD ["npm", "start"]
