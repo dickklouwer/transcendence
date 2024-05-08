@@ -7,27 +7,25 @@ services:
     env_file: .env
     init: true  # Ensures quick shutdown by sending SIGTERM to child processes
     restart: on-failure
-    environment:
-      - PORT=${PORT}
     ports:
       - "4242:4242"
     volumes:
       - ./containers/nestjs/:/nestjs/code/
     depends_on:
-      - svelte  # Ensures that Svelte service is started before this service
+      - react 
       - db     # Ensures that the database service is started before this service
 
-  svelte:
-    build: ./containers/svelte
-    image: svelte
-    container_name: svelte
+  react:
+    build: ./containers/react
+    image: react
+    container_name: react
     env_file: .env
     init: true
     restart: on-failure
     ports:
       - "2424:2424"
     volumes:
-      - ./containers/svelte/:/svelte/code/
+      - ./containers/react/:/react/code/
 
   db:
     image: postgres
