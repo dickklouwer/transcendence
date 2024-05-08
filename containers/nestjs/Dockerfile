@@ -3,7 +3,7 @@ FROM node
 RUN npm install -g @nestjs/cli
 
 # Set the working directory for the backend service
-WORKDIR /nestjsnest nestjs
+WORKDIR /nestjs
 
 # Copy package.json and package-lock.json to the container
 COPY package*.json ./

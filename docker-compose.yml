@@ -10,7 +10,7 @@ services:
     ports:
       - "4242:4242"
     volumes:
-      - ./containers/nestjs/:/nestjs/code/
+      - ./containers/nestjs/src/:/nestjs/src/
     depends_on:
       - react 
       - db     # Ensures that the database service is started before this service
@@ -20,13 +20,15 @@ services:
     image: react
     container_name: react
     env_file: .env
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     init: true
     restart: on-failure
     ports:
       - "2424:2424"
       - "4243:4243"
     volumes:
-      - ./containers/react/:/react/code/
+      - ./containers/react/src/:/usr/src/app/src/
 
   db:
     image: postgres
@@ -45,7 +47,7 @@ services:
     container_name: nest-pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=pgadmin4
+      - PGADMIN_DEFAULT_PASSWORD=pgad                                                                                                               min4
     ports:
       - '5050:80'
     depends_on:
