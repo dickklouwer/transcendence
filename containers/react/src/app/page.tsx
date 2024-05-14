@@ -1,6 +1,9 @@
-import Image from "next/image";
+// src/app/page.tsx
 
-export default function Page() {
-  return <h1>Hello, js!
-  </h1>;
+export default function Home() {
+  return (
+    <main className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold text-center">PONG!</h1>
+    </main>
+  );
 }
