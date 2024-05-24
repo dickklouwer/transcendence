@@ -2,16 +2,17 @@
 
 
 import { useState } from 'react';
+import PongGame from './simplePong';
 
 /*  Shows the homepage. 
- */
+*/
 function Home({ navigateToMenu }) {
   return (
     <div className="flex justify-center items-center flex-grow">
       <h2
         className="text-4xl font-bold text-center cursor-pointer"
         onClick={navigateToMenu}
-      >
+        >
         PONG!
       </h2>
     </div>
@@ -19,12 +20,12 @@ function Home({ navigateToMenu }) {
 }
 
 /*  Shows the Menupage. 
- */
-function Menu({ navigateToHome }) {
+*/
+function Menu({ navigateToHome, navigateToPong }) {
   return (
   <div className="flex flex-col items-center justify-center flex-grow space-y-4">
   <h2 className="text-2xl font-bold text-center">Choose Your Game Mode</h2>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Single Player')}>
+  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToPong} >
     Single Player
   </button>
   <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
@@ -41,19 +42,21 @@ function Menu({ navigateToHome }) {
 }
 
 /* The app function manages the state to determine which function (page) is being rendered. 
- */
+*/
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
-
+  
   const navigateToMenu = () => setCurrentView('menu');
   const navigateToHome = () => setCurrentView('home');
-
+  const navigateToPong = () => setCurrentView('pong');
+  
   return (
     <div className="flex flex-col min-h-screen">
       <header />
       <main className="flex-grow flex items-center justify-center">
         {currentView === 'home' && <Home navigateToMenu={navigateToMenu} />}
-        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} />}
+        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} navigateToPong={navigateToPong} />}
+        {currentView === 'pong' && <PongGame />}
       </main>
       <footer />
     </div>
