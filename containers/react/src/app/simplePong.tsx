@@ -5,12 +5,13 @@ const PongGame = () => {
   const [ballSpeed, setBallSpeed] = useState({ dx: 2, dy: 0 });
   const [rightPaddlePosition, setRightPaddlePosition] = useState(150);
   const [leftPaddlePosition, setLeftPaddlePosition] = useState(150);
+  const [score, setScore] = useState({ leftPlayer: 0, rightPlayer: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const ballSpeedRef = useRef(ballSpeed);
-  const scoreRef = useRef({ leftPlayer: 0, rightPlayer: 0 });
+  // const scoreRef = useRef({ leftPlayer: 0, rightPlayer: 0 });
   // const ballSpeed = ballSpeedRef.current;
-  const score = scoreRef.current;
+  // const score = scoreRef.current;
   const paddleWidth = 10;
   const paddleHeight = 100;
   const gameWidth = 400;
@@ -46,7 +47,7 @@ const PongGame = () => {
 
   const resetGame = () => {
     setBallPosition({ x: 200, y: 100 });
-    setBallSpeed({ dx: 2, dy: 1 });
+    // setBallSpeed({ dx: 2, dy: 1 });
     ballSpeed.dx = 2;
     ballSpeed.dy = 1;
     setRightPaddlePosition(150);
@@ -72,24 +73,27 @@ const PongGame = () => {
         }
         if (checkCollisionLeftPaddleX(newX)) {
           if (checkCollisionLeftPaddleY(newY)) {
+            console.log('Collision with left paddle');
             ballSpeed.dx = -ballSpeed.dx;
           }
         }
         if (checkCollisionRightPaddleX(newX)) {
-          console.log(`new x ${newX}, new y ${newY}. right paddle x border${gameWidth - (paddleWidth + ballSize)}, right paddle upper y ${rightPaddlePosition} right paddle lower y ${rightPaddlePosition + paddleHeight}`, )
-          console.log(`${newY > leftPaddlePosition && newY < leftPaddlePosition + paddleHeight}`)
+          // console.log(`new x ${newX}, new y ${newY}. right paddle x border${gameWidth - (paddleWidth + ballSize)}, right paddle upper y ${rightPaddlePosition} right paddle lower y ${rightPaddlePosition + paddleHeight}`, )
           if (checkCollisionRightPaddleY(newY)) {
+            console.log('Collision with right paddle');
             ballSpeed.dx = -ballSpeed.dx;
           }
         }
         if (checkCollisionLeftWall(newX)) {
           // console.log('Collision with right wall');
           score.rightPlayer = score.rightPlayer + 1;
+          // setScore(score => ({ ...score, rightPlayer: score.rightPlayer + 1 }));
           resetGame();
         }
         if (checkCollisionRightWall(newX)) {
           // console.log('Collision with right wall');
-          score.leftPlayer = score.leftPlayer + 1;
+          setScore(score => ({ ...score, leftPlayer: score.leftPlayer + 1 }));
+          // score.leftPlayer = score.leftPlayer + 1;
           resetGame();
         }
         return { x: newX, y: newY };

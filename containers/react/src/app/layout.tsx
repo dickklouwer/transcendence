@@ -13,9 +13,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>{metadata.title}</title>
       </head>
       <body className='flex flex-col min-h-screen'>
-        <Header></Header>
+        {/* <Header></Header> */}
         <main className="flex-grow flex items-center justify-center">{children}</main>
-        <Footer></Footer>
+        {/* <Footer></Footer> */}
       </body>
     </html>
   );
