@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const PongGame = (gameType: number) => {
+const PongGame = ({ gameType }) => {
   const [ballPosition, setBallPosition] = useState({ x: 200, y: 200 });
   const [ballSpeed, setBallSpeed] = useState({ dx: 2, dy: 0 });
   const [rightPaddlePosition, setRightPaddlePosition] = useState(150);
@@ -101,7 +101,7 @@ const PongGame = (gameType: number) => {
         return { x: newX, y: newY };
       });
 
-      if (gameType === 1) {
+      if (gameType === "single") {
         if (ballPosition.y > (leftPaddlePosition + paddleHeight)) {
           setLeftPaddlePosition(prevPosition => Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed));
         } else if (ballPosition.y < leftPaddlePosition) {
@@ -109,21 +109,21 @@ const PongGame = (gameType: number) => {
         }
       }
 
-      if (gameType === 2) {
-        setRightPaddlePosition(prevPosition => {
-          if (keysPressed['ArrowUp']) {
+      if (gameType === "multi") {
+        setLeftPaddlePosition(prevPosition => {
+          if (keysPressed['w']) {
             return Math.max(0, prevPosition - paddleSpeed);
-          } else if (keysPressed['ArrowDown']) {
+          } else if (keysPressed['s']) {
             return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed);
           }
           return prevPosition;
         });
       }
 
-      setLeftPaddlePosition(prevPosition => {
-        if (keysPressed['w']) {
+      setRightPaddlePosition(prevPosition => {
+        if (keysPressed['ArrowUp']) {
           return Math.max(0, prevPosition - paddleSpeed);
-        } else if (keysPressed['s']) {
+        } else if (keysPressed['ArrowDown']) {
           return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed);
         }
         return prevPosition;
@@ -168,4 +168,3 @@ const PongGame = (gameType: number) => {
 };
 
 export default PongGame;
-

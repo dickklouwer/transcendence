@@ -57,8 +57,8 @@ export default function App() {
       <main className="flex-grow flex items-center justify-center">
         {currentView === 'home' && <Home navigateToMenu={navigateToMenu} />}
         {currentView === 'menu' && <Menu navigateToHome={navigateToHome} navigateToPongSingle={navigateToPongSingle} navigateToPongMulti={navigateToPongMulti} />}
-        {currentView === 'pongSingle' && <PongGame />}
-        {currentView === 'pongMulti' && <PongGame />}
+        {currentView === 'pongSingle' && <PongGame gameType="single" />}
+        {currentView === 'pongMulti' && <PongGame gameType="multi" />}
       </main>
       <footer />
     </div>
