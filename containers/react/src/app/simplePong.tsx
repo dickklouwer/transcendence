@@ -9,9 +9,6 @@ const PongGame = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const ballSpeedRef = useRef(ballSpeed);
-  // const scoreRef = useRef({ leftPlayer: 0, rightPlayer: 0 });
-  // const ballSpeed = ballSpeedRef.current;
-  // const score = scoreRef.current;
   const paddleWidth = 10;
   const paddleHeight = 100;
   const gameWidth = 400;
@@ -19,8 +16,7 @@ const PongGame = () => {
   const ballSize = 10;
   const borderWidth = 5;
   const updateInterval = 10;
-  const paddleSpeed = 10;
-  // const leftPaddlePosition = 150;
+  const paddleSpeed = 20;
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -45,12 +41,21 @@ const PongGame = () => {
     ctx.fillRect(gameWidth - paddleWidth - 10, rightPaddlePosition, paddleWidth, paddleHeight);
   };
 
+  const changeBallDirectionRight = () => {
+    const diff = ballPosition.y - (rightPaddlePosition + paddleHeight / 2);
+    ballSpeed.dy = diff / 20;
+  }
+  const changeBallDirectionLeft = () => { // needs some work
+    const diff = ballPosition.y - (leftPaddlePosition + paddleHeight / 2);
+    ballSpeed.dy = diff / 20;
+  }
+
   const resetGame = () => {
     setBallPosition({ x: 200, y: 100 });
-    // setBallSpeed({ dx: 2, dy: 1 });
     ballSpeed.dx = 2;
     ballSpeed.dy = 1;
     setRightPaddlePosition(150);
+    setLeftPaddlePosition(150);
   };
   useEffect(() => {
 
@@ -73,25 +78,21 @@ const PongGame = () => {
         }
         if (checkCollisionLeftPaddleX(newX)) {
           if (checkCollisionLeftPaddleY(newY)) {
-            console.log('Collision with left paddle');
             ballSpeed.dx = -ballSpeed.dx;
+            changeBallDirectionLeft();
           }
         }
         if (checkCollisionRightPaddleX(newX)) {
-          // console.log(`new x ${newX}, new y ${newY}. right paddle x border${gameWidth - (paddleWidth + ballSize)}, right paddle upper y ${rightPaddlePosition} right paddle lower y ${rightPaddlePosition + paddleHeight}`, )
           if (checkCollisionRightPaddleY(newY)) {
-            console.log('Collision with right paddle');
             ballSpeed.dx = -ballSpeed.dx;
+            changeBallDirectionRight();
           }
         }
         if (checkCollisionLeftWall(newX)) {
-          // console.log('Collision with right wall');
           score.rightPlayer = score.rightPlayer + 1;
-          // setScore(score => ({ ...score, rightPlayer: score.rightPlayer + 1 }));
           resetGame();
         }
         if (checkCollisionRightWall(newX)) {
-          // console.log('Collision with right wall');
           setScore(score => ({ ...score, leftPlayer: score.leftPlayer + 1 }));
           // score.leftPlayer = score.leftPlayer + 1;
           resetGame();
@@ -99,14 +100,22 @@ const PongGame = () => {
         return { x: newX, y: newY };
       });
     };
-    
+
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowUp':
           setRightPaddlePosition(prevPosition => Math.max(0, prevPosition - paddleSpeed));
           break;
-        case 'ArrowDown':
+          case 'ArrowDown':
           setRightPaddlePosition(prevPosition => Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed));
+          break;
+        case 'w':
+          console.log(`leftPaddlePosition = ${leftPaddlePosition}`)
+          setLeftPaddlePosition(prevPosition => Math.max(0, prevPosition - paddleSpeed));
+          break;
+          case 's':
+          console.log(`leftPaddlePosition = ${leftPaddlePosition}`)
+          setLeftPaddlePosition(prevPosition => Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed));
           break;
         default:
           break;
@@ -120,11 +129,11 @@ const PongGame = () => {
       clearInterval(gameLoop);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [rightPaddlePosition]);
+  }, [rightPaddlePosition, leftPaddlePosition]);
 
   useEffect(() => {
     draw();
-  }, [ballPosition, rightPaddlePosition]);
+  }, [ballPosition, rightPaddlePosition, leftPaddlePosition]);
 
   return (
     <>
@@ -141,13 +150,13 @@ const PongGame = () => {
 
 export default PongGame;
 
-    // setLeftPaddlePosition(prevPosition => {
-    //   if (ballPosition.y > (prevPosition + paddleHeight / 2)) {
-    //     return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed / 2);
-    //   } else if (ballPosition.y < (prevPosition - (paddleHeight / 2))) {
-    //     return Math.max(0, prevPosition - paddleSpeed / 2);
-    //   }
-    //   else {
-    //     return prevPosition;
-    //   }
-    // });
+// setLeftPaddlePosition(prevPosition => {
+//   if (ballPosition.y > (prevPosition + paddleHeight / 2)) {
+//     return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed / 2);
+//   } else if (ballPosition.y < (prevPosition - (paddleHeight / 2))) {
+//     return Math.max(0, prevPosition - paddleSpeed / 2);
+//   }
+//   else {
+//     return prevPosition;
+//   }
+// });
