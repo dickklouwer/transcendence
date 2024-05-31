@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const PongGame = () => {
+const PongGame = (gameType: number) => {
   const [ballPosition, setBallPosition] = useState({ x: 200, y: 200 });
   const [ballSpeed, setBallSpeed] = useState({ dx: 2, dy: 0 });
   const [rightPaddlePosition, setRightPaddlePosition] = useState(150);
@@ -101,14 +101,24 @@ const PongGame = () => {
         return { x: newX, y: newY };
       });
 
-      setRightPaddlePosition(prevPosition => {
-        if (keysPressed['ArrowUp']) {
-          return Math.max(0, prevPosition - paddleSpeed);
-        } else if (keysPressed['ArrowDown']) {
-          return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed);
+      if (gameType === 1) {
+        if (ballPosition.y > (leftPaddlePosition + paddleHeight)) {
+          setLeftPaddlePosition(prevPosition => Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed));
+        } else if (ballPosition.y < leftPaddlePosition) {
+          setLeftPaddlePosition(prevPosition => Math.max(0, prevPosition - paddleSpeed));
         }
-        return prevPosition;
-      });
+      }
+
+      if (gameType === 2) {
+        setRightPaddlePosition(prevPosition => {
+          if (keysPressed['ArrowUp']) {
+            return Math.max(0, prevPosition - paddleSpeed);
+          } else if (keysPressed['ArrowDown']) {
+            return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed);
+          }
+          return prevPosition;
+        });
+      }
 
       setLeftPaddlePosition(prevPosition => {
         if (keysPressed['w']) {
@@ -118,6 +128,7 @@ const PongGame = () => {
         }
         return prevPosition;
       });
+
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -137,11 +148,11 @@ const PongGame = () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [rightPaddlePosition, leftPaddlePosition, keysPressed]);
+  }, [rightPaddlePosition, leftPaddlePosition, keysPressed, ballPosition, score]);
 
   useEffect(() => {
     draw();
-  }, [ballPosition, rightPaddlePosition, leftPaddlePosition]);
+  }, [ballPosition, rightPaddlePosition, leftPaddlePosition, score]);
 
   return (
     <>
@@ -158,14 +169,3 @@ const PongGame = () => {
 
 export default PongGame;
 
-
-// setLeftPaddlePosition(prevPosition => {
-//   if (ballPosition.y > (prevPosition + paddleHeight / 2)) {
-  //     return Math.min(gameHeight - paddleHeight, prevPosition + paddleSpeed / 2);
-  //   } else if (ballPosition.y < (prevPosition - (paddleHeight / 2))) {
-    //     return Math.max(0, prevPosition - paddleSpeed / 2);
-    //   }
-    //   else {
-//     return prevPosition;
-//   }
-// });

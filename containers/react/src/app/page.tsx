@@ -21,14 +21,14 @@ function Home({ navigateToMenu }) {
 
 /*  Shows the Menupage. 
 */
-function Menu({ navigateToHome, navigateToPong }) {
+function Menu({ navigateToHome, navigateToPongSingle, navigateToPongMulti}) {
   return (
   <div className="flex flex-col items-center justify-center flex-grow space-y-4">
   <h2 className="text-2xl font-bold text-center">Choose Your Game Mode</h2>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToPong} >
+  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToPongSingle} >
     Single Player
   </button>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
+  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToPongMulti}>
     Multiplayer
   </button>
   <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Login')}>
@@ -48,15 +48,17 @@ export default function App() {
   
   const navigateToMenu = () => setCurrentView('menu');
   const navigateToHome = () => setCurrentView('home');
-  const navigateToPong = () => setCurrentView('pong');
+  const navigateToPongSingle = (gameType : number) => setCurrentView('pongSingle');
+  const navigateToPongMulti = (gameType : number) => setCurrentView('pongMulti');
   
   return (
     <div className="flex flex-col min-h-screen">
       <header />
       <main className="flex-grow flex items-center justify-center">
         {currentView === 'home' && <Home navigateToMenu={navigateToMenu} />}
-        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} navigateToPong={navigateToPong} />}
-        {currentView === 'pong' && <PongGame />}
+        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} navigateToPongSingle={navigateToPongSingle} navigateToPongMulti={navigateToPongMulti} />}
+        {currentView === 'pongSingle' && <PongGame />}
+        {currentView === 'pongMulti' && <PongGame />}
       </main>
       <footer />
     </div>
