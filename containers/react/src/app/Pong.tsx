@@ -42,13 +42,8 @@ const PongGame = ({ gameType }) => {
     ctx.fillRect(gameWidth - paddleWidth - 10, rightPaddlePosition, paddleWidth, paddleHeight);
   };
 
-  const changeBallDirectionRight = () => {
-    const diff = ballPosition.y - (rightPaddlePosition + paddleHeight / 2);
-    ballSpeed.dy = diff / 20;
-  };
-
-  const changeBallDirectionLeft = () => {
-    const diff = ballPosition.y - (leftPaddlePosition + paddleHeight / 2);
+  const changeBallDirection = (paddlePosition: number) => {
+    const diff = ballPosition.y - (paddlePosition + paddleHeight / 2);
     ballSpeed.dy = diff / 20;
   };
 
@@ -81,13 +76,13 @@ const PongGame = ({ gameType }) => {
         if (checkCollisionLeftPaddleX(newX)) {
           if (checkCollisionLeftPaddleY(newY)) {
             ballSpeed.dx = -ballSpeed.dx;
-            changeBallDirectionLeft();
+            changeBallDirection(leftPaddlePosition);
           }
         }
         if (checkCollisionRightPaddleX(newX)) {
           if (checkCollisionRightPaddleY(newY)) {
             ballSpeed.dx = -ballSpeed.dx;
-            changeBallDirectionRight();
+            changeBallDirection(rightPaddlePosition);
           }
         }
         if (checkCollisionLeftWall(newX)) {
