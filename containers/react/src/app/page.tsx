@@ -2,7 +2,7 @@
 
 
 import { useState } from 'react';
-import PongGame from './simplePong';
+import PongGame from './MultiplayerPong';
 
 /*  Shows the homepage. 
 */

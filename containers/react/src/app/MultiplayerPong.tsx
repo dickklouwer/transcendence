@@ -45,7 +45,7 @@ const PongGame = () => {
     const diff = ballPosition.y - (rightPaddlePosition + paddleHeight / 2);
     ballSpeed.dy = diff / 20;
   }
-  const changeBallDirectionLeft = () => { // needs some work
+  const changeBallDirectionLeft = () => {
     const diff = ballPosition.y - (leftPaddlePosition + paddleHeight / 2);
     ballSpeed.dy = diff / 20;
   }
@@ -89,7 +89,8 @@ const PongGame = () => {
           }
         }
         if (checkCollisionLeftWall(newX)) {
-          score.rightPlayer = score.rightPlayer + 1;
+          setScore(score => ({ ...score, rightPlayer: score.rightPlayer + 1 }));
+          // score.rightPlayer = score.rightPlayer + 1;
           resetGame();
         }
         if (checkCollisionRightWall(newX)) {
@@ -129,11 +130,11 @@ const PongGame = () => {
       clearInterval(gameLoop);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [rightPaddlePosition, leftPaddlePosition]);
+  }, [rightPaddlePosition, leftPaddlePosition, score]);
 
   useEffect(() => {
     draw();
-  }, [ballPosition, rightPaddlePosition, leftPaddlePosition]);
+  }, [ballPosition, rightPaddlePosition, leftPaddlePosition, score]);
 
   return (
     <>
