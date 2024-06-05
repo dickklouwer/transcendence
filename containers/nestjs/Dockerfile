@@ -10,6 +10,7 @@ COPY package*.json ./
 
 # Install project dependencies using npm ci for cleaner
 RUN npm install
+RUN npm install --save @nestjs/websockets @nestjs/platform-socket.io socket.io
 
 COPY . .
 
