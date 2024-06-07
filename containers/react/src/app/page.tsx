@@ -9,6 +9,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import { useRouter } from 'next/navigation';
+import Login from '@/pages/login';
+import { SessionProvider } from 'next-auth/react';
 
 /*  Shows the homepage. 
  */
@@ -27,28 +29,24 @@ function Home({ navigateToMenu }) {
 
 /*  Shows the Menupage. 
  */
-function Menu({ navigateToHome }) {
+function Menu({ navigateToHome, navigateToLogin }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    axios.get('http://nestjs:4242/')
-      .then(response => {
-        setItems(response.data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('There was an error fetching the items!', error);
-        setError(error);
-        setLoading(false);
-      });
-  }, []);
-
-  const navigateToLogin = () => {
-    router.push('/login');  
-  };
+  // useEffect(() => {
+  //   axios.get('http://nestjs:4242/')
+  //     .then(response => {
+  //       setItems(response.data);
+  //       setLoading(false);
+  //     })
+  //     .catch(error => {
+  //       console.error('There was an error fetching the items!', error);
+  //       setError(error);
+  //       setLoading(false);
+  //     });
+  // }, []);
 
   return (
   <div className="flex flex-col items-center justify-center flex-grow space-y-4">
@@ -59,7 +57,7 @@ function Menu({ navigateToHome }) {
   <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
     Multiplayer
   </button>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={requestIdleCallback='http://localhost:2424/api/auth/signin'}>
+  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToLogin}>
     Login
   </button>
   <button className="text-blue-500 mt-4" onClick={navigateToHome}>
@@ -76,13 +74,17 @@ export default function App() {
 
   const navigateToMenu = () => setCurrentView('menu');
   const navigateToHome = () => setCurrentView('home');
+  const navigateToLogin = () => setCurrentView('login');
 
   return (
     <div className="flex flex-col min-h-screen">
       <header />
       <main className="flex-grow flex items-center justify-center">
+        <SessionProvider>
         {currentView === 'home' && <Home navigateToMenu={navigateToMenu} />}
-        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} />}
+        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} />}
+        {currentView === 'login' && <Login />}
+      </SessionProvider>
       </main>
       <footer />
     </div>

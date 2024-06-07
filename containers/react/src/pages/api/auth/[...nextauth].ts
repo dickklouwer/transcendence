@@ -4,49 +4,24 @@
  */
 import NextAuth from 'next-auth';
 import FortyTwoProvider from 'next-auth/providers/42-school';
+import { signIn } from 'next-auth/react';
 
-export default NextAuth({
-  /*  Providers: These are services that handle user authentication. 
-   */
+export const authOptions = {
+  // Configure one or more authentication providers
   providers: [
     FortyTwoProvider({
-      clientId: process.env.FORTY_TWO_CLIENT_ID,
-      clientSecret: process.env.FORTY_TWO_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: 'public',
-          response_type: 'code',
-        },
-      },
-      profile: async (profile) => {
-        return {
-          id: profile.id,
-          name: profile.displayname,
-          email: profile.email,
-          image: profile.image_url,
-        };
-      },
+      clientId: process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID!,
+      clientSecret: process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET!,
     }),
+    // ...add more providers here
   ],
-  /* Callbacks: Callbacks are functions that allow you to customize the authentication flow, 
-      such as handling JWTs, managing sessions, and redirecting users.
-   */
-  callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      // Ensure the URL is absolute
-      return url.startsWith(baseUrl) ? url : baseUrl;
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: true,
-});
+
+  pages: {
+    signIn: "https://api.intra.42.fr/oauth/authorize?client_id=" + process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID + "&redirect_uri=http%3A%2F%2F127.0.0.1%3A2424%2F&response_type=code" 
+  }
+
+  
+}
+
+export default NextAuth(authOptions);
+
