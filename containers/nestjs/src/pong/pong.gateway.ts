@@ -19,7 +19,18 @@ export class PongGateway
 
   @SubscribeMessage('message')
   handleMessage(client: Socket, payload: string): void {
-    this.server.emit('message', payload);
+    this.server.emit('confirm', payload);
+  }
+  @SubscribeMessage('movement')
+  handleMovement(client: Socket, payload: string): void {
+    if (payload === 'ArrowUp') {
+      this.logger.log('ArrowUp');
+      this.server.emit('movement', 'ArrowUp');
+    }
+    if (payload === 'ArrowDown') {
+      this.logger.log('ArrowDown');
+      this.server.emit('movement', 'ArrowDown');
+    }
   }
 
   afterInit(server: Server) {
