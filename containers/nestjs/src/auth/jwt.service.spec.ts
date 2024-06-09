@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtService } from './jwt.service';
+import { JwtService } from '@nestjs/jwt';
 
 describe('JwtService', () => {
   let service: JwtService;
