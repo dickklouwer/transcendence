@@ -17,7 +17,7 @@ export const authOptions = {
   ],
 
   pages: {
-    signIn: "https://api.intra.42.fr/oauth/authorize?client_id=" + process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID + "&redirect_uri=http%3A%2F%2F127.0.0.1%3A2424%2F&response_type=code" 
+    signIn: "https://api.intra.42.fr/oauth/authorize?client_id=" + process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID + "&redirect_uri=http%3A%2F%2F127.0.0.1%3A4242%2Fauth%2Fvalidate&response_type=code" 
   }
 
   

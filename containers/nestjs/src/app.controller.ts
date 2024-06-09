@@ -10,8 +10,8 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('/api/auth')
-  getAuth(): string {
-    return this.appService.getAuth();
-  }
+  // @Get('/api/auth')
+  // getAuth(): string {
+  //   return this.appService.getAuth();
+  // }
 }
