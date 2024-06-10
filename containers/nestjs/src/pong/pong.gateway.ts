@@ -11,9 +11,10 @@ import {
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 
-@WebSocketGateway()
+@WebSocketGateway({cors: { origin: '*' }, credentials : true})
 export class PongGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('PongGateway');
 
@@ -34,7 +35,7 @@ export class PongGateway
   }
 
   afterInit(server: Server) {
-    this.logger.log('Init');
+    this.logger.log('WebSocket PongGateway initialized');
   }
 
   handleDisconnect(client: Socket) {

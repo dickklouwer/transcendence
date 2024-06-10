@@ -1,5 +1,6 @@
 version: '3.8'
 services:
+
   nestjs:
     build: ./containers/nestjs
     image: nestjs
@@ -26,9 +27,22 @@ services:
     restart: on-failure
     ports:
       - "2424:2424"
-      - "4243:4243"
     volumes:
       - ./containers/react/src/:/usr/src/app/src/
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx/conf:/etc/nginx/
+    ports:
+      - "8080:80"
+    environment:
+      - ./nginx/.env
+    links:
+      - react
+      - nestjs
 
   db:
     image: postgres

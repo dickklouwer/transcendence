@@ -4,9 +4,9 @@ import io from 'socket.io-client';
 
 const socket = io('http://localhost:4242'); // Pas de URL aan naar je backend URL
 
-const PongGame = () => {
-  const [messages, setMessages] = useState([]);
+const PongGame = () => { // something wrong with event listeners and movement
   const [keysPressed, setKeysPressed] = useState({});
+  const [rightPaddlePosition, setRightPaddlePosition] = useState(150);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -18,7 +18,7 @@ const PongGame = () => {
   const borderWidth = 5;
   const ballPosition = { x: 200, y: 200 };
   const leftPaddlePosition = 150;
-  const rightPaddlePosition = 150;
+  // const rightPaddlePosition = 150;
   const score = { leftPlayer: 0, rightPlayer: 0 };
 
   const draw = () => {
@@ -48,9 +48,16 @@ const PongGame = () => {
     socket.on('connect', () => {
       console.log('Connected to server');
     });
-
-    socket.on('confirm', (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
+    
+    socket.on('movement', (movement) => {
+      if (movement === 'ArrowUp') {
+        setRightPaddlePosition((prevPosition) => Math.max(0, prevPosition - 1));
+        console.log('ArrowUp');
+      }
+      if (movement === 'ArrowDown') {
+        setRightPaddlePosition((prevPosition) => Math.min(gameHeight - paddleHeight, prevPosition + 1));
+        console.log('ArrowDown');
+      }
     });
 
     draw(); // drawing the initial state
@@ -79,7 +86,7 @@ const PongGame = () => {
       socket.off('connect');
       socket.off('message');
     };
-}, [messages, keysPressed]);
+}, [rightPaddlePosition, keysPressed]);
 
   const sendMessage = () => {
     socket.emit('message', 'Hello from client');
@@ -97,11 +104,6 @@ const PongGame = () => {
     <div>
       <h1>Pong Game</h1>
       <button onClick={sendMessage}>Send Message</button>
-      <ul>
-        {messages.map((msg, index) => (
-          <li key={index}>{msg}</li>
-        ))}
-      </ul>
     </div>
     </>
   );
