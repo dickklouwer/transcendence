@@ -16,7 +16,13 @@ const user_state = mySchema.enum('user_state', [
   'In-Game',
   'Idle',
 ]);
-jfslkdj fdsjlfjdslfjdsljfdsjlkfsjdlkfjdslk
+
+const message_status = mySchema.enum('message_status', [
+  'sent',
+  'delivered',
+  'read',
+]);
+
 export const users = mySchema.table('user', {
   intra_user_id: integer('intra_user_id').primaryKey(),
   name: text('name').notNull().unique(),
@@ -60,3 +66,8 @@ export const Messages = mySchema.table('messages', {
   sent_at: timestamp('sent_at').defaultNow(),
 });
 
+export const MessageStatus = mySchema.table('message_status', {
+  message_id: integer('message_id').references(() => Messages.message_id),
+  user_id: integer('user_id').references(() => users.intra_user_id),
+  status: message_status('status').notNull().default('sent'),
+});
