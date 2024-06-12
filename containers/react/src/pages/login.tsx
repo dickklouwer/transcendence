@@ -1,5 +1,5 @@
 // import { signIn } from 'next-auth/react';
-import { useSession, signIn, signOut, SessionProvider } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 //  { callbackUrl: 'http://localhost:2424/api/auth/signin'
 export default function Login() {
 

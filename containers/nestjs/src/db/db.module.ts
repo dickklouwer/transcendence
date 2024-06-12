@@ -7,6 +7,7 @@ import * as schema from '../../drizzle/schema';
   imports: [
     // Method #1: Pass options object
     DrizzlePostgresModule.register({
+      tag: 'DB',
       postgres: {
         url: process.env.DATABASE_URL,
       },
