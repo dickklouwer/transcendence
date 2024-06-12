@@ -1,6 +1,7 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -17,12 +18,17 @@ export class AuthController {
 
       const user = await this.authService.validateToken(tokenData);
 
-      console.log(user);
+      const jwt = await this.authService.CreateJWT(user);
 
-      // const jwt = await this.authService.CreateJWT(user);
+      return res.redirect(`http://localhost:2424/?token=${jwt}`);
     } catch (error) {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');
     }
+  }
+
+  @Get('profile')
+  async getProfile() {
+    return 'Hello World!';
   }
 }

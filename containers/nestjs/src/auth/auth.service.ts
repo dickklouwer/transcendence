@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthGuard } from '@nestjs/passport';
 import axios from 'axios';
 
 @Injectable()
@@ -52,8 +51,7 @@ export class AuthService {
   }
 
   async CreateJWT(user: any): Promise<string> {
-    const jwt_arguments = { username: user.username, sub: user.id };
+    const jwt_arguments = { userEmail: user.email, user_id: user.id };
     return this.JwtService.sign(jwt_arguments);
   }
-  @AuthGuard('jwt')
 }

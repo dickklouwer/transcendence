@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 
 /*  Axios is a simple library for making HTTP requests in Javascript. 
     It connects our frontend to the backend by making us easily fetch data form APIs. 
@@ -11,10 +11,13 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Login from '@/pages/login';
 import { SessionProvider } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { profile } from 'console';
 
 /*  Shows the homepage. 
  */
 function Home({ navigateToMenu }) {
+  
   return (
     <div className="flex justify-center items-center flex-grow">
       <h2
@@ -75,6 +78,29 @@ export default function App() {
   const navigateToMenu = () => setCurrentView('menu');
   const navigateToHome = () => setCurrentView('home');
   const navigateToLogin = () => setCurrentView('login');
+
+  const Router = useRouter();
+  const token = useSearchParams().get('token');
+  async function fetchProfile() {
+    const profile = await fetch('http://nestjs:4242/auth/profile', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+    .then(response => response.json())
+    .catch(error => console.error('Error fetching user data:', error));
+    console.log(profile);
+  }
+  useEffect(() => {
+    Router.push('/', { scroll: false });
+    if (token) {
+      localStorage.setItem('token', token);
+      }
+      fetchProfile();
+    }
+  );
+
+
 
   return (
     <div className="flex flex-col min-h-screen">

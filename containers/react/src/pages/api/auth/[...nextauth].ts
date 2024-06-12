@@ -6,6 +6,7 @@ import NextAuth from 'next-auth';
 import FortyTwoProvider from 'next-auth/providers/42-school';
 import { signIn } from 'next-auth/react';
 
+
 export const authOptions = {
   // Configure one or more authentication providers
   providers: [

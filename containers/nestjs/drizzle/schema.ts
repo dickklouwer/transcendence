@@ -16,7 +16,7 @@ const user_state = mySchema.enum('user_state', [
   'In-Game',
   'Idle',
 ]);
-jfslkdj fdsjlfjdslfjdsljfdsjlkfsjdlkfjdslk
+
 export const users = mySchema.table('user', {
   intra_user_id: integer('intra_user_id').primaryKey(),
   name: text('name').notNull().unique(),
