@@ -1,16 +1,287 @@
 {
-  "id": "c501b785-dea1-4d87-8486-112abc144077",
+  "id": "8b9d8ef1-fd98-41c9-98f0-8448c9c6e4f9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.user": {
-      "name": "user",
-      "schema": "",
+    "pong.message_status": {
+      "name": "message_status",
+      "schema": "pong",
       "columns": {
+        "message_id": {
+          "name": "message_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
         "user_id": {
           "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "message_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'sent'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "message_status_message_id_messages_message_id_fk": {
+          "name": "message_status_message_id_messages_message_id_fk",
+          "tableFrom": "message_status",
+          "tableTo": "messages",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "message_id"
+          ],
+          "columnsTo": [
+            "message_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "message_status_user_id_user_intra_user_id_fk": {
+          "name": "message_status_user_id_user_intra_user_id_fk",
+          "tableFrom": "message_status",
+          "tableTo": "user",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "pong.messages": {
+      "name": "messages",
+      "schema": "pong",
+      "columns": {
+        "message_id": {
+          "name": "message_id",
           "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "sender_id": {
+          "name": "sender_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reciever_id": {
+          "name": "reciever_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "group_chat_id": {
+          "name": "group_chat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "messages_sender_id_user_intra_user_id_fk": {
+          "name": "messages_sender_id_user_intra_user_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "user",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "sender_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "pong.user_group_chats": {
+      "name": "user_group_chats",
+      "schema": "pong",
+      "columns": {
+        "group_chat_id": {
+          "name": "group_chat_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "intra_user_id": {
+          "name": "intra_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_owner": {
+          "name": "is_owner",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_banned": {
+          "name": "is_banned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mute_untill": {
+          "name": "mute_untill",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_group_chats_group_chat_id_group_chats_group_chat_id_fk": {
+          "name": "user_group_chats_group_chat_id_group_chats_group_chat_id_fk",
+          "tableFrom": "user_group_chats",
+          "tableTo": "group_chats",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "group_chat_id"
+          ],
+          "columnsTo": [
+            "group_chat_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_group_chats_intra_user_id_user_intra_user_id_fk": {
+          "name": "user_group_chats_intra_user_id_user_intra_user_id_fk",
+          "tableFrom": "user_group_chats",
+          "tableTo": "user",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "intra_user_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "pong.friends": {
+      "name": "friends",
+      "schema": "pong",
+      "columns": {
+        "user_id_one": {
+          "name": "user_id_one",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id_two": {
+          "name": "user_id_two",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_approved": {
+          "name": "is_approved",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "pong.group_chats": {
+      "name": "group_chats",
+      "schema": "pong",
+      "columns": {
+        "group_chat_id": {
+          "name": "group_chat_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "group_name": {
+          "name": "group_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "group_password": {
+          "name": "group_password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "pong.user": {
+      "name": "user",
+      "schema": "pong",
+      "columns": {
+        "intra_user_id": {
+          "name": "intra_user_id",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true
         },
@@ -20,11 +291,25 @@
           "primaryKey": false,
           "notNull": true
         },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "email": {
           "name": "email",
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "user_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Online'"
         },
         "image_url": {
           "name": "image_url",
@@ -44,6 +329,13 @@
             "name"
           ]
         },
+        "user_token_unique": {
+          "name": "user_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        },
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
@@ -54,7 +346,27 @@
       }
     }
   },
-  "enums": {},
+  "enums": {
+    "public.message_state": {
+      "name": "message_state",
+      "schema": "public",
+      "values": [
+        "sent",
+        "delivered",
+        "read"
+      ]
+    },
+    "public.user_state": {
+      "name": "user_state",
+      "schema": "public",
+      "values": [
+        "Online",
+        "Offline",
+        "In-Game",
+        "Idle"
+      ]
+    }
+  },
   "schemas": {
     "pong": "pong"
   },
