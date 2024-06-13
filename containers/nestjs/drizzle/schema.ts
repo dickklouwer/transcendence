@@ -45,7 +45,7 @@ export const groupChats = mySchema.table('group_chats', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-export const UserGroupChats = mySchema.table('user_group_chats', {
+export const groupChatsUsers = mySchema.table('group_chats_users', {
   group_chat_id: integer('group_chat_id')
     .primaryKey()
     .references(() => groupChats.group_chat_id),
@@ -57,7 +57,7 @@ export const UserGroupChats = mySchema.table('user_group_chats', {
   joined_at: timestamp('joined_at').defaultNow(),
 });
 
-export const Messages = mySchema.table('messages', {
+export const messages = mySchema.table('messages', {
   message_id: serial('message_id').primaryKey(),
   sender_id: integer('sender_id').references(() => users.intra_user_id),
   reciever_id: integer('reciever_id'),
@@ -66,10 +66,10 @@ export const Messages = mySchema.table('messages', {
   sent_at: timestamp('sent_at').defaultNow(),
 });
 
-export const MessageStatus = mySchema.table('message_status', {
+export const messageStatus = mySchema.table('message_status', {
   message_id: integer('message_id')
     .primaryKey()
-    .references(() => Messages.message_id),
+    .references(() => messages.message_id),
   user_id: integer('user_id').references(() => users.intra_user_id),
   status: message_state('status').notNull().default('sent'),
 });
