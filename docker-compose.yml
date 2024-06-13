@@ -2,7 +2,6 @@ version: '3.8'
 services:
   nestjs:
     build: ./containers/nestjs
-    image: nestjs
     container_name: nestjs
     env_file: .env
     init: true  # Ensures quick shutdown by sending SIGTERM to child processes
@@ -17,7 +16,6 @@ services:
 
   react:
     build: ./containers/react
-    image: react
     container_name: react
     env_file: .env
     environment:
@@ -30,6 +28,17 @@ services:
     volumes:
       - ./containers/react/src/:/usr/src/app/src/
 
+  nginx:
+    image: nginx:latest
+    restart: always
+    container_name: nginx
+    ports:
+      - "4433:80"
+    volumes:
+      - ./containers/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - nestjs
+      - react
   db:
     image: postgres
     restart: always

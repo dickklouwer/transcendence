@@ -20,15 +20,16 @@ export class AuthController {
 
       const jwt = await this.authService.CreateJWT(user);
 
-      return res.redirect(`http://localhost:2424/?token=${jwt}`);
+      return res.redirect(`http://localhost:4433/?token=${jwt}`);
     } catch (error) {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile() {
-    return 'Hello World!';
+  async getProfile(req, @Res() res: Response) {
+    return res.send({ str: 'Hello World!' });
   }
 }

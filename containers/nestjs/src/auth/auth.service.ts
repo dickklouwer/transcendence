@@ -4,7 +4,7 @@ import axios from 'axios';
 
 @Injectable()
 export class AuthService {
-  constructor(private JwtService: JwtService) {}
+  constructor(private jwtService: JwtService) {}
   /**
    * This Method is used to validate the access code.
    * first creating an url with the access code and other required parameters
@@ -42,7 +42,7 @@ export class AuthService {
     const authUrl = new URL('https://api.intra.42.fr/v2/me');
 
     const response = await axios.get(authUrl.toString(), {
-      headers: { Authorization: `Bearer ` + access_token },
+      headers: { Authorization: `Bearer ${access_token}` },
     });
 
     const profile = response.data;
@@ -52,6 +52,6 @@ export class AuthService {
 
   async CreateJWT(user: any): Promise<string> {
     const jwt_arguments = { userEmail: user.email, user_id: user.id };
-    return this.JwtService.sign(jwt_arguments);
+    return this.jwtService.sign(jwt_arguments);
   }
 }

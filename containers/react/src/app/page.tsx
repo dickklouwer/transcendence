@@ -82,22 +82,22 @@ export default function App() {
   const Router = useRouter();
   const token = useSearchParams().get('token');
   async function fetchProfile() {
-    const profile = await fetch('http://nestjs:4242/auth/profile', {
+    const profile = await fetch('/auth/profile', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
     })
-    .then(response => response.json())
-    .catch(error => console.error('Error fetching user data:', error));
-    console.log(profile);
+    profile.json().then(data => console.log(data));
   }
+  
   useEffect(() => {
     Router.push('/', { scroll: false });
     if (token) {
       localStorage.setItem('token', token);
-      }
-      fetchProfile();
     }
+    fetchProfile();
+    
+  }, []
   );
 
 
@@ -107,9 +107,9 @@ export default function App() {
       <header />
       <main className="flex-grow flex items-center justify-center">
         <SessionProvider>
-        {currentView === 'home' && <Home navigateToMenu={navigateToMenu} />}
-        {currentView === 'menu' && <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} />}
-        {currentView === 'login' && <Login />}
+        {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
+        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} /> : null}
+        {currentView === 'login' ? <Login /> : null}
       </SessionProvider>
       </main>
       <footer />

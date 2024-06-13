@@ -6,22 +6,28 @@ import NextAuth from 'next-auth';
 import FortyTwoProvider from 'next-auth/providers/42-school';
 import { signIn } from 'next-auth/react';
 
+if (!process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID) {
+  throw new Error("NEXT_PUBLIC_FORTY_TWO_CLIENT_ID is not set");
+}
+if (!process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET) {
+  throw new Error("NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET is not set");
+}
 
 export const authOptions = {
   // Configure one or more authentication providers
   providers: [
     FortyTwoProvider({
-      clientId: process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID!,
-      clientSecret: process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET!,
+      clientId: process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID,
+      clientSecret: process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET,
     }),
     // ...add more providers here
   ],
 
   pages: {
-    signIn: "https://api.intra.42.fr/oauth/authorize?client_id=" + process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID + "&redirect_uri=http%3A%2F%2F127.0.0.1%3A4242%2Fauth%2Fvalidate&response_type=code" 
+    signIn: "https://api.intra.42.fr/oauth/authorize?client_id="
+    + process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID
+    + "&redirect_uri=http://127.0.0.1:4242/auth/validate&response_type=code"
   }
-
-  
 }
 
 export default NextAuth(authOptions);
