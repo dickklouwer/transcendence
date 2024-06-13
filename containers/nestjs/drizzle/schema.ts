@@ -1,4 +1,3 @@
-import { is } from 'drizzle-orm';
 import {
   serial,
   timestamp,
@@ -6,15 +5,22 @@ import {
   integer,
   pgSchema,
   boolean,
+  pgEnum,
 } from 'drizzle-orm/pg-core';
 
 export const mySchema = pgSchema('pong');
 
-const user_state = mySchema.enum('user_state', [
+export const user_state = pgEnum('user_state', [
   'Online',
   'Offline',
   'In-Game',
   'Idle',
+]);
+
+export const message_state = pgEnum('message_state', [
+  'sent',
+  'delivered',
+  'read',
 ]);
 
 export const users = mySchema.table('user', {
@@ -60,3 +66,10 @@ export const Messages = mySchema.table('messages', {
   sent_at: timestamp('sent_at').defaultNow(),
 });
 
+export const MessageStatus = mySchema.table('message_status', {
+  message_id: integer('message_id')
+    .primaryKey()
+    .references(() => Messages.message_id),
+  user_id: integer('user_id').references(() => users.intra_user_id),
+  status: message_state('status').notNull().default('sent'),
+});
