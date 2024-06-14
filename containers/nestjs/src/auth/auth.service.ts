@@ -52,7 +52,7 @@ export class AuthService {
 
     const tmp = userInsert.safeParse({
       intra_user_id: profile.id,
-      name: profile.login,
+      user_name: profile.login,
       token: null,
       email: profile.email,
       state: 'Online',
