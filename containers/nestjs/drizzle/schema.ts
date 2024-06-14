@@ -47,7 +47,6 @@ export const groupChats = mySchema.table('group_chats', {
 export const groupChatsUsers = mySchema.table('group_chats_users', {
   group_chat_user_id: serial('group_chat_user_id').primaryKey(),
   group_chat_id: integer('group_chat_id')
-    .primaryKey()
     .references(() => groupChats.group_chat_id),
   intra_user_id: integer('intra_user_id').references(() => users.intra_user_id),
   is_owner: boolean('is_owner').notNull().default(false),
