@@ -101,6 +101,8 @@ export default function App() {
   const Router = useRouter();
 
   const token = useSearchParams().get('token');
+
+  console.log('Token: ', token);
   
   useEffect(() => {
     if (token)
