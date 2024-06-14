@@ -53,12 +53,11 @@ CREATE TABLE IF NOT EXISTS "pong"."group_chats" (
 CREATE TABLE IF NOT EXISTS "pong"."user" (
 	"intra_user_id" integer PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
-	"token" text NOT NULL,
+	"token" text,
 	"email" text NOT NULL,
 	"state" "user_state" DEFAULT 'Online' NOT NULL,
 	"image_url" text,
 	CONSTRAINT "user_name_unique" UNIQUE("name"),
-	CONSTRAINT "user_token_unique" UNIQUE("token"),
 	CONSTRAINT "user_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

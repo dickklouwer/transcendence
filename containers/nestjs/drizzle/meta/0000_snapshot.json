@@ -1,5 +1,5 @@
 {
-  "id": "8b9d8ef1-fd98-41c9-98f0-8448c9c6e4f9",
+  "id": "d4169be1-fa04-483a-96d0-7b161065e508",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -295,7 +295,7 @@
           "name": "token",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "email": {
           "name": "email",
@@ -327,13 +327,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "name"
-          ]
-        },
-        "user_token_unique": {
-          "name": "user_token_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "token"
           ]
         },
         "user_email_unique": {

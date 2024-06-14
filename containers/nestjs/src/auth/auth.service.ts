@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
+import { userInsert } from 'drizzle/schema';
+import { z } from 'zod';
+
+type User = z.infer<typeof userInsert>;
 
 @Injectable()
 export class AuthService {
@@ -10,7 +14,7 @@ export class AuthService {
    * first creating an url with the access code and other required parameters
    * then sending a post request to 42 API to get the access token
    **/
-  async validateCode(accessCode: string): Promise<any> {
+  async validateCode(accessCode: string): Promise<string> {
     const tokenUrl = new URL('https://api.intra.42.fr/oauth/token');
 
     tokenUrl.searchParams.append(
@@ -30,28 +34,42 @@ export class AuthService {
 
     const response = await axios.post(tokenUrl.toString(), null);
 
-    console.log(response.data);
-    return response.data;
+    console.log(response.data.access_token);
+
+    return response.data.access_token;
   }
   /**
    * This Method is used to validate the access token.
    * @returns {Promise<any>} - Returns the user profile
    */
-  async validateToken(accessToken: any): Promise<any> {
-    const { access_token } = accessToken;
-    const authUrl = new URL('https://api.intra.42.fr/v2/me');
-
-    const response = await axios.get(authUrl.toString(), {
-      headers: { Authorization: `Bearer ${access_token}` },
+  async validateToken(accessToken: string): Promise<User> {
+    const response = await axios.get('https://api.intra.42.fr/v2/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     const profile = response.data;
+    console.log(profile.image_url);
 
-    return { id: profile.id, username: profile.login, email: profile.email };
+    const tmp = userInsert.safeParse({
+      intra_user_id: profile.id,
+      name: profile.login,
+      token: null,
+      email: profile.email,
+      state: 'Online',
+      image: profile.image_url,
+    });
+
+    if (!tmp.success) {
+      throw new Error('User Data is not valid');
+    }
+
+    return tmp.data;
   }
-
-  async CreateJWT(user: any): Promise<string> {
-    const jwt_arguments = { userEmail: user.email, user_id: user.id };
+  async CreateJWT(user: User): Promise<string> {
+    const jwt_arguments = {
+      userEmail: user.email,
+      user_id: user.intra_user_id,
+    };
     return this.jwtService.sign(jwt_arguments);
   }
 }

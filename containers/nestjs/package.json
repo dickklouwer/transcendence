@@ -32,6 +32,7 @@
     "@types/passport-oauth2": "^1.4.17",
     "axios": "^1.7.2",
     "drizzle-orm": "^0.31.2",
+    "drizzle-zod": "^0.5.1",
     "i": "^0.3.7",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
@@ -39,7 +40,8 @@
     "passport-oauth2": "^1.8.0",
     "postgres": "^3.4.4",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

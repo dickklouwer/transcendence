@@ -7,6 +7,7 @@ import {
   boolean,
   pgEnum,
 } from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
 
 export const mySchema = pgSchema('pong');
 
@@ -26,16 +27,18 @@ export const message_state = pgEnum('message_state', [
 export const users = mySchema.table('user', {
   intra_user_id: integer('intra_user_id').primaryKey(),
   name: text('name').notNull().unique(),
-  token: text('token').notNull().unique(),
+  token: text('token'),
   email: text('email').notNull().unique(),
   state: user_state('state').notNull().default('Online'),
   image: text('image_url'),
 });
 
+export const userInsert = createInsertSchema(users);
+
 export const friends = mySchema.table('friends', {
   user_id_one: integer('user_id_one').notNull(),
   user_id_two: integer('user_id_two').notNull(),
-  is_approved: boolean('is_approved').notNull().default(false), 
+  is_approved: boolean('is_approved').notNull().default(false),
 });
 
 export const groupChats = mySchema.table('group_chats', {
@@ -65,7 +68,6 @@ export const Messages = mySchema.table('messages', {
   message: text('message').notNull(),
   sent_at: timestamp('sent_at').defaultNow(),
 });
-
 export const MessageStatus = mySchema.table('message_status', {
   message_id: integer('message_id')
     .primaryKey()
