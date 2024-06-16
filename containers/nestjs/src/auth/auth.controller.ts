@@ -1,11 +1,12 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Res, Req, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
+import { DbService } from '../db/db.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private dbservice: DbService) {}
 
   @Get('validate')
   async validateFortyTwo(@Query('code') code: string, @Res() res: Response) {
@@ -21,6 +22,9 @@ export class AuthController {
       const jwt = await this.authService.CreateJWT(user);
 
       user.token = jwt;
+      console.log(user);
+
+      await this.dbservice.createUserInDataBase(user);
 
       return res.redirect(`http://localhost:4433/?token=${user.token}`);
     } catch (error) {
@@ -31,7 +35,11 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(req, @Res() res: Response) {
+  async getProfile(@Req() req : Request, @Res() res: Response) {
+    
+    const token = req.headers['authorization'].split(' ')[1];
+    console.log("TOKENENNNNENEN " + token);
+    const user = await this.dbservice.getUserFromDataBase(token);
     return res.send({ str: 'Hello World!' });
   }
 }

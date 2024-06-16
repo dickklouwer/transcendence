@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { userInsert } from 'drizzle/schema';
+import { users } from '../../drizzle/schema'
 import { z } from 'zod';
 
-type User = z.infer<typeof userInsert>;
+export type NewUser = typeof users.$inferInsert;
 
 @Injectable()
 export class AuthService {
@@ -42,7 +43,7 @@ export class AuthService {
    * This Method is used to validate the access token.
    * @returns {Promise<any>} - Returns the user profile
    */
-  async validateToken(accessToken: string): Promise<User> {
+  async validateToken(accessToken: string): Promise<NewUser> {
     const response = await axios.get('https://api.intra.42.fr/v2/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -50,22 +51,18 @@ export class AuthService {
     const profile = response.data;
     console.log(profile.image_url);
 
-    const tmp = userInsert.safeParse({
+    const tmp : NewUser = {
       intra_user_id: profile.id,
       user_name: profile.login,
       token: null,
       email: profile.email,
       state: 'Online',
-      image: profile.image_url,
-    });
+      image: profile.image.link,
+    };
 
-    if (!tmp.success) {
-      throw new Error('User Data is not valid');
-    }
-
-    return tmp.data;
+    return tmp;
   }
-  async CreateJWT(user: User): Promise<string> {
+  async CreateJWT(user: NewUser): Promise<string> {
     const jwt_arguments = {
       userEmail: user.email,
       user_id: user.intra_user_id,

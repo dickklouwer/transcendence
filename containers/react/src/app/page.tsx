@@ -12,8 +12,6 @@ import { useRouter } from 'next/navigation';
 import Login from '@/pages/login';
 import { SessionProvider } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { profile } from 'console';
-
 /*  Shows the homepage. 
  */
 function Home({ navigateToMenu }) {
@@ -31,7 +29,7 @@ function Home({ navigateToMenu }) {
 }
 
 function Logout( navigateToHome : any) {
-  localStorage.removeItem('token');
+  fetchProfile(localStorage.getItem('token'))
   navigateToHome.call();
 }
 

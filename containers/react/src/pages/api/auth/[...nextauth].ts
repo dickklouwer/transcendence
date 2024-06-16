@@ -4,7 +4,6 @@
  */
 import NextAuth from 'next-auth';
 import FortyTwoProvider from 'next-auth/providers/42-school';
-import { signIn } from 'next-auth/react';
 
 if (!process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID) {
   throw new Error("NEXT_PUBLIC_FORTY_TWO_CLIENT_ID is not set");

@@ -1,0 +1,11 @@
+
+> nestjs@0.0.1 migrate
+> drizzle-kit migrate
+
+drizzle-kit: v0.22.7
+drizzle-orm: v0.31.2
+
+No config path provided, using default path
+Reading config file '/home/jisse/Documents/Codam/transcendence/containers/nestjs/drizzle.config.ts'
+Using 'pg' driver for database querying
+[⣷] applying migrations...[2K[1G[✓] migrations applied successfully!
