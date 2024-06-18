@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { userInsert } from 'drizzle/schema';
-import { users } from '../../drizzle/schema'
-import { z } from 'zod';
+import { users } from '../../drizzle/schema';
 
 export type NewUser = typeof users.$inferInsert;
 
@@ -35,8 +33,6 @@ export class AuthService {
 
     const response = await axios.post(tokenUrl.toString(), null);
 
-    console.log(response.data.access_token);
-
     return response.data.access_token;
   }
   /**
@@ -49,9 +45,9 @@ export class AuthService {
     });
 
     const profile = response.data;
-    console.log(profile.image_url);
+    console.log(profile.image.link);
 
-    const tmp : NewUser = {
+    const tmp: NewUser = {
       intra_user_id: profile.id,
       user_name: profile.login,
       token: null,

@@ -1,12 +1,23 @@
-import { Controller, Get, Query, Res, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Res,
+  Headers,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { DbService } from '../db/db.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { NewUser } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService, private dbservice: DbService) {}
+  constructor(
+    private authService: AuthService,
+    private dbservice: DbService,
+  ) {}
 
   @Get('validate')
   async validateFortyTwo(@Query('code') code: string, @Res() res: Response) {
@@ -16,13 +27,10 @@ export class AuthController {
 
     try {
       const tokenData = await this.authService.validateCode(code);
-
       const user = await this.authService.validateToken(tokenData);
-
       const jwt = await this.authService.CreateJWT(user);
 
       user.token = jwt;
-      console.log(user);
 
       await this.dbservice.createUserInDataBase(user);
 
@@ -35,11 +43,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Req() req : Request, @Res() res: Response) {
-    
-    const token = req.headers['authorization'].split(' ')[1];
-    console.log("TOKENENNNNENEN " + token);
-    const user = await this.dbservice.getUserFromDataBase(token);
-    return res.send({ str: 'Hello World!' });
+  async getProfile(@Headers('authorization') token: string): Promise<NewUser> {
+    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
+
+    return user;
   }
 }
