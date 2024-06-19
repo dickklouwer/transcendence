@@ -95,7 +95,7 @@ async function fetchProfile(token : string | null): Promise<number> {
 /* The app function manages the state to determine which function (page) is being rendered. 
  */
 export default function App() {
-  var defaultView = 'chat'; // temporary view, set back to 'home' later
+  var defaultView = 'home'; // temporary view, set back to 'home' later
   const [currentView, setCurrentView] = useState(defaultView);
 
 
