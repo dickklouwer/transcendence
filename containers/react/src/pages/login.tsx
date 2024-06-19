@@ -14,9 +14,10 @@ export default function Login() {
 export function SignIn42() {
 
     return (
-        <p> Would you like to sign in? <br /> 
+        <div className="flex flex-col items-center">
+            <p> Would you like to sign in?</p>
             <button className="bg-blue-500 text-white font-bold py-2 px-4 mt-4 rounded"  onClick={() => signIn('FortyTwoProvider')}>Sign in with 42</button>
-        </p>
+        </div>
     )
 
 }
