@@ -35,9 +35,24 @@ function Logout( navigateToHome : any) {
   navigateToHome.call();
 }
 
+function Chat({navigateToMenu}) {
+  return (
+    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+      <h2 className="text-2xl font-bold text-center">Messages</h2>
+      <h2>private chat 1</h2>
+      <h2>groep chat 1</h2>
+      <h2>private chat 2</h2>
+      <h2>groep chat 2</h2>
+      <button className="text-blue-500 mt-4" onClick={navigateToMenu}>
+        Back to Menu
+      </button>
+    </div>
+  );
+}
+
 /*  Shows the Menupage. 
  */
-function Menu({ navigateToHome, navigateToLogin }) {
+function Menu({ navigateToHome, navigateToLogin, navigateToChat, navigateToMenu }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,6 +66,9 @@ function Menu({ navigateToHome, navigateToLogin }) {
   </button>
   <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
     Multiplayer
+  </button>
+  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToChat}>
+    Chat
   </button>
   <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => Logout(navigateToHome)}>
     Logout
@@ -92,10 +110,13 @@ async function fetchProfile(token : string | null): Promise<number> {
 /* The app function manages the state to determine which function (page) is being rendered. 
  */
 export default function App() {
-  const [currentView, setCurrentView] = useState('home');
+  var defaultView = 'chat'; // temporary view, set back to 'home' later
+  const [currentView, setCurrentView] = useState(defaultView);
+
 
   const navigateToMenu = () => setCurrentView('menu');
   const navigateToHome = () => setCurrentView('home');
+  const navigateToChat = () => setCurrentView('chat');
   const navigateToLogin = () => setCurrentView('HomeToLogin');
 
   const Router = useRouter();
@@ -105,22 +126,22 @@ export default function App() {
   console.log('Token: ', token);
   
   useEffect(() => {
-    if (token)
-      localStorage.setItem('token', token);
-    Router.push('/', { scroll: false });
-    console.log('Token: ', token);
-    fetchProfile(localStorage.getItem('token'))
-    .then((statusCode) => {
-      if (statusCode === 200) {
-        setCurrentView('home');
-      } else {
+      if (token)
+        localStorage.setItem('token', token);
+      Router.push('/', { scroll: false });
+      console.log('Token: ', token);
+      fetchProfile(localStorage.getItem('token'))
+      .then((statusCode) => {
+        if (statusCode === 200) {
+          setCurrentView(defaultView);
+        } else {
+          setCurrentView('login');
+        }
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
         setCurrentView('login');
-      }
-    })
-    .catch((error) => {
-      console.log('Error: ', error);
-      setCurrentView('login');
-    });
+      });
   }, []
   );
 
@@ -132,8 +153,9 @@ export default function App() {
       <main className="flex-grow flex items-center justify-center">
         <SessionProvider>
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} /> : null}
+        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToMenu={navigateToChat} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
+        {currentView === 'chat' ? <Chat navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'HomeToLogin' ? <Login /> : null}
       </SessionProvider>
       </main>
