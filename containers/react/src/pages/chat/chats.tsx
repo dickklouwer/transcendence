@@ -1,6 +1,4 @@
-// Chats:
-// - Private chat
-// - Group chat
+// Desc: Chat page with a list of chats
 
 function ChatField({ username, lastMessage, time, unreadMessages }) {
     var defaultUserIcon = "https://static.vecteezy.com/system/resources/thumbnails/008/442/086/small_2x/illustration-of-human-icon-user-symbol-icon-modern-design-on-blank-background-free-vector.jpg";
