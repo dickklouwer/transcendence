@@ -10,9 +10,9 @@ import axios from 'axios';
 
 import { useRouter } from 'next/navigation';
 import Login from '@/pages/login';
+import Chats from '@/pages/chat/chats';
 import { SessionProvider } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { profile } from 'console';
 
 /*  Shows the homepage. 
  */
@@ -33,21 +33,6 @@ function Home({ navigateToMenu }) {
 function Logout( navigateToHome : any) {
   localStorage.removeItem('token');
   navigateToHome.call();
-}
-
-function Chat({navigateToMenu}) {
-  return (
-    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-      <h2 className="text-2xl font-bold text-center">Messages</h2>
-      <h2>private chat 1</h2>
-      <h2>groep chat 1</h2>
-      <h2>private chat 2</h2>
-      <h2>groep chat 2</h2>
-      <button className="text-blue-500 mt-4" onClick={navigateToMenu}>
-        Back to Menu
-      </button>
-    </div>
-  );
 }
 
 /*  Shows the Menupage. 
@@ -155,7 +140,7 @@ export default function App() {
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToMenu={navigateToChat} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
-        {currentView === 'chat' ? <Chat navigateToMenu={navigateToMenu} /> : null}
+        {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'HomeToLogin' ? <Login /> : null}
       </SessionProvider>
       </main>
