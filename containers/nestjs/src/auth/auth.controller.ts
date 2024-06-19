@@ -20,7 +20,9 @@ export class AuthController {
 
       const jwt = await this.authService.CreateJWT(user);
 
-      return res.redirect(`http://localhost:4433/?token=${jwt}`);
+      user.token = jwt;
+
+      return res.redirect(`http://localhost:4433/?token=${user.token}`);
     } catch (error) {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');

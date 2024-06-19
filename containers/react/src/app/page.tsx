@@ -30,6 +30,11 @@ function Home({ navigateToMenu }) {
   );
 }
 
+function Logout( navigateToHome : any) {
+  localStorage.removeItem('token');
+  navigateToHome.call();
+}
+
 /*  Shows the Menupage. 
  */
 function Menu({ navigateToHome, navigateToLogin }) {
@@ -37,19 +42,6 @@ function Menu({ navigateToHome, navigateToLogin }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
-
-  // useEffect(() => {
-  //   axios.get('http://nestjs:4242/')
-  //     .then(response => {
-  //       setItems(response.data);
-  //       setLoading(false);
-  //     })
-  //     .catch(error => {
-  //       console.error('There was an error fetching the items!', error);
-  //       setError(error);
-  //       setLoading(false);
-  //     });
-  // }, []);
 
   return (
   <div className="flex flex-col items-center justify-center flex-grow space-y-4">
@@ -60,14 +52,41 @@ function Menu({ navigateToHome, navigateToLogin }) {
   <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
     Multiplayer
   </button>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToLogin}>
-    Login
+  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => Logout(navigateToHome)}>
+    Logout
   </button>
   <button className="text-blue-500 mt-4" onClick={navigateToHome}>
     Back to Home
   </button>
 </div>
 );
+}
+
+async function fetchProfile(token : string | null): Promise<number> {
+    
+    try {
+      const profile = await fetch('/auth/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Profile: ', profile.status);
+      if (profile.status === 401)
+        throw 'Unauthorized';
+      else if (profile.status === 200)
+        return 200;
+      else
+        return profile.status;
+    } 
+    catch (error : any) {
+      console.log('Fetch Error: ', error);
+      if (error.message === 'Unauthorized') {
+        throw error;
+      } else {
+        return 500;
+      }
+    }
 }
 
 /* The app function manages the state to determine which function (page) is being rendered. 
@@ -77,26 +96,31 @@ export default function App() {
 
   const navigateToMenu = () => setCurrentView('menu');
   const navigateToHome = () => setCurrentView('home');
-  const navigateToLogin = () => setCurrentView('login');
+  const navigateToLogin = () => setCurrentView('HomeToLogin');
 
   const Router = useRouter();
+
   const token = useSearchParams().get('token');
-  async function fetchProfile() {
-    const profile = await fetch('/auth/profile', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
-    profile.json().then(data => console.log(data));
-  }
+
+  console.log('Token: ', token);
   
   useEffect(() => {
-    Router.push('/', { scroll: false });
-    if (token) {
+    if (token)
       localStorage.setItem('token', token);
-    }
-    fetchProfile();
-    
+    Router.push('/', { scroll: false });
+    console.log('Token: ', token);
+    fetchProfile(localStorage.getItem('token'))
+    .then((statusCode) => {
+      if (statusCode === 200) {
+        setCurrentView('home');
+      } else {
+        setCurrentView('login');
+      }
+    })
+    .catch((error) => {
+      console.log('Error: ', error);
+      setCurrentView('login');
+    });
   }, []
   );
 
@@ -109,7 +133,8 @@ export default function App() {
         <SessionProvider>
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} /> : null}
-        {currentView === 'login' ? <Login /> : null}
+        {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
+        {currentView === 'HomeToLogin' ? <Login /> : null}
       </SessionProvider>
       </main>
       <footer />
