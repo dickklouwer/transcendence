@@ -12,8 +12,7 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 
 @WebSocketGateway({cors: { origin: '*' }, credentials : true})
-export class PongGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('PongGateway');
