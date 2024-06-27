@@ -83,8 +83,7 @@ export default function App() {
       <main className="flex-grow flex items-center justify-center">
         <SessionProvider>
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToMenu={navigateToChat} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToProfile={navigateToProfile} navigateToLogin={navigateToLogin} /> : null}
+        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToProfile={navigateToProfile} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
         {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'HomeToLogin' ? <Login /> : null}

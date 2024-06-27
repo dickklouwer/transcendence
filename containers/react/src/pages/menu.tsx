@@ -9,7 +9,7 @@ async function Logout( navigateToHome : FunctionRouter) {
     navigateToHome();
   }
 
-export default function Menu({ navigateToHome, navigateToProfile, navigateToLogin }: { navigateToHome: FunctionRouter, navigateToProfile: FunctionRouter, navigateToLogin: FunctionRouter}) {
+export default function Menu({ navigateToHome, navigateToProfile, navigateToLogin, navigateToChat }: { navigateToHome: FunctionRouter, navigateToProfile: FunctionRouter, navigateToLogin: FunctionRouter, navigateToChat: FunctionRouter}) {
     const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [error, setError] = useState(null);
   
@@ -44,6 +44,9 @@ export default function Menu({ navigateToHome, navigateToProfile, navigateToLogi
       </button>
       <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
         Multiplayer
+      </button>
+      <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToChat}>
+      Chat
       </button>
       <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => Logout(navigateToHome)}>
         Logout
