@@ -1,6 +1,10 @@
+"use client";
+
+
 // import { signIn } from 'next-auth/react';
 import { signIn, signOut } from 'next-auth/react';
 //  { callbackUrl: 'http://localhost:2424/api/auth/signin'
+
 export default function Login() {
 
     return (
@@ -12,6 +16,7 @@ export default function Login() {
 }
 
 export function SignIn42() {
+
 
     return (
         <div className="flex flex-col items-center">
