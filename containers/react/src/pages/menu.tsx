@@ -1,17 +1,15 @@
 "use client";
 
-
 import Image from 'next/image';
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { fetchProfile, FunctionRouter } from '../app/page';
 
-async function Logout( navigateToHome : any) {
-
-    navigateToHome.call();
+async function Logout( navigateToHome : FunctionRouter) {
+    localStorage.removeItem('token');
+    navigateToHome();
   }
 
-export default function Menu({ navigateToHome, navigateToProfile }: { navigateToHome: FunctionRouter, navigateToProfile: FunctionRouter }) {
+export default function Menu({ navigateToHome, navigateToProfile, navigateToLogin }: { navigateToHome: FunctionRouter, navigateToProfile: FunctionRouter, navigateToLogin: FunctionRouter}) {
     const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [error, setError] = useState(null);
   
@@ -24,6 +22,7 @@ export default function Menu({ navigateToHome, navigateToProfile }: { navigateTo
       .catch((error) => {
         console.log('Error: ', error);
         setError(error);
+        navigateToLogin();
       })
     }, []);
     if (!user)

@@ -13,7 +13,7 @@ export default function Profile({ navigateToMenu }: { navigateToMenu: FunctionRo
             console.log('Retrieved Data: ', data);
             setUser(data);
         })
-    });
+    }, []);
 
     if (!user)
         return <div>Loading...</div>;

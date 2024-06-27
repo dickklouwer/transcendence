@@ -1,16 +1,7 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Res,
-  Headers,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { DbService } from '../db/db.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { NewUser } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -39,13 +30,5 @@ export class AuthController {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');
     }
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  async getProfile(@Headers('authorization') token: string): Promise<NewUser> {
-    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
-
-    return user;
   }
 }

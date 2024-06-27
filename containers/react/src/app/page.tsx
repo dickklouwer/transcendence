@@ -11,9 +11,8 @@ import Profile from '@/pages/profile';
 
 export type FunctionRouter = () => void;
 
-export async function fetchProfile(token : string | null): Promise<any> {
-    
-  const profile = await fetch('/auth/profile', {
+export async function fetchProfile(token : string | null): Promise<any> {    
+  const profile = await fetch('api/profile', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -23,6 +22,22 @@ export async function fetchProfile(token : string | null): Promise<any> {
     throw `Unauthorized ${error}`;
   });
   const user = await profile.json();
+  if (user.statusCode !== 401)
+    return user;
+  throw `Unauthorized ${user.statusCode}`;
+}
+
+async function SetNickname( name: string ): Promise<any> {
+  const nickname = await fetch('/auth/setNickname', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  })
+  .catch((error) => {
+    throw `Unauthorized ${error}`;
+  });
+  const user = await nickname.json();
   if (user.statusCode !== 401)
     return user;
   throw `Unauthorized ${user.statusCode}`;
@@ -40,6 +55,7 @@ export default function App() {
   const navigateToHome: FunctionRouter = () => setCurrentView('home');
   const navigateToLogin: FunctionRouter = () => setCurrentView('HomeToLogin');
   const navigateToProfile: FunctionRouter = () => setCurrentView('profile');
+  const navigateToNickname: FunctionRouter = () => setCurrentView('setNickname');
 
   const token = useSearchParams().get('token');
   
@@ -65,10 +81,11 @@ export default function App() {
       <main className="flex-grow flex items-center justify-center">
         <SessionProvider>
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToProfile={navigateToProfile} /> : null}
+        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToProfile={navigateToProfile} navigateToLogin={navigateToLogin} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
         {currentView === 'HomeToLogin' ? <Login /> : null}
         {currentView === 'profile' ? <Profile navigateToMenu={navigateToMenu}/> : null}
+        {currentView === 'setNickname' ? <Profile navigateToMenu={navigateToMenu}/> : null}
       </SessionProvider>
       </main>
     </div>
