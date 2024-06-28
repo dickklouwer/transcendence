@@ -3,13 +3,14 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { fetchProfile, FunctionRouter } from '../app/page';
+import { PongGame } from '../app/Pong';
 
 async function Logout( navigateToHome : FunctionRouter) {
     localStorage.removeItem('token');
     navigateToHome();
   }
 
-export default function Menu({ navigateToHome, navigateToProfile, navigateToLogin, navigateToChat }: { navigateToHome: FunctionRouter, navigateToProfile: FunctionRouter, navigateToLogin: FunctionRouter, navigateToChat: FunctionRouter}) {
+export default function Menu({ navigateToHome, navigateToProfile, navigateToLogin, navigateToChat, navigateToPong }: { navigateToHome: FunctionRouter, navigateToProfile: FunctionRouter, navigateToLogin: FunctionRouter, navigateToChat: FunctionRouter, navigateToPong: FunctionRouter}) {
     const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [error, setError] = useState(null);
   
@@ -39,7 +40,7 @@ export default function Menu({ navigateToHome, navigateToProfile, navigateToLogi
       </div>
     <div className="relative flex flex-col items-center justify-center flex-grow space-y-4 min-h-screen">
       <h2 className="text-2xl font-bold text-center mt-8">Choose Your Game Mode</h2>
-      <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Single Player')}>
+      <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToPong}>
         Single Player
       </button>
       <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>

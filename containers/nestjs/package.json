@@ -29,6 +29,8 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.3.9",
+    "@nestjs/websockets": "^10.3.9",
     "@types/passport-oauth2": "^1.4.17",
     "axios": "^1.7.2",
     "drizzle-orm": "^0.31.2",

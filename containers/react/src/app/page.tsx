@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import Menu from '@/pages/menu';
 import Home from '@/pages/home';
 import Profile from '@/pages/profile';
+import PongGame from './Pong';
 
 export type FunctionRouter = () => void;
 
@@ -58,6 +59,7 @@ export default function App() {
   const navigateToProfile: FunctionRouter = () => setCurrentView('profile');
   const navigateToNickname: FunctionRouter = () => setCurrentView('setNickname');
   const navigateToChat: FunctionRouter = () => setCurrentView('chat');
+  const navigateToPong: FunctionRouter = () => setCurrentView('pongSingle');
 
   const token = useSearchParams().get('token');
   
@@ -83,14 +85,14 @@ export default function App() {
       <main className="flex-grow flex items-center justify-center">
         <SessionProvider>
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToProfile={navigateToProfile} /> : null}
+        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToProfile={navigateToProfile} navigateToPong={navigateToPong} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
         {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'HomeToLogin' ? <Login /> : null}
         {currentView === 'profile' ? <Profile navigateToMenu={navigateToMenu}/> : null}
         {currentView === 'setNickname' ? <Profile navigateToMenu={navigateToMenu}/> : null}
-        {currentView === 'pongSingle' && <PongGame gameType="single" />}
-        {currentView === 'pongMulti' && <PongGame gameType="multi" />}
+        {currentView === 'pongSingle' && <PongGame />}
+        {currentView === 'pongMulti' && <PongGame />}
       </SessionProvider>
       </main>
     </div>
