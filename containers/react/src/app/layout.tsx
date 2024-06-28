@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className='relative flex-grow flex-col min-h-screen w-full'>
         <main className="flex-grow flex items-center justify-center">{children}</main>
-        <Footer></Footer>
+        {/* <Footer></Footer> */}
       </body>
     </html>
   );

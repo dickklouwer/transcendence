@@ -89,6 +89,8 @@ export default function App() {
         {currentView === 'HomeToLogin' ? <Login /> : null}
         {currentView === 'profile' ? <Profile navigateToMenu={navigateToMenu}/> : null}
         {currentView === 'setNickname' ? <Profile navigateToMenu={navigateToMenu}/> : null}
+        {currentView === 'pongSingle' && <PongGame gameType="single" />}
+        {currentView === 'pongMulti' && <PongGame gameType="multi" />}
       </SessionProvider>
       </main>
     </div>
