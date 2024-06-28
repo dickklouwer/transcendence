@@ -13,3 +13,6 @@ clean: rmvol
 	docker rmi -f $$(docker images -qa) 2> /dev/null || exit 0
 	docker network rm $$(docker network ls -q) 2> /dev/null || exit 0
 	docker builder prune -
+
+rmvol: down
+	docker volume rm $$(docker volume ls -q) 2> /dev/null || exit 0

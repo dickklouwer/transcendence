@@ -5,117 +5,98 @@ import io from 'socket.io-client';
 const socket = io('http://localhost:4242'); // Update to your backend URL
 
 const PongGame = () => {
-  const [keysPressed, setKeysPressed] = useState({});
-  const [rightPaddlePosition, setRightPaddlePosition] = useState(150);
+	const canvasRef = useRef(null);
+	const [rightPaddle, setRightPaddle] = useState({ y: 150 });
+	// const [leftPaddle, setLeftPaddle] = useState({ y: 150 });
+	const [ball, setBall] = useState({ x: 200, y: 200 });
 
-  const canvasRef = useRef(null);
+	const paddleWidth = 10;
+	const paddleHeight = 100;
+	const gameWidth = 400;
+	const gameHeight = 400;
+	const ballSize = 10;
+	const borderWidth = 5;
+	const leftPaddle: number = 150;
 
-  const paddleWidth = 10;
-  const paddleHeight = 100;
-  const gameWidth = 400;
-  const gameHeight = 400;
-  const ballSize = 10;
-  const borderWidth = 5;
-  const ballPosition = { x: 200, y: 200 };
-  const leftPaddlePosition = 150;
-  const score = { leftPlayer: 0, rightPlayer: 0 };
 
-  const draw = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx) return;
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		const context = canvas.getContext('2d');
 
-    // Clear canvas
-    ctx.clearRect(0, 0, gameWidth, gameHeight);
+		const drawGame = (context, rightPaddle, ball) => {
+			context.clearRect(0, 0, gameWidth, gameHeight);
 
-    // Draw ball
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(ballPosition.x, ballPosition.y, ballSize / 2, 0, Math.PI * 2);
-    ctx.fill();
+			// Draw ball
+			context.fillStyle = 'white';
+			context.beginPath();
+			context.arc(ball.x, ball.y, ballSize / 2, 0, Math.PI * 2);
+			context.fill();
 
-    // Draw left paddle
-    ctx.fillStyle = 'white';
-    ctx.fillRect(10, leftPaddlePosition, paddleWidth, paddleHeight);
+			// Draw left paddle (static position for now)
+			context.fillStyle = 'white';
+			context.fillRect(10, leftPaddle, paddleWidth, paddleHeight);
 
-    // Draw right paddle
-    ctx.fillStyle = 'white';
-    ctx.fillRect(gameWidth - paddleWidth - 10, rightPaddlePosition, paddleWidth, paddleHeight);
-  };
+			// Draw right paddle
+			context.fillStyle = 'white';
+			context.fillRect(gameWidth - paddleWidth - 10, rightPaddle, paddleWidth, paddleHeight);
+		};
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      setKeysPressed((prevKeys) => ({ ...prevKeys, [event.key]: true }));
-    };
+		drawGame(context, 150, ball);
 
-    const handleKeyUp = (event) => {
-      setKeysPressed((prevKeys) => ({ ...prevKeys, [event.key]: false }));
-    };
+		socket.on('paddle', (paddle) => {
+			setRightPaddle(paddle);
+			console.log('rightPaddle', rightPaddle);
+		});
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
+		socket.on('ball', (ball) => {
+			setBall(ball);
+			drawGame(context, rightPaddle, ball);
+		});
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
+		const handleKeyDown = (event) => {
+			if (event.key === 'ArrowUp') {
+				socket.emit('movement', 'ArrowUp');
+			}
+			if (event.key === 'ArrowDown') {
+				socket.emit('movement', 'ArrowDown');
+			}
+		};
 
-  useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to server');
-    });
+		window.addEventListener('keydown', handleKeyDown);
 
-    socket.on('movement', (movement) => {
-      setRightPaddlePosition((prevPosition) => {
-        if (movement === 'ArrowUp') {
-          return Math.max(0, prevPosition - 5);
-        }
-        if (movement === 'ArrowDown') {
-          return Math.min(gameHeight - paddleHeight, prevPosition + 5);
-        }
-        return prevPosition;
-      });
-    });
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+			socket.off('paddle');
+			socket.off('ball');
+		};
+	}, [rightPaddle]);
 
-    return () => {
-      socket.off('connect');
-      socket.off('movement');
-    };
-  }, []);
+	const startGame = () => {
+		socket.emit('start');
+	};
 
-  useEffect(() => {
-    if (keysPressed['ArrowUp']) {
-      socket.emit('movement', 'ArrowUp');
-    }
-    if (keysPressed['ArrowDown']) {
-      socket.emit('movement', 'ArrowDown');
-    }
-  }, [keysPressed]);
+	const stopGame = () => {
+		socket.emit('stop');
+	};
 
-  useEffect(() => {
-    draw();
-  }, [rightPaddlePosition]);
 
-  const sendMessage = () => {
-    socket.emit('message', 'Hello from client');
-  };
-
-  return (
-    <>
-      <h1>Score: {score.leftPlayer}-{score.rightPlayer}</h1>
-      <canvas
-        ref={canvasRef}
-        width={gameWidth}
-        height={gameHeight}
-        style={{ border: `${borderWidth}px solid white` }}
-      />
-      <div>
-        <h1>Pong Game</h1>
-        <button onClick={sendMessage}>Send Message</button>
-      </div>
-    </>
-  );
+	return (
+		<>
+			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+				<button onClick={startGame}>Start</button>
+				<button onClick={stopGame}>Stop</button>
+			</div>
+			<canvas
+				ref={canvasRef}
+				width={gameWidth}
+				height={gameHeight}
+				style={{ border: `${borderWidth}px solid white` }}
+			/>
+			<div>
+				<h1>Pong Game</h1>
+			</div>
+		</>
+	);
 };
 
 export default PongGame;
