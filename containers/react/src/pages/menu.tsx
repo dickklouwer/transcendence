@@ -33,10 +33,10 @@ export default function Menu({ navigateToHome, navigateToProfile, navigateToLogi
     return ( 
     <div className="static space-y-4 w-full">
       {/* Profile Picture and Username */}
-      <div onClick={navigateToProfile} className="absolute flex flex-col right-4 top-1 z-10">
+      {/* <div onClick={navigateToProfile} className="absolute flex flex-col right-4 top-1 z-10">
           <Image className="rounded-full" src={user.image} alt="Profile Picture" width={100} height={100} />
           <span className="text-sm mt-2">{user.user_name}</span>
-      </div>
+      </div> */}
     <div className="relative flex flex-col items-center justify-center flex-grow space-y-4 min-h-screen">
       <h2 className="text-2xl font-bold text-center mt-8">Choose Your Game Mode</h2>
       <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Single Player')}>
