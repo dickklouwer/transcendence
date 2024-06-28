@@ -41,8 +41,6 @@ const PongGame = () => {
 			context.fillRect(gameWidth - paddleWidth - 10, rightPaddle, paddleWidth, paddleHeight);
 		};
 
-		drawGame(context, 150, ball);
-
 		socket.on('paddle', (paddle) => {
 			setRightPaddle(paddle);
 			console.log('rightPaddle', rightPaddle);
