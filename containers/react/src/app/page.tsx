@@ -4,6 +4,8 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Login from '@/pages/login';
 import Chats from '@/pages/chat/chats';
+import DM from '@/pages/chat/dm';
+import GM from '@/pages/chat/gm';
 import { SessionProvider } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Menu from '@/pages/menu';
@@ -59,6 +61,8 @@ export default function App() {
   const navigateToProfile: FunctionRouter = () => setCurrentView('profile');
   const navigateToNickname: FunctionRouter = () => setCurrentView('setNickname');
   const navigateToChat: FunctionRouter = () => setCurrentView('chat');
+  const navigateToDM: FunctionRouter = () => setCurrentView('dm');
+  const navigateToGM: FunctionRouter = () => setCurrentView('gm');
   const navigateToPong: FunctionRouter = () => setCurrentView('pongSingle');
 
   const token = useSearchParams().get('token');
@@ -87,7 +91,9 @@ export default function App() {
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToProfile={navigateToProfile} navigateToPong={navigateToPong} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
-        {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} /> : null}
+        {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} navigateToDM={navigateToDM} navigateToGM={navigateToGM} /> : null}
+        {currentView === 'dm' ? <DM navigateToChat={navigateToChat} /> : null}
+        {currentView === 'gm' ? <GM navigateToChat={navigateToChat} /> : null}
         {currentView === 'HomeToLogin' ? <Login /> : null}
         {currentView === 'profile' ? <Profile navigateToMenu={navigateToMenu}/> : null}
         {currentView === 'setNickname' ? <Profile navigateToMenu={navigateToMenu}/> : null}

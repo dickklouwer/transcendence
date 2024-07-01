@@ -6,25 +6,29 @@ const initialChatFields = [
         username: "Username 1",
         lastMessage: "Last message",
         time: new Date(new Date().getTime() - 60000), // 1 minute ago
-        unreadMessages: "1"
+        unreadMessages: "1",
+        type: "dm"
     },
     {
         username: "Groupname 1",
         lastMessage: "This is a very long message that does not fit on a small screen therefore is not readable!",
         time: new Date(new Date().getTime() - 86400000), // 1 day ago
-        unreadMessages: "3"
+        unreadMessages: "3",
+        type: "gm"
     },
     {
         username: "Username 2",
         lastMessage: "Last message",
         time: new Date(new Date().getTime() - 172800000), // 2 days ago
-        unreadMessages: ""
+        unreadMessages: "",
+        type: "dm"
     },
     {
         username: "Username 3",
         lastMessage: "Last message",
         time: new Date("2024-06-17T18:00:00"),
-        unreadMessages: ""
+        unreadMessages: "",
+        type: "dm"
     }
 ];
 
