@@ -34,27 +34,12 @@ function SearchBar({ searchTerm, setSearchTerm }) {
             <input
                 type="search"
                 name="q"
-                className="py-2 text-sm text-white bg-gray-900 rounded-md pl-3 pr-10 focus:outline-none focus:bg-white focus:text-gray-900"
+                className="py-2 text-sm text-white bg-gray-900 rounded-md pl-3 pr-3 focus:outline-none focus:bg-white focus:text-gray-900"
                 placeholder="Search..."
                 autoComplete="off"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                <button type="submit" className="p-1 focus:outline-none focus:shadow-outline">
-                    <svg
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        className="w-6 h-6"
-                    >
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </button>
-            </span>
         </div>
     );
 }
@@ -62,28 +47,18 @@ function SearchBar({ searchTerm, setSearchTerm }) {
 function ChatField({ chatField }: { chatField: JSON }) {
     const defaultUserIcon = "https://static.vecteezy.com/system/resources/thumbnails/008/442/086/small_2x/illustration-of-human-icon-user-symbol-icon-modern-design-on-blank-background-free-vector.jpg";
 
-    // Function to format the time based on the conditions
     const formatTime = (time: Date) => {
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        const options: Intl.DateTimeFormatOptions = {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true, // Use 12-hour format with AM/PM
-        };
-
         if (time.toDateString() === today.toDateString()) {
-            // Today's message
-            return time.toLocaleTimeString('en-US', options);
+            return time.toTimeString().slice(0, 5); // Only show the time
         } else if (time.toDateString() === yesterday.toDateString()) {
-            // Yesterday's message
             return "Yesterday";
         } else {
-            // Older than yesterday
             const day = time.getDate();
-            const month = time.toLocaleString('default', { month: 'short' }).toLowerCase(); // Ensure month name is in lowercase
+            const month = time.toLocaleString('default', { month: 'short' }).toLowerCase();
             const year = time.getFullYear();
             return `${day}-${month}-${year}`;
         }
