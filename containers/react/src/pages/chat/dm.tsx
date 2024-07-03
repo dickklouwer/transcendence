@@ -41,15 +41,19 @@ function Message({ message }) {
     const isCurrentUser = message.sender === currentUser;
     const bubbleClass = isCurrentUser ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
+    const renderMessageWithLineBreaks = (text) => {
+        return text.split('\n').map((line, index) => (
+            <div key={index}>
+                {line}
+                <br />
+            </div>
+        ));
+    };
+
     return (
         <div className={`mb-2 flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-2 rounded-lg ${isCurrentUser ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
-                <div>{message.message.split('\n').map((line, index) => ( /* Showing enters */
-                    <React.Fragment key={index}>
-                        {line}
-                        <br />
-                    </React.Fragment>
-                ))}</div>
+                <div>{renderMessageWithLineBreaks(message.message)}</div>
                 <div className="text-xs text-gray-600">{message.sentAt}</div>
             </div>
         </div>
