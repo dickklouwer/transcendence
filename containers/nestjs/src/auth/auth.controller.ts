@@ -10,16 +10,19 @@ export class AuthController {
   @Get('validate')
   async validateFortyTwo(@Query('code') code: string, @Res() res: Response) {
     if (!code) {
-      return res.status(400).send('Code Undifined Authorization Failed!');
+      return res.status(400).send('Code Undefined Authorization Failed!');
     }
 
     try {
-      const tokenData = await this.authService.validateCode(code);
+      console.log('Starting code validation ...');
+      const token = await this.authService.validateCode(code);
+      console.log('Token:', token);
 
-      const user = await this.authService.validateToken(tokenData);
+      const user = await this.authService.validateToken(token);
+      console.log('User:', user);
 
       const jwt = await this.authService.CreateJWT(user);
-
+      console.log('JWT::', jwt);
       user.token = jwt;
 
       return res.redirect(`http://localhost:4433/?token=${user.token}`);

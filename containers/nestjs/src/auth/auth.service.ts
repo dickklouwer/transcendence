@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { userInsert } from 'drizzle/schema';
@@ -15,29 +15,41 @@ export class AuthService {
    * then sending a post request to 42 API to get the access token
    **/
   async validateCode(accessCode: string): Promise<string> {
-    const tokenUrl = new URL('https://api.intra.42.fr/oauth/token');
+    const clientId = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID;
+    const clientSecret = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET;
 
-    tokenUrl.searchParams.append(
-      'client_id',
-      process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID,
-    );
-    tokenUrl.searchParams.append(
-      'client_secret',
-      process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET,
-    );
-    tokenUrl.searchParams.append('code', accessCode);
-    tokenUrl.searchParams.append(
-      'redirect_uri',
-      'http://127.0.0.1:4242/auth/validate',
-    );
-    tokenUrl.searchParams.append('grant_type', 'authorization_code');
+    if (!clientId || !clientSecret) {
+      throw new InternalServerErrorException('Client ID or Secret is not defined');
+    }
 
-    const response = await axios.post(tokenUrl.toString(), null);
+    const tokenUrl = 'https://api.intra.42.fr/oauth/token';
+    const params = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: accessCode,
+      redirect_uri: 'http://127.0.0.1:4242/auth/validate',
+      grant_type: 'authorization_code',
+    });
 
-    console.log(response.data.access_token);
+    try {
+      const response = await axios.post(tokenUrl, params.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
 
+    if (!response.data.access_token) {
+      throw new InternalServerErrorException('Access token not received');
+    }
+
+    console.log('Access Token:', response.data.access_token);
     return response.data.access_token;
+  }catch (error) {
+  console.error('Error validating code:', error.response?.data || error.message);
+  throw new InternalServerErrorException('Error validating access code');
+}
   }
+
   /**
    * This Method is used to validate the access token.
    * @returns {Promise<any>} - Returns the user profile
