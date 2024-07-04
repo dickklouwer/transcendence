@@ -39,6 +39,7 @@ export const friends = mySchema.table('friends', {
 export const groupChats = mySchema.table('group_chats', {
   group_chat_id: serial('group_chat_id').primaryKey(),
   group_name: text('group_name').notNull(),
+  group_is_public: boolean('group_is_public').default(false),
   group_password: text('group_password').default(null),
   group_image: text('group_image').default(null),
   created_at: timestamp('created_at').defaultNow(),
