@@ -1,10 +1,11 @@
 "use client";
 import { FunctionRouter } from "@/app/page";
 import { useState, useEffect } from "react";
-import { fetchProfile } from "../app/page";
+import { fetchProfile } from "../page";
+import Link from 'next/link';
 
 
-export default function Profile({ navigateToMenu }: { navigateToMenu: FunctionRouter }) {
+export default function Profile() {
     const [user, setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     
     useEffect(() => {
@@ -21,9 +22,9 @@ export default function Profile({ navigateToMenu }: { navigateToMenu: FunctionRo
 
     <div>
       <h1>Profile: {user.user_name}</h1>
-      <button className="bg-blue-500 text-white font-bold py-2 px-4 mt-4 rounded" onClick={navigateToMenu}>
+      <Link className="bg-blue-500 text-white font-bold py-2 px-4 mt-4 rounded" href={'/menu'}>
         Back to Menu
-        </button>
+        </Link>
     </div>
   );
 } 

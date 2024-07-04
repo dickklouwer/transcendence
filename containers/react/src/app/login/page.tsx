@@ -5,7 +5,7 @@
 import { signIn, signOut } from 'next-auth/react';
 //  { callbackUrl: 'http://localhost:2424/api/auth/signin'
 
-export default function Login() {
+export default function Login({children}:{children: React.ReactNode}) {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen">
