@@ -1,45 +1,73 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // Assuming the current user's ID
-const currentUser = 'current_user_id';
+const myId = 42;
 
-// Sample messages
-const initialMessages = [
+/* TABLE messages
+  message_id: serial('message_id').primaryKey(),
+  sender_id: integer('sender_id')
+    .references(() => users.intra_user_id)
+    .notNull(),
+  receiver_id: integer('reciever_id'),
+  group_chat_id: integer('group_chat_id'),
+  message: text('message').notNull(),
+  sent_at: timestamp('sent_at').defaultNow(),
+*/
+
+const databaseMessages = [
     {
-        sender: 'sender_id_1',
+        message_id: 1,
+        sender_id: 43,
+        receiver_id: 42,
+        group_chat_id: null,
         message: 'Hello',
-        sentAt: '13:02'
+        sent_at: '13:04'
     },
     {
-        sender: 'current_user_id',
+        message_id: 2,
+        sender_id: 42,
+        receiver_id: 43,
+        group_chat_id: null,
         message: 'Hi',
-        sentAt: '13:03'
+        sent_at: '13:05'
     },
     {
-        sender: 'sender_id_1',
+        message_id: 3,
+        sender_id: 43,
+        receiver_id: 42,
+        group_chat_id: null,
         message: 'How are you?',
-        sentAt: '13:04'
+        sent_at: '13:06'
     },
     {
-        sender: 'current_user_id',
+        message_id: 4,
+        sender_id: 42,
+        receiver_id: 43,
+        group_chat_id: null,
         message: 'I am fine :)\nThanks for asking!',
-        sentAt: '13:05'
+        sent_at: '13:07'
     },
     {
-        sender: 'current_user_id',
+        message_id: 5,
+        sender_id: 42,
+        receiver_id: 43,
+        group_chat_id: null,
         message: 'How are you?',
-        sentAt: '13:05'
+        sent_at: '13:08'
     },
     {
-        sender: 'sender_id_1',
+        message_id: 6,
+        sender_id: 43,
+        receiver_id: 42,
+        group_chat_id: null,
         message: 'Good',
-        sentAt: '13:06'
-    }
+        sent_at: '13:09'
+    },
 ];
 
 function Message({ message }) {
-    const isCurrentUser = message.sender === currentUser;
-    const bubbleClass = isCurrentUser ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
+    const isMyMessage = message.sender_id === myId;
+    const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
     const renderMessageWithLineBreaks = (text) => {
         return text.split('\n').map((line, index) => (
@@ -48,10 +76,10 @@ function Message({ message }) {
     };
 
     return (
-        <div className={`mb-2 flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-            <div className={`p-2 rounded-lg ${isCurrentUser ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
+        <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
+            <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                 <div>{renderMessageWithLineBreaks(message.message)}</div>
-                <div className="text-xs text-gray-600">{message.sentAt}</div>
+                <div className="text-xs text-gray-600">{message.sent_at}</div>
             </div>
         </div>
     );
@@ -71,8 +99,25 @@ function customTransparantToBlack() {
     );
 }
 
+function SearchBar({ searchTerm, setSearchTerm }) {
+    return (
+        <div className="relative text-gray-600 focus-within:text-gray-400 w-96 px-3">
+            <input
+                type="search"
+                name="q"
+                className="py-2 text-sm w-full text-white bg-gray-900 rounded-md pl-3 pr-3 focus:outline-none focus:bg-white focus:text-gray-900"
+                placeholder="Search..."
+                autoComplete="off"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+    );
+}
+
 export default function DM() {
-    const [messages, setMessages] = useState(initialMessages);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [messages, setMessages] = useState(databaseMessages);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
 
@@ -84,9 +129,9 @@ export default function DM() {
         if (newMessage.trim() === '') return;
 
         const message = {
-            sender: currentUser,
+            sender_id: myId,
             message: newMessage,
-            sentAt: new Date().toLocaleTimeString()
+            sent_at: new Date().toLocaleTimeString()
         };
 
         setMessages([...messages, message]);
@@ -102,6 +147,7 @@ export default function DM() {
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 {customTransparantToBlack()}
                 <div className="overflow-auto h-full">
@@ -114,7 +160,8 @@ export default function DM() {
             </div>
             <div className="flex flex-col space-y-4 px-4 w-96">
                 <textarea
-                    className="border border-gray-300 rounded-lg p-2 w-full text-black"
+                    // className="border border-gray-300 rounded-lg p-2 w-full text-black"
+                    className="bg-gray-900 focus:bg-white focus:outline-none rounded-lg p-2 w-full text-black"
                     placeholder="Type a message..."
                     rows="2"
                     value={newMessage}

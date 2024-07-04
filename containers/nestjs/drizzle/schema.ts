@@ -61,7 +61,7 @@ export const messages = mySchema.table('messages', {
   sender_id: integer('sender_id')
     .references(() => users.intra_user_id)
     .notNull(),
-  reciever_id: integer('reciever_id'),
+  receiver_id: integer('receiver_id'),
   group_chat_id: integer('group_chat_id'),
   message: text('message').notNull(),
   sent_at: timestamp('sent_at').defaultNow(),
@@ -72,7 +72,7 @@ export const messageStatus = mySchema.table('message_status', {
   message_id: integer('message_id')
     .references(() => messages.message_id)
     .notNull(),
-  reciever_id: integer('reciever_id')
+  receiver_id: integer('receiver_id')
     .references(() => users.intra_user_id)
     .notNull(),
   receivet_at: timestamp('receivet_at').default(null),
