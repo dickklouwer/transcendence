@@ -1,3 +1,5 @@
+'use client';
+import Link from 'next/link';
 // Desc: Chat page with a list of chats
 
 function ChatField({ username, lastMessage, time, unreadMessages }) {
@@ -26,7 +28,7 @@ function ChatField({ username, lastMessage, time, unreadMessages }) {
     );
 }
 
-export default function Chats({navigateToMenu}) {
+export default function Chats() {
   
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
@@ -36,9 +38,9 @@ export default function Chats({navigateToMenu}) {
             <ChatField username="Groupname 1" lastMessage="This is a very long message that does not fit on a small screen therefor is not readeble!" time="11:42" unreadMessages="3" />
             <ChatField username="Username 2" lastMessage="Last message" time="19-07-2024" unreadMessages="" />
         </div>
-        <button className="text-blue-500 mt-4" onClick={navigateToMenu}>
+        <Link className="text-blue-500 mt-4" href={'/menu'}>
             Back to Menu
-        </button>
+        </Link>
         </div>
     );
 }
