@@ -15,7 +15,8 @@
     "next": "latest",
     "next-auth": "^4.24.7",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "react-router-dom": "^6.24.0"
   },
   "devDependencies": {
     "@types/node": "^20",

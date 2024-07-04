@@ -10,6 +10,7 @@ import Menu from '@/pages/menu';
 import Home from '@/pages/home';
 import Profile from '@/pages/profile';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export type FunctionRouter = () => void;
 
@@ -118,8 +119,10 @@ export default function App() {
         <LoadProfile />
       </div>
       </header>
-      <main className="flex-grow flex items-center justify-center">
+      <div className="flex-grow flex items-center justify-center">
         <SessionProvider>
+        <Link href={'/menu'} replace > Menu </Link>
+
         {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
         {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToProfile={navigateToProfile} /> : null}
         {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
@@ -128,7 +131,7 @@ export default function App() {
         {currentView === 'profile' ? <Profile navigateToMenu={navigateToMenu}/> : null}
         {currentView === 'setNickname' ? <Profile navigateToMenu={navigateToMenu}/> : null}
       </SessionProvider>
-      </main>
+      </div>
     </div>
   );
 }
