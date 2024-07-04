@@ -71,7 +71,7 @@ function ChatField({ chatField }: { chatField: JSON }) {
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing picture of ' + chatField.username)}>
+                <button onClick={() => alert('Showing profile of ' + chatField.username)}>
                     <img src={defaultUserIcon} alt="User or Group" className="w-12 h-12 rounded-full" />
                 </button>
                 <button onClick={() => alert('Showing chat of ' + chatField.username)} className="flex-grow">
