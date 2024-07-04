@@ -10,6 +10,5 @@ import { PongModule } from './pong/pong.module';
   imports: [AuthModule, DbModule, PongModule],
   controllers: [AppController],
   providers: [AppService, DbService],
-
 })
-export class AppModule { }
+export class AppModule {}

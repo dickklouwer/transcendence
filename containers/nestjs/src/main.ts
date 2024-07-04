@@ -2,17 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 // import * as cors from 'cors';
-import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 const corsConfig: CorsOptions = {
-  origin: "*",
-  methods: "GET, PUT, POST, DELETE",
-  allowedHeaders: "Content-Type, Authorization"
+  origin: '*',
+  methods: 'GET, PUT, POST, DELETE',
+  allowedHeaders: 'Content-Type, Authorization',
 };
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   app.enableCors(corsConfig);
   // Enable CORS with options
   // app.use(cors({
@@ -24,4 +24,3 @@ async function bootstrap() {
   await app.listen(4242);
 }
 bootstrap();
-
