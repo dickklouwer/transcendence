@@ -1,3 +1,4 @@
+import { FunctionRouter } from '@/app/page';
 import React, { useState, useEffect, useRef } from 'react';
 
 // Assuming the current user's ID
@@ -115,7 +116,7 @@ function SearchBar({ searchTerm, setSearchTerm }) {
     );
 }
 
-export default function DM() {
+export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter}) {
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState(databaseMessages);
     const [newMessage, setNewMessage] = useState('');
@@ -168,12 +169,20 @@ export default function DM() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                 ></textarea>
-                <button
-                    className="bg-blue-500 text-black font-bold py-2 px-4 rounded self-end"
-                    onClick={handleSendMessage}
-                >
-                    Send
-                </button>
+                <div className='flow-root'>
+                    <button
+                        className="float-left py-2 px-4"
+                        onClick={navigateToChat}
+                        >
+                        Back
+                    </button>
+                    <button
+                        className="float-right py-2 px-4 rounded bg-blue-500 text-black font-bold "
+                        onClick={handleSendMessage}
+                        >
+                        Send
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -1,3 +1,4 @@
+import { FunctionRouter } from '@/app/page';
 import React, { useState, useEffect } from 'react';
 
 // Initial chat data
@@ -48,7 +49,7 @@ function SearchBar({ searchTerm, setSearchTerm }) {
     );
 }
 
-function ChatField({ chatField }: { chatField: JSON }) {
+function ChatField({ chatField, navigateToDM, navigateToGM}: { chatField: JSON,navigateToDM: FunctionRouter, navigateToGM: FunctionRouter }) {
     const defaultUserIcon = "https://static.vecteezy.com/system/resources/thumbnails/008/442/086/small_2x/illustration-of-human-icon-user-symbol-icon-modern-design-on-blank-background-free-vector.jpg";
 
     const formatTime = (time: Date) => {
@@ -74,7 +75,8 @@ function ChatField({ chatField }: { chatField: JSON }) {
                 <button onClick={() => alert('Showing profile of ' + chatField.username)}>
                     <img src={defaultUserIcon} alt="User or Group" className="w-12 h-12 rounded-full" />
                 </button>
-                <button onClick={() => alert('Showing chat of ' + chatField.username)} className="flex-grow">
+                {/* <button onClick={() => alert('Showing chat of ' + chatField.username)} className="flex-grow"> */}
+                <button className="flex-grow" onClick={navigateToDM}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.username}</h3>
@@ -91,7 +93,7 @@ function ChatField({ chatField }: { chatField: JSON }) {
     );
 }
 
-export default function Chats({ navigateToMenu }) {
+export default function Chats({ navigateToMenu, navigateToDM, navigateToGM }: {navigateToMenu: FunctionRouter, navigateToDM: FunctionRouter, navigateToGM: FunctionRouter }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [chatFields, setChatFields] = useState(initialChatFields);
 
@@ -112,12 +114,23 @@ export default function Chats({ navigateToMenu }) {
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="h-64 overflow-auto">
                 {filteredChatFields.map((chatField, index) => (
-                    <ChatField key={index} chatField={chatField} />
+                    <ChatField key={index} chatField={chatField} navigateToDM={navigateToDM} navigateToGM={navigateToGM} />
                 ))}
                 { filteredChatFields.length == 0 && <p>No chats found...</p> }
             </div>
             <button className="text-blue-500 mt-4" onClick={navigateToMenu}>
                 Back to Menu
+            </button>
+            <p>----- Temporary -----</p>
+            <button
+                className='text-blue-500'
+                onClick={navigateToDM}
+            >DM
+            </button>
+            <button
+                className='text-blue-500'
+                onClick={navigateToGM}
+            >GM
             </button>
         </div>
     );

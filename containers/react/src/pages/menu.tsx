@@ -46,7 +46,7 @@ export default function Menu({ navigateToHome, navigateToProfile, navigateToLogi
       <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
         Multiplayer
       </button>
-      <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Chat')}>
+      <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToChat}>
       Chat
       </button>
       <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => Logout(navigateToHome)}>

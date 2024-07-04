@@ -1,6 +1,8 @@
 // Description: Groep Message Page
 
-export default function GM() {
+import { FunctionRouter } from "@/app/page";
+
+export default function GM({ navigateToChat }: {navigateToChat: FunctionRouter}) {
     return (
         <p>GM page</p>
     );
