@@ -1,10 +1,8 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Menu() {
-    const Router = useRouter();
   
     function Logout() {
       localStorage.removeItem('token');
