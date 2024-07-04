@@ -30,7 +30,6 @@ export class AuthService {
       'http://127.0.0.1:4242/auth/validate',
     );
     tokenUrl.searchParams.append('grant_type', 'authorization_code');
-
     const response = await axios.post(tokenUrl.toString(), null);
 
     return response.data.access_token;
