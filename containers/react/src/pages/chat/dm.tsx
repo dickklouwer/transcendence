@@ -22,7 +22,7 @@ const initialMessages = [
     },
     {
         sender: 'current_user_id',
-        message: 'I am fine',
+        message: 'I am fine :)\nThanks for asking!',
         sentAt: '13:05'
     },
     {
@@ -43,10 +43,7 @@ function Message({ message }) {
 
     const renderMessageWithLineBreaks = (text) => {
         return text.split('\n').map((line, index) => (
-            <div key={index}>
-                {line}
-                <br />
-            </div>
+            <div key={index}>{line}</div>
         ));
     };
 
