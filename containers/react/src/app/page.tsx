@@ -45,32 +45,7 @@ async function SetNickname( name: string ): Promise<any> {
 
 // NickName set flow is {fetchProfile -> check if nickname is set -> if not set navigate to set nickname page return to menu}
 export default function Home() {
-  const [profilepicture, setProfilePicture] = useState(null);
-  const [view, setView] = useState<string>('') // This Any needs to be replaced with the correct type that we will get from the backend
-  const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
   const Router = useRouter();
-
-  const token = useSearchParams().get('token');
-  
-  useEffect(() => {
-    if (token)
-      localStorage.setItem('token', token);
-    Router.push('/', { scroll: false });
-    fetchProfile(localStorage.getItem('token'))
-    .then((data) => {
-      console.log('Retrieved Data: ', data);
-      setUser(data);
-      setView('/menu');
-    })
-    .catch((error) => {
-      console.log('Error: ', error);
-      Router.push('/login', { scroll: false });
-    });
-  }, []
-  );
-  
-  console.log(view);
-
 
   return (
     <div className="flex flex-col min-h-screen w-full h-full">

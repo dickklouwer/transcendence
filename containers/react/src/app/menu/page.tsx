@@ -8,7 +8,7 @@ export default function Menu() {
   
     function Logout() {
       localStorage.removeItem('token');
-      Router.push('/', { scroll: false });
+      window.location.replace('/login');
     }
   
     return ( 
