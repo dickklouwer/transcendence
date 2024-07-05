@@ -1,17 +1,7 @@
 "use client";
 
-import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import Login from '@/pages/login';
-import Chats from '@/pages/chat/chats';
-import DM from '@/pages/chat/dm';
-import GM from '@/pages/chat/gm';
 import { SessionProvider } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import Menu from '@/pages/menu';
-import Home from '@/pages/home';
-import Profile from '@/pages/profile';
-import PongGame from './Pong';
 
 export type FunctionRouter = () => void;
 
@@ -51,56 +41,18 @@ async function SetNickname( name: string ): Promise<any> {
  */
 
 // NickName set flow is {fetchProfile -> check if nickname is set -> if not set navigate to set nickname page return to menu}
-export default function App() {
-  const [currentView, setCurrentView] = useState('home');
+export default function Home() {
   const Router = useRouter();
-
-  const navigateToMenu: FunctionRouter = () => setCurrentView('menu');
-  const navigateToHome: FunctionRouter = () => setCurrentView('home');
-  const navigateToLogin: FunctionRouter = () => setCurrentView('HomeToLogin');
-  const navigateToProfile: FunctionRouter = () => setCurrentView('profile');
-  const navigateToNickname: FunctionRouter = () => setCurrentView('setNickname');
-  const navigateToChat: FunctionRouter = () => setCurrentView('chat');
-  const navigateToDM: FunctionRouter = () => setCurrentView('dm');
-  const navigateToGM: FunctionRouter = () => setCurrentView('gm');
-  const navigateToPong: FunctionRouter = () => setCurrentView('pongSingle');
-
-  const token = useSearchParams().get('token');
-  
-  useEffect(() => {
-    if (token)
-      localStorage.setItem('token', token);
-    Router.push('/', { scroll: false });
-    fetchProfile(localStorage.getItem('token'))
-    .then((data) => {
-      console.log('Retrieved Data: ', data);
-      setCurrentView('home');
-    })
-    .catch((error) => {
-      console.log('Error: ', error);
-      setCurrentView('login');
-    });
-  }, []
-  );
 
   return (
     <div className="flex flex-col min-h-screen w-full h-full">
-      <h1 className="inline-block text-white text-3xl">PONG!</h1>
-      <main className="flex-grow flex items-center justify-center">
-        <SessionProvider>
-        {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToProfile={navigateToProfile} navigateToPong={navigateToPong} /> : null}
-        {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
-        {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} navigateToDM={navigateToDM} navigateToGM={navigateToGM} /> : null}
-        {currentView === 'dm' ? <DM navigateToChat={navigateToChat} /> : null}
-        {currentView === 'gm' ? <GM navigateToChat={navigateToChat} /> : null}
-        {currentView === 'HomeToLogin' ? <Login /> : null}
-        {currentView === 'profile' ? <Profile navigateToMenu={navigateToMenu}/> : null}
-        {currentView === 'setNickname' ? <Profile navigateToMenu={navigateToMenu}/> : null}
-        {currentView === 'pongSingle' && <PongGame />}
-        {currentView === 'pongMulti' && <PongGame />}
+      <SessionProvider>
+        <div className="flex justify-center items-center flex-grow">
+          <h2 className="text-4xl font-bold text-center cursor-pointer">
+            <button onClick={() => Router.push('/menu')}> PONG! </button>
+          </h2>
+        </div>
       </SessionProvider>
-      </main>
     </div>
   );
 }
