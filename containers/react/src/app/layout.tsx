@@ -29,7 +29,7 @@ function LoadProfile()
       console.log('Error: ', error);
       Router.push('/login', { scroll: false });
     })
-  }, [token, user, Router]);
+  }, []);
 
   if (!user)
     return ;
