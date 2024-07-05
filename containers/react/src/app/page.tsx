@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { SessionProvider } from 'next-auth/react';
 
-export type FunctionRouter = () => void;
-
 export async function fetchProfile(token : string | null): Promise<any> {    
   const profile = await fetch('api/profile', {
     headers: {

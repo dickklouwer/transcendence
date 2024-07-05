@@ -1,5 +1,8 @@
+"use client";
+
 import { fetchProfile, FunctionRouter } from '@/app/page';
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 /* notes for showing inbox
 
@@ -117,7 +120,7 @@ function SearchBar({ searchTerm, setSearchTerm }) {
     );
 }
 
-function ChatField({ chatField, navigateToDM, navigateToGM}: { chatField: JSON,navigateToDM: FunctionRouter, navigateToGM: FunctionRouter }) {
+function ChatField({ chatField}: { chatField: JSON }) {
     const defaultUserIcon = "https://static.vecteezy.com/system/resources/thumbnails/008/442/086/small_2x/illustration-of-human-icon-user-symbol-icon-modern-design-on-blank-background-free-vector.jpg";
 
     const formatTime = (time: Date) => {
@@ -143,7 +146,7 @@ function ChatField({ chatField, navigateToDM, navigateToGM}: { chatField: JSON,n
                 <button onClick={() => alert('Showing profile of ' + chatField.description)}>
                     <img src={defaultUserIcon} alt="User or Group" className="w-12 h-12 rounded-full" />
                 </button>
-                <button className="flex-grow" onClick={navigateToDM}>
+                <Link className="flex-grow" href={'/dc'}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.description}</h3>
@@ -154,13 +157,13 @@ function ChatField({ chatField, navigateToDM, navigateToGM}: { chatField: JSON,n
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
                     </div>
-                </button>
+                </Link>
             </div>
         </div>
     );
 }
 
-export default function Chats({ navigateToMenu, navigateToDM, navigateToGM }: {navigateToMenu: FunctionRouter, navigateToDM: FunctionRouter, navigateToGM: FunctionRouter }) {
+export default function Chats() {
     const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [searchTerm, setSearchTerm] = useState('');
     const [chatFields, setChatFields] = useState(initialChatFields);
@@ -193,24 +196,20 @@ export default function Chats({ navigateToMenu, navigateToDM, navigateToGM }: {n
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="h-64 overflow-auto">
                 {filteredChatFields.map((chatField, index) => (
-                    <ChatField key={index} chatField={chatField} navigateToDM={navigateToDM} navigateToGM={navigateToGM} />
+                    <ChatField key={index} chatField={chatField} />
                 ))}
                 { filteredChatFields.length == 0 && <p>No chats found...</p> }
             </div>
-            <button className="text-blue-500 mt-4" onClick={navigateToMenu}>
+            <Link className="text-blue-500 mt-4" href={'/menu'}>
                 Back to Menu
-            </button>
+            </Link>
             <p>----- Temporary -----</p>
-            <button
-                className='text-blue-500'
-                onClick={navigateToDM}
-            >DM
-            </button>
-            <button
-                className='text-blue-500'
-                onClick={navigateToGM}
-            >GM
-            </button>
+            <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/dc'}>
+                DC
+            </Link>
+            <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/gc'}>
+                GC
+            </Link>
         </div>
     );
 }

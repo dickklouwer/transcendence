@@ -1,5 +1,7 @@
-import { FunctionRouter } from '@/app/page';
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 
 // Assuming the current user's ID
 const myId = 42;
@@ -116,7 +118,7 @@ function SearchBar({ searchTerm, setSearchTerm }) {
     );
 }
 
-export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter}) {
+export default function DC() {
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState(databaseMessages);
     const [newMessage, setNewMessage] = useState('');
@@ -170,12 +172,9 @@ export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter})
                     onKeyPress={handleKeyPress}
                 ></textarea>
                 <div className='flow-root'>
-                    <button
-                        className="float-left py-2 px-4"
-                        onClick={navigateToChat}
-                        >
+                    <Link className="float-left py-2 px-4" href={'/chats'}>
                         Back
-                    </button>
+                    </Link>
                     <button
                         className="float-right py-2 px-4 rounded bg-blue-500 text-black font-bold "
                         onClick={handleSendMessage}
