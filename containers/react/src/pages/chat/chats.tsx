@@ -1,31 +1,99 @@
-import { FunctionRouter } from '@/app/page';
+import { fetchProfile, FunctionRouter } from '@/app/page';
 import React, { useState, useEffect } from 'react';
+
+/* notes for showing inbox
+
+Show message in inbox when:
+- messages.receiver_id === own_id (use fetchProfile() to get own_id)
+  show:
+  - users.user_name where users.intra_user_id === messages.sender_id
+  - messages.message where (last send)
+  - messages.sent_at where (last send)
+  - (count where messages.message_id === message_status.message_id && message_status.read_at === null)
+- group_chats_users.intra_user_id == own_id (use fetchProfile() to get own_id)
+  show:
+  - group_chats.group_name where group_chats_users
+  - messages.message where (last send)
+  - messages.sent_at where (last send)
+  - (count where messages.message_id === message_status.message_id && message_status.read_at === null)
+
+Back-end function for chats:
+    get_chats() {
+        return (
+            {
+                message_id,
+                type: [dm | gm],
+                titel: [users.user_name | group_chats.group_name],
+                image: [users.image | group_chats.group_image],
+                lastMessage: messages.message where (last send),
+                time: messages.sent_at where (last send),
+                unreadMessages: ''
+            }
+        );
+    }
+
+    
+
+Back-end function for dm & gm:
+custom functions:
+    get_chat_info(message_id) {
+        return (
+            {
+                titel: [users.user_name | group_chats.group_name],
+                image: [users.image | group_chats.group_image],
+                users: [
+                    user_id,
+                    user_name,
+                    user_image
+                ]
+            }
+        );
+    }
+    
+    get_chat(message_id) {
+        return (
+            {
+                message_id,
+                sender_id,
+                receiver_id,
+                group_chat_id,
+                message,
+                sent_at
+            }
+        )
+    }
+
+    get_own_id() {
+        return (own_id);
+    }
+
+*/
 
 // Initial chat data
 const initialChatFields = [
     {
-        username: "Username 1",
+        description: "Username 1",
         lastMessage: "Last message",
         time: new Date(new Date().getTime() - 60000), // 1 minute ago
         unreadMessages: "1",
         type: "dm"
     },
     {
-        username: "Groupname 1",
+        description: "Groupname 1",
         lastMessage: "This is a very long message that does not fit on a small screen therefore is not readable!",
         time: new Date(new Date().getTime() - 86400000), // 1 day ago
         unreadMessages: "3",
         type: "gm"
     },
     {
-        username: "Username 2",
+        description: "Username 2",
         lastMessage: "Last message",
         time: new Date(new Date().getTime() - 172800000), // 2 days ago
         unreadMessages: "",
         type: "dm"
     },
     {
-        username: "Username 3",
+        description: "Username 3",
         lastMessage: "Last message",
         time: new Date("2024-06-17T18:00:00"),
         unreadMessages: "",
@@ -72,14 +140,13 @@ function ChatField({ chatField, navigateToDM, navigateToGM}: { chatField: JSON,n
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing profile of ' + chatField.username)}>
+                <button onClick={() => alert('Showing profile of ' + chatField.description)}>
                     <img src={defaultUserIcon} alt="User or Group" className="w-12 h-12 rounded-full" />
                 </button>
-                {/* <button onClick={() => alert('Showing chat of ' + chatField.username)} className="flex-grow"> */}
                 <button className="flex-grow" onClick={navigateToDM}>
                     <div className="flex justify-between w-full">
                         <div>
-                            <h3 className="font-bold text-left">{chatField.username}</h3>
+                            <h3 className="font-bold text-left">{chatField.description}</h3>
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
                         </div>
                         <div className="text-right">
@@ -94,10 +161,17 @@ function ChatField({ chatField, navigateToDM, navigateToGM}: { chatField: JSON,n
 }
 
 export default function Chats({ navigateToMenu, navigateToDM, navigateToGM }: {navigateToMenu: FunctionRouter, navigateToDM: FunctionRouter, navigateToGM: FunctionRouter }) {
+    const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [searchTerm, setSearchTerm] = useState('');
     const [chatFields, setChatFields] = useState(initialChatFields);
 
     useEffect(() => {
+        // load user data
+        fetchProfile(localStorage.getItem('token'))
+        .then((data) => {
+            console.log('Retrieved Data: ', data);
+            setUser(data);
+        })
         // Sort the chatFields by time, with the newest messages at the top
         setChatFields(chatFields => {
             return [...chatFields].sort((a, b) => new Date(b.time) - new Date(a.time));
@@ -105,8 +179,13 @@ export default function Chats({ navigateToMenu, navigateToDM, navigateToGM }: {n
     }, []);
 
     const filteredChatFields = chatFields.filter(chatField =>
-        chatField.username.toLowerCase().includes(searchTerm.toLowerCase())
+        chatField.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (!user)
+        console.log('User: none');
+    else
+        console.log('intra_user_id: ', user.intra_user_id);
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
