@@ -38,10 +38,10 @@ export const friends = mySchema.table('friends', {
 
 export const games = mySchema.table('games', {
   game_id: serial('game_id').primaryKey(),
-  player1_id: integer('player1_id').references(() =>users.intra_user_id),
-  player2_id: integer('player2_id').references(() =>users.intra_user_id),
+  player1_id: integer('player1_id').references(() => users.intra_user_id),
+  player2_id: integer('player2_id').references(() => users.intra_user_id),
   player1_score: integer('player1_score'),
-  player2_score: integer('player2_score')
+  player2_score: integer('player2_score'),
 });
 
 export const groupChats = mySchema.table('group_chats', {
@@ -55,7 +55,9 @@ export const groupChats = mySchema.table('group_chats', {
 
 export const groupChatsUsers = mySchema.table('group_chats_users', {
   group_chat_user_id: serial('group_chat_user_id').primaryKey(),
-  group_chat_id: integer('group_chat_id').references(() => groupChats.group_chat_id,),
+  group_chat_id: integer('group_chat_id').references(
+    () => groupChats.group_chat_id,
+  ),
   intra_user_id: integer('intra_user_id').references(() => users.intra_user_id),
   is_owner: boolean('is_owner').notNull().default(false),
   is_admin: boolean('is_admin').notNull().default(false),
@@ -67,8 +69,8 @@ export const groupChatsUsers = mySchema.table('group_chats_users', {
 export const messages = mySchema.table('messages', {
   message_id: serial('message_id').primaryKey(),
   sender_id: integer('sender_id')
-  .references(() => users.intra_user_id)
-  .notNull(),
+    .references(() => users.intra_user_id)
+    .notNull(),
   receiver_id: integer('receiver_id'),
   group_chat_id: integer('group_chat_id'),
   message: text('message').notNull(),
@@ -78,13 +80,13 @@ export const messages = mySchema.table('messages', {
 export const messageStatus = mySchema.table('message_status', {
   message_status_id: serial('message_status_id').primaryKey(),
   message_id: integer('message_id')
-  .references(() => messages.message_id)
-  .notNull(),
+    .references(() => messages.message_id)
+    .notNull(),
   receiver_id: integer('receiver_id')
     .references(() => users.intra_user_id)
     .notNull(),
-    receivet_at: timestamp('receivet_at').default(null),
-    read_at: timestamp('read_at').default(null),
+  receivet_at: timestamp('receivet_at').default(null),
+  read_at: timestamp('read_at').default(null),
 });
 
 export const userInsert = createInsertSchema(users);
