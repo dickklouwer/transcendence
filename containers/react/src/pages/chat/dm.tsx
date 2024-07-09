@@ -1,6 +1,15 @@
 import { FunctionRouter } from '@/app/page';
 import React, { useState, useEffect, useRef } from 'react';
 
+interface TMessage {
+    message_id: number;
+    sender_id: number;
+    receiver_id: number | null;
+    group_chat_id: number | null;
+    message: string;
+    sent_at: string;
+}
+
 // Assuming the current user's ID
 const myId = 42;
 
@@ -66,11 +75,11 @@ const databaseMessages = [
     },
 ];
 
-function Message({ message }) {
+function Message({ message }: { message:TMessage }) {
     const isMyMessage = message.sender_id === myId;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
-    const renderMessageWithLineBreaks = (text) => {
+    const renderMessageWithLineBreaks = (text:string) => {
         return text.split('\n').map((line, index) => (
             <div key={index}>{line}</div>
         ));
@@ -100,7 +109,7 @@ function customTransparantToBlack() {
     );
 }
 
-function SearchBar({ searchTerm, setSearchTerm }) {
+function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>>}) {
     return (
         <div className="relative text-gray-600 focus-within:text-gray-400 w-96 px-3">
             <input
@@ -120,7 +129,7 @@ export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter})
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState(databaseMessages);
     const [newMessage, setNewMessage] = useState('');
-    const messagesEndRef = useRef(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); /* Auto scroll to last message */
@@ -130,7 +139,10 @@ export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter})
         if (newMessage.trim() === '') return;
 
         const message = {
+            message_id: databaseMessages[databaseMessages.length - 1].message_id + 1,
             sender_id: myId,
+            receiver_id: 43,
+            group_chat_id: null,
             message: newMessage,
             sent_at: new Date().toLocaleTimeString()
         };
@@ -139,7 +151,7 @@ export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter})
         setNewMessage('');
     };
 
-    const handleKeyPress = (e) => {
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
@@ -161,10 +173,9 @@ export default function DM({ navigateToChat }: {navigateToChat: FunctionRouter})
             </div>
             <div className="flex flex-col space-y-4 px-4 w-96">
                 <textarea
-                    // className="border border-gray-300 rounded-lg p-2 w-full text-black"
                     className="bg-gray-900 focus:bg-white focus:outline-none rounded-lg p-2 w-full text-black"
                     placeholder="Type a message..."
-                    rows="2"
+                    rows={2}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
