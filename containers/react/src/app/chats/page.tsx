@@ -3,6 +3,8 @@
 import { fetchProfile, fetchChats } from '@/app/page';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from "next/image";
+import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 
 /* notes for showing inbox
 
@@ -72,39 +74,47 @@ custom functions:
 
 */
 
+interface TchatFields {
+    description: string;
+    lastMessage: string;
+    time: Date;
+    unreadMessages: string;
+    type: string;
+}
+
 // Initial chat data
 const initialChatFields = [
     {
         description: "Username 1",
         lastMessage: "Last message",
-        time: new Date(new Date().getTime() - 60000), // 1 minute ago
+        time: new Date(Number(new Date().getTime()) - 60000) as any, // 1 minute ago
         unreadMessages: "1",
         type: "dm"
     },
     {
         description: "Groupname 1",
         lastMessage: "This is a very long message that does not fit on a small screen therefore is not readable!",
-        time: new Date(new Date().getTime() - 86400000), // 1 day ago
+        time: new Date(Number(new Date().getTime()) - 86400000), // 1 day ago
         unreadMessages: "3",
         type: "gm"
     },
     {
         description: "Username 2",
         lastMessage: "Last message",
-        time: new Date(new Date().getTime() - 172800000), // 2 days ago
+        time: new Date(Number(new Date().getTime()) - 172800000), // 2 days ago
         unreadMessages: "",
         type: "dm"
     },
     {
         description: "Username 3",
         lastMessage: "Last message",
-        time: new Date("2024-06-17T18:00:00"),
+        time: new Date(Number(new Date().getTime()) - 259200000), // 3 days ago
         unreadMessages: "",
         type: "dm"
     }
 ];
 
-function SearchBar({ searchTerm, setSearchTerm }) {
+function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
         <div className="relative text-gray-600 focus-within:text-gray-400">
             <input
@@ -120,9 +130,7 @@ function SearchBar({ searchTerm, setSearchTerm }) {
     );
 }
 
-function ChatField({ chatField}: { chatField: JSON }) {
-    const defaultUserIcon = "https://static.vecteezy.com/system/resources/thumbnails/008/442/086/small_2x/illustration-of-human-icon-user-symbol-icon-modern-design-on-blank-background-free-vector.jpg";
-
+function ChatField({ chatField }: { chatField: TchatFields }) {
     const formatTime = (time: Date) => {
         const today = new Date();
         const yesterday = new Date(today);
@@ -144,7 +152,7 @@ function ChatField({ chatField}: { chatField: JSON }) {
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
                 <button onClick={() => alert('Showing profile of ' + chatField.description)}>
-                    <img src={defaultUserIcon} alt="User or Group" className="w-12 h-12 rounded-full" />
+                    <Image src={defaultUserImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
                 <Link className="flex-grow" href={'/dc'}>
                     <div className="flex justify-between w-full">
@@ -178,7 +186,7 @@ export default function Chats() {
         })
         // Sort the chatFields by time, with the newest messages at the top
         setChatFields(chatFields => {
-            return [...chatFields].sort((a, b) => new Date(b.time) - new Date(a.time));
+            return [...chatFields].sort((a, b) => b.time.getTime() - a.time.getTime());
         });
 
         // load user chats
