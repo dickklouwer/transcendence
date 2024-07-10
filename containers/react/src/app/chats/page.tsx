@@ -201,15 +201,16 @@ export default function Chats() {
         chatField.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    console.log('Get user data');
     if (!user)
         console.log('User: none');
     else
-        console.log('intra_user_id: ', user.intra_user_id);
-
+        console.log('User: ', user);
+    console.log('Get user chats');
     if (!userChats)
         console.log('User Chats: none');
     else
-        console.log('User Chats: ', userChats.titel);
+        console.log('User Chats: ', userChats);
 
 
     return (

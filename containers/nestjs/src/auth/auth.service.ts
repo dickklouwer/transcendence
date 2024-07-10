@@ -4,14 +4,14 @@ import axios from 'axios';
 import { users } from '../../drizzle/schema';
 
 export type NewUser = typeof users.$inferInsert;
-export type userChats = {
+export type UserChats = {
   messageId: number;
   type: string;
   title: string;
   image: string;
   lastMessage: string;
-  time: string;
-  unreadMessages: string;
+  time: Date;
+  unreadMessages: number;
 };
 
 @Injectable()

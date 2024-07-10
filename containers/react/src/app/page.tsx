@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { SessionProvider } from 'next-auth/react';
+import { NewUser, UserChats } from '../../../nestjs/src/auth/auth.service';
 
-export async function fetchProfile(token : string | null): Promise<any> {    
+export async function fetchProfile(token : string | null): Promise<NewUser> {
   const profile = await fetch('api/profile', {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -19,7 +20,7 @@ export async function fetchProfile(token : string | null): Promise<any> {
   throw `Unauthorized ${user.statusCode}`;
 }
 
-export async function fetchChats(token : string | null): Promise<any> {
+export async function fetchChats(token : string | null): Promise<UserChats[]> {
   const messages = await fetch('api/chats', {
     headers: {
       Authorization: `Bearer ${token}`,

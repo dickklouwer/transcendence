@@ -2,8 +2,8 @@ import { Injectable, Inject } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../../drizzle/schema';
 import { users, messages } from '../../drizzle/schema';
-import { NewUser, userChats } from '../auth/auth.service';
-import { eq } from 'drizzle-orm';
+import { NewUser, UserChats } from '../auth/auth.service';
+import { eq, or } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
@@ -41,28 +41,46 @@ export class DbService {
     }
   }
 
-  async getChatsFromDataBase(jwtToken: string): Promise<userChats | null> {
+  async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
+    const result: UserChats[] = [];
+
     try {
-      console.log('in function getChatsFromDataBase');
+      console.log('In function getChatsFromDataBase');
       const user = await this.getUserFromDataBase(jwtToken);
       if (user) {
-        if (!user.intra_user_id) console.log('id: none');
+        console.log('user: ', user);
       } else {
         console.log('user: none');
       }
       const userMessages = await this.drizzleService
         .select()
         .from(messages)
-        .where(eq(messages.sender_id, user.intra_user_id));
+        .where(
+          or(
+            eq(messages.sender_id, user.intra_user_id),
+            eq(messages.receiver_id, user.intra_user_id),
+          ),
+        );
       if (userMessages) {
         console.log('userMessages: ', userMessages);
       } else {
         console.log('userMessages: none');
       }
 
-      let result: userChats;
-      result.lastMessage = userMessages[0].message;
-      // fill result with data
+      for (let i = 0; i < userMessages.length; i++) {
+        const message = userMessages[i];
+        result.push({
+          messageId: message.message_id,
+          type: 'dm',
+          title: user.user_name,
+          image: user.image,
+          lastMessage: message.message,
+          time: message.sent_at,
+          unreadMessages: i,
+        });
+        console.log('messages i: ', i);
+      }
+      console.log('result: ', result);
       return result;
     } catch (error) {
       console.log('userMessages:', error);
