@@ -1,5 +1,5 @@
 {
-  "id": "9d75b2ba-804f-48b6-a2e9-3e6cd0ab25e9",
+  "id": "2bad1631-dc9f-4b61-b603-88a2934b5980",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -335,7 +335,7 @@
           "name": "sender_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "receiver_id": {
           "name": "receiver_id",
@@ -375,6 +375,34 @@
           ],
           "columnsTo": [
             "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "messages_receiver_id_users_intra_user_id_fk": {
+          "name": "messages_receiver_id_users_intra_user_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "users",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "receiver_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "messages_group_chat_id_group_chats_group_chat_id_fk": {
+          "name": "messages_group_chat_id_group_chats_group_chat_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "group_chats",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "group_chat_id"
+          ],
+          "columnsTo": [
+            "group_chat_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

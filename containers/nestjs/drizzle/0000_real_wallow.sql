@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "pong"."message_status" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."messages" (
 	"message_id" serial PRIMARY KEY NOT NULL,
-	"sender_id" integer NOT NULL,
+	"sender_id" integer,
 	"receiver_id" integer,
 	"group_chat_id" integer,
 	"message" text NOT NULL,
@@ -111,6 +111,18 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "pong"."messages" ADD CONSTRAINT "messages_sender_id_users_intra_user_id_fk" FOREIGN KEY ("sender_id") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pong"."messages" ADD CONSTRAINT "messages_receiver_id_users_intra_user_id_fk" FOREIGN KEY ("receiver_id") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pong"."messages" ADD CONSTRAINT "messages_group_chat_id_group_chats_group_chat_id_fk" FOREIGN KEY ("group_chat_id") REFERENCES "pong"."group_chats"("group_chat_id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

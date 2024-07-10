@@ -24,7 +24,7 @@ export const users = mySchema.table('users', {
   nick_name: text('nick_name').default(null),
   token: text('token').default(null),
   email: text('email').notNull().unique(),
-  password: text('password').default(null), // hash it!
+  password: text('password').default(null),
   state: user_state('state').notNull().default('Online'),
   image: text('image_url'),
 });
@@ -68,11 +68,11 @@ export const groupChatsUsers = mySchema.table('group_chats_users', {
 
 export const messages = mySchema.table('messages', {
   message_id: serial('message_id').primaryKey(),
-  sender_id: integer('sender_id')
-    .references(() => users.intra_user_id)
-    .notNull(),
-  receiver_id: integer('receiver_id'),
-  group_chat_id: integer('group_chat_id'),
+  sender_id: integer('sender_id').references(() => users.intra_user_id),
+  receiver_id: integer('receiver_id').references(() => users.intra_user_id),
+  group_chat_id: integer('group_chat_id').references(
+    () => groupChats.group_chat_id,
+  ),
   message: text('message').notNull(),
   sent_at: timestamp('sent_at').defaultNow(),
 });
