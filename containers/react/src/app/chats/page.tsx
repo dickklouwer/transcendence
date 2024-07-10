@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
+import {UserChats} from '../../../../nestjs/src/auth/auth.service';
 
 /* notes for showing inbox
 
@@ -74,46 +75,6 @@ custom functions:
 
 */
 
-interface TchatFields {
-    description: string;
-    lastMessage: string;
-    time: Date;
-    unreadMessages: string;
-    type: string;
-}
-
-// Initial chat data
-const initialChatFields = [
-    {
-        description: "Username 1",
-        lastMessage: "Last message",
-        time: new Date(Number(new Date().getTime()) - 60000) as any, // 1 minute ago
-        unreadMessages: "1",
-        type: "dm"
-    },
-    {
-        description: "Groupname 1",
-        lastMessage: "This is a very long message that does not fit on a small screen therefore is not readable!",
-        time: new Date(Number(new Date().getTime()) - 86400000), // 1 day ago
-        unreadMessages: "3",
-        type: "gm"
-    },
-    {
-        description: "Username 2",
-        lastMessage: "Last message",
-        time: new Date(Number(new Date().getTime()) - 172800000), // 2 days ago
-        unreadMessages: "",
-        type: "dm"
-    },
-    {
-        description: "Username 3",
-        lastMessage: "Last message",
-        time: new Date(Number(new Date().getTime()) - 259200000), // 3 days ago
-        unreadMessages: "",
-        type: "dm"
-    }
-];
-
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
         <div className="relative text-gray-600 focus-within:text-gray-400">
@@ -130,38 +91,41 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
     );
 }
 
-function ChatField({ chatField }: { chatField: TchatFields }) {
-    const formatTime = (time: Date) => {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
+function ChatField({ chatField }: { chatField: UserChats }) {
+    // const formatTime = (time: Date) => {
+    //     const today = new Date();
+    //     const yesterday = new Date(today);
+    //     yesterday.setDate(yesterday.getDate() - 1);
 
-        if (time.toDateString() === today.toDateString()) {
-            return time.toTimeString().slice(0, 5); // Only show the time
-        } else if (time.toDateString() === yesterday.toDateString()) {
-            return "Yesterday";
-        } else {
-            const day = time.getDate();
-            const month = time.toLocaleString('default', { month: 'short' }).toLowerCase();
-            const year = time.getFullYear();
-            return `${day}-${month}-${year}`;
-        }
-    };
+    //     if (time.toDateString() === today.toDateString()) {
+    //         return time.toTimeString().slice(0, 5); // Only show the time
+    //     } else if (time.toDateString() === yesterday.toDateString()) {
+    //         return "Yesterday";
+    //     } else {
+    //         const day = time.getDate();
+    //         const month = time.toLocaleString('default', { month: 'short' }).toLowerCase();
+    //         const year = time.getFullYear();
+    //         return `${day}-${month}-${year}`;
+    //     }
+    // };
+
+    const userImage = chatField.image ? chatField.image : defaultUserImage;
 
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing profile of ' + chatField.description)}>
-                    <Image src={defaultUserImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                <button onClick={() => alert('Showing profile of ' + chatField.title)}>
+                    <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
                 <Link className="flex-grow" href={'/dc'}>
                     <div className="flex justify-between w-full">
                         <div>
-                            <h3 className="font-bold text-left">{chatField.description}</h3>
+                            <h3 className="font-bold text-left">{chatField.title}</h3>
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
                         </div>
                         <div className="text-right">
-                            <p>{formatTime(chatField.time)}</p>
+                            {/* <p>{formatTime(chatField.time)}</p> */}
+                            <p>{chatField.time.toString().slice(11,16)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
                     </div>
@@ -173,45 +137,48 @@ function ChatField({ chatField }: { chatField: TchatFields }) {
 
 export default function Chats() {
     const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
-    const [userChats, setUserChats] = useState<any>(null);
+    const [userChats, setUserChats] = useState<UserChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
-    const [chatFields, setChatFields] = useState(initialChatFields);
 
     useEffect(() => {
         // load user data
         fetchProfile(localStorage.getItem('token'))
         .then((data) => {
-            console.log('Retrieved Profile Data: ', data);
+            console.log('Retrieved Profile Data: ');
             setUser(data);
         })
         // Sort the chatFields by time, with the newest messages at the top
-        setChatFields(chatFields => {
-            return [...chatFields].sort((a, b) => b.time.getTime() - a.time.getTime());
+        setUserChats(userChats => {
+            if (userChats) {
+                return userChats.sort((a, b) => {
+                    return b.time.getTime() - a.time.getTime();
+                });
+            }
+            return userChats;
         });
 
         // load user chats
         fetchChats(localStorage.getItem('token'))
         .then((data) => {
-            console.log('Received Chats Data: ', data);
+            console.log('Received Chats Data: ');
             setUserChats(data);
         })
     }, []);
-
-    const filteredChatFields = chatFields.filter(chatField =>
-        chatField.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     console.log('Get user data');
     if (!user)
         console.log('User: none');
     else
-        console.log('User: ', user);
+        console.log('User: availeble');
     console.log('Get user chats');
     if (!userChats)
         console.log('User Chats: none');
     else
         console.log('User Chats: ', userChats);
 
+    const filteredChatFields = userChats?.filter((chatField) => {
+        return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
+    }) ?? [];
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">

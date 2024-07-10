@@ -25,6 +25,16 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('user')
+  async getUser(
+    @Headers('authorization') intra_user_id: number,
+  ): Promise<NewUser> {
+    const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
+
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('chats')
   async getChats(
     @Headers('authorization') token: string,

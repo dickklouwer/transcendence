@@ -41,6 +41,21 @@ export class DbService {
     }
   }
 
+  async getAnyUserFromDataBase(intra_user_id: number): Promise<NewUser | null> {
+    try {
+      const user = await this.drizzleService
+        .select()
+        .from(users)
+        .where(eq(users.intra_user_id, intra_user_id));
+
+      console.log('User from id: ', user);
+      return user[0];
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
   async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
     const result: UserChats[] = [];
 
@@ -48,11 +63,11 @@ export class DbService {
       console.log('In function getChatsFromDataBase');
       const user = await this.getUserFromDataBase(jwtToken);
       if (user) {
-        console.log('user: ', user);
+        console.log('user: availeble');
       } else {
         console.log('user: none');
       }
-      const userMessages = await this.drizzleService
+      const dbMessages = await this.drizzleService
         .select()
         .from(messages)
         .where(
@@ -61,24 +76,63 @@ export class DbService {
             eq(messages.receiver_id, user.intra_user_id),
           ),
         );
-      if (userMessages) {
-        console.log('userMessages: ', userMessages);
+      if (dbMessages) {
+        console.log('userMessages: availeble');
       } else {
         console.log('userMessages: none');
       }
 
-      for (let i = 0; i < userMessages.length; i++) {
-        const message = userMessages[i];
-        result.push({
-          messageId: message.message_id,
-          type: 'dm',
-          title: user.user_name,
-          image: user.image,
-          lastMessage: message.message,
-          time: message.sent_at,
-          unreadMessages: i,
-        });
-        console.log('messages i: ', i);
+      for (let i = 0; i < dbMessages.length; i++) {
+        const message = dbMessages[i];
+        const isGroupChat = message.group_chat_id !== null;
+        const field: UserChats = {
+          messageId: 0,
+          type: '',
+          title: '',
+          image: '',
+          lastMessage: '',
+          time: new Date(),
+          unreadMessages: 0,
+        };
+
+        if (!isGroupChat) {
+          const otherUserId =
+            message.sender_id === user.intra_user_id
+              ? message.receiver_id
+              : message.sender_id;
+          const otherUser = await this.getAnyUserFromDataBase(otherUserId);
+          if (!otherUser) {
+            continue;
+          }
+
+          field.messageId = message.message_id;
+          field.type = 'dm';
+          field.title = otherUser.nick_name
+            ? otherUser.nick_name
+            : otherUser.user_name;
+          field.image = otherUser.image;
+          field.lastMessage = message.message;
+          field.time = message.sent_at;
+          field.unreadMessages = 0;
+        }
+        if (isGroupChat) {
+          const groupChat = await this.drizzleService
+            .select()
+            .from(schema.groupChats)
+            .where(eq(schema.groupChats.group_chat_id, message.group_chat_id));
+          if (!groupChat) {
+            continue;
+          }
+
+          field.messageId = message.message_id;
+          field.type = 'gm';
+          field.title = groupChat[0].group_name;
+          field.image = groupChat[0].group_image;
+          field.lastMessage = message.message;
+          field.time = message.sent_at;
+          field.unreadMessages = 0;
+        }
+        result.push(field);
       }
       console.log('result: ', result);
       return result;
