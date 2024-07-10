@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchProfile, FunctionRouter } from '@/app/page';
+import { fetchProfile, fetchChats } from '@/app/page';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -165,6 +165,7 @@ function ChatField({ chatField}: { chatField: JSON }) {
 
 export default function Chats() {
     const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
+    const [userChats, setUserChats] = useState<any>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [chatFields, setChatFields] = useState(initialChatFields);
 
@@ -172,13 +173,20 @@ export default function Chats() {
         // load user data
         fetchProfile(localStorage.getItem('token'))
         .then((data) => {
-            console.log('Retrieved Data: ', data);
+            console.log('Retrieved Profile Data: ', data);
             setUser(data);
         })
         // Sort the chatFields by time, with the newest messages at the top
         setChatFields(chatFields => {
             return [...chatFields].sort((a, b) => new Date(b.time) - new Date(a.time));
         });
+
+        // load user chats
+        fetchChats(localStorage.getItem('token'))
+        .then((data) => {
+            console.log('Received Chats Data: ', data);
+            setUserChats(data);
+        })
     }, []);
 
     const filteredChatFields = chatFields.filter(chatField =>
@@ -189,6 +197,12 @@ export default function Chats() {
         console.log('User: none');
     else
         console.log('intra_user_id: ', user.intra_user_id);
+
+    if (!userChats)
+        console.log('User Chats: none');
+    else
+        console.log('User Chats: ', userChats.titel);
+
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">

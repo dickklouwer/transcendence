@@ -19,6 +19,22 @@ export async function fetchProfile(token : string | null): Promise<any> {
   throw `Unauthorized ${user.statusCode}`;
 }
 
+export async function fetchChats(token : string | null): Promise<any> {
+  const messages = await fetch('api/chats', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  .catch((error) => {
+    throw `Unauthorized ${error}`;
+  });
+  const chats = await messages.json();
+  if (chats.statusCode !== 401)
+    return chats;
+  throw `Unauthorized ${chats.statusCode}`;
+}
+
 async function SetNickname( name: string ): Promise<any> {
   const nickname = await fetch('/auth/setNickname', {
     method: 'POST',
@@ -34,6 +50,8 @@ async function SetNickname( name: string ): Promise<any> {
     return user;
   throw `Unauthorized ${user.statusCode}`;
 }
+
+
 
 /* The app function manages the state to determine which function (page) is being rendered. 
  */
