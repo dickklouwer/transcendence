@@ -1,7 +1,7 @@
 import { Controller, Get, Headers, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { NewUser } from './auth/auth.service';
+import { NewUser, userChats } from './auth/auth.service';
 import { DbService } from './db/db.service';
 
 @Controller('api')
@@ -22,5 +22,15 @@ export class AppController {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
 
     return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('chats')
+  async getChats(@Headers('authorization') token: string): Promise<userChats> {
+    const userChats = await this.dbservice.getChatsFromDataBase(
+      token.split(' ')[1],
+    );
+
+    return userChats;
   }
 }

@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../../drizzle/schema';
-import { users } from '../../drizzle/schema';
-import { NewUser } from '../auth/auth.service';
+import { users, messages } from '../../drizzle/schema';
+import { NewUser, userChats } from '../auth/auth.service';
 import { eq } from 'drizzle-orm';
 
 @Injectable()
@@ -41,5 +41,32 @@ export class DbService {
     }
   }
 
-  
+  async getChatsFromDataBase(jwtToken: string): Promise<userChats | null> {
+    try {
+      console.log('in function getChatsFromDataBase');
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (user) {
+        if (!user.intra_user_id) console.log('id: none');
+      } else {
+        console.log('user: none');
+      }
+      const userMessages = await this.drizzleService
+        .select()
+        .from(messages)
+        .where(eq(messages.sender_id, user.intra_user_id));
+      if (userMessages) {
+        console.log('userMessages: ', userMessages);
+      } else {
+        console.log('userMessages: none');
+      }
+
+      let result: userChats;
+      result.lastMessage = userMessages[0].message;
+      // fill result with data
+      return result;
+    } catch (error) {
+      console.log('userMessages:', error);
+      return null;
+    }
+  }
 }

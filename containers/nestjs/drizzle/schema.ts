@@ -90,3 +90,4 @@ export const messageStatus = mySchema.table('message_status', {
 });
 
 export const userInsert = createInsertSchema(users);
+export const messagesInsert = createInsertSchema(messages);
