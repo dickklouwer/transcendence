@@ -39,6 +39,9 @@ export class AuthService {
       grant_type: 'authorization_code',
     });
 
+    console.log('Token URL:', tokenUrl);
+    console.log('Parameters:', params.toString());
+
     try {
       const response = await axios.post(tokenUrl, params.toString(), {
         headers: {
