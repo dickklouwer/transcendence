@@ -1,150 +1,75 @@
 "use client";
 
-
-import { useState, useEffect, use } from 'react';
-
-/*  Axios is a simple library for making HTTP requests in Javascript. 
-    It connects our frontend to the backend by making us easily fetch data form APIs. 
- */
-import axios from 'axios';
-
 import { useRouter } from 'next/navigation';
-import Login from '@/pages/login';
-import Chats from '@/pages/chat/chats';
 import { SessionProvider } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { NewUser, UserChats } from '../../../nestjs/src/auth/auth.service';
 
-/*  Shows the homepage. 
- */
-function Home({ navigateToMenu }) {
-  
-  return (
-    <div className="flex justify-center items-center flex-grow">
-      <h2
-        className="text-4xl font-bold text-center cursor-pointer"
-        onClick={navigateToMenu}
-      >
-        PONG!
-      </h2>
-    </div>
-  );
+export async function fetchProfile(token : string | null): Promise<NewUser> {
+  const profile = await fetch('api/profile', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  .catch((error) => {
+    throw `Unauthorized ${error}`;
+  });
+  const user = await profile.json();
+  if (user.statusCode !== 401)
+    return user;
+  throw `Unauthorized ${user.statusCode}`;
 }
 
-function Logout( navigateToHome : any) {
-  localStorage.removeItem('token');
-  navigateToHome.call();
+export async function fetchChats(token : string | null): Promise<UserChats[]> {
+  const messages = await fetch('api/chats', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  .catch((error) => {
+    throw `Unauthorized ${error}`;
+  });
+  const chats = await messages.json();
+  if (chats.statusCode !== 401)
+    return chats;
+  throw `Unauthorized ${chats.statusCode}`;
 }
 
-/*  Shows the Menupage. 
- */
-function Menu({ navigateToHome, navigateToLogin, navigateToChat, navigateToMenu }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const router = useRouter();
-
-  return (
-  <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-  <h2 className="text-2xl font-bold text-center">Choose Your Game Mode</h2>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Single Player')}>
-    Single Player
-  </button>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => alert('Multiplayer')}>
-    Multiplayer
-  </button>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={navigateToChat}>
-    Chat
-  </button>
-  <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={() => Logout(navigateToHome)}>
-    Logout
-  </button>
-  <button className="text-blue-500 mt-4" onClick={navigateToHome}>
-    Back to Home
-  </button>
-</div>
-);
+async function SetNickname( name: string ): Promise<any> {
+  const nickname = await fetch('/auth/setNickname', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  })
+  .catch((error) => {
+    throw `Unauthorized ${error}`;
+  });
+  const user = await nickname.json();
+  if (user.statusCode !== 401)
+    return user;
+  throw `Unauthorized ${user.statusCode}`;
 }
 
-async function fetchProfile(token : string | null): Promise<number> {
-    
-    try {
-      const profile = await fetch('/auth/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
 
-      console.log('Profile: ', profile.status);
-      if (profile.status === 401)
-        throw 'Unauthorized';
-      else if (profile.status === 200)
-        return 200;
-      else
-        return profile.status;
-    } 
-    catch (error : any) {
-      console.log('Fetch Error: ', error);
-      if (error.message === 'Unauthorized') {
-        throw error;
-      } else {
-        return 500;
-      }
-    }
-}
 
 /* The app function manages the state to determine which function (page) is being rendered. 
  */
-export default function App() {
-  var defaultView = 'home'; // temporary view, set back to 'home' later
-  const [currentView, setCurrentView] = useState(defaultView);
 
-
-  const navigateToMenu = () => setCurrentView('menu');
-  const navigateToHome = () => setCurrentView('home');
-  const navigateToChat = () => setCurrentView('chat');
-  const navigateToLogin = () => setCurrentView('HomeToLogin');
-
+// NickName set flow is {fetchProfile -> check if nickname is set -> if not set navigate to set nickname page return to menu}
+export default function Home() {
   const Router = useRouter();
 
-  const token = useSearchParams().get('token');
-
-  console.log('Token: ', token);
-  
-  useEffect(() => {
-      if (token)
-        localStorage.setItem('token', token);
-      Router.push('/', { scroll: false });
-      console.log('Token: ', token);
-      fetchProfile(localStorage.getItem('token'))
-      .then((statusCode) => {
-        if (statusCode === 200) {
-          setCurrentView(defaultView);
-        } else {
-          setCurrentView('login');
-        }
-      })
-      .catch((error) => {
-        console.log('Error: ', error);
-        setCurrentView('login');
-      });
-  }, []
-  );
-
-
-
   return (
-    <div className="flex flex-col min-h-screen">
-      <header />
-      <main className="flex-grow flex items-center justify-center">
-        <SessionProvider>
-        {currentView === 'home' ? <Home navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'menu' ? <Menu navigateToHome={navigateToHome} navigateToLogin={navigateToLogin} navigateToChat={navigateToChat} navigateToMenu={navigateToChat} /> : null}
-        {currentView === 'login' ? <Home navigateToMenu={navigateToLogin} /> : null}
-        {currentView === 'chat' ? <Chats navigateToMenu={navigateToMenu} /> : null}
-        {currentView === 'HomeToLogin' ? <Login /> : null}
+    <div className="flex flex-col min-h-screen w-full h-full">
+      <SessionProvider>
+        <div className="flex justify-center items-center flex-grow">
+          <h2 className="text-4xl font-bold text-center cursor-pointer">
+            <button onClick={() => Router.push('/menu')}> PONG! </button>
+          </h2>
+        </div>
       </SessionProvider>
-      </main>
-      <footer />
     </div>
   );
 }

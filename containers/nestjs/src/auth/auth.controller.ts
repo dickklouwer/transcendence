@@ -1,11 +1,14 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { DbService } from '../db/db.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private dbservice: DbService,
+  ) {}
 
   @Get('validate')
   async validateFortyTwo(@Query('code') code: string, @Res() res: Response) {
@@ -25,16 +28,12 @@ export class AuthController {
       console.log('JWT::', jwt);
       user.token = jwt;
 
+      await this.dbservice.createUserInDataBase(user);
+
       return res.redirect(`http://localhost:4433/?token=${user.token}`);
     } catch (error) {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');
     }
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  async getProfile(req, @Res() res: Response) {
-    return res.send({ str: 'Hello World!' });
   }
 }

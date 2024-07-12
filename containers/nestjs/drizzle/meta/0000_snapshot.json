@@ -1,5 +1,5 @@
 {
-  "id": "9bad9de1-e743-4fbb-9cac-5cdd8df772c2",
+  "id": "2bad1631-dc9f-4b61-b603-88a2934b5980",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -39,6 +39,75 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "pong.games": {
+      "name": "games",
+      "schema": "pong",
+      "columns": {
+        "game_id": {
+          "name": "game_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "player1_id": {
+          "name": "player1_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "player2_id": {
+          "name": "player2_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "player1_score": {
+          "name": "player1_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "player2_score": {
+          "name": "player2_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "games_player1_id_users_intra_user_id_fk": {
+          "name": "games_player1_id_users_intra_user_id_fk",
+          "tableFrom": "games",
+          "tableTo": "users",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "player1_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "games_player2_id_users_intra_user_id_fk": {
+          "name": "games_player2_id_users_intra_user_id_fk",
+          "tableFrom": "games",
+          "tableTo": "users",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "player2_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "pong.group_chats": {
       "name": "group_chats",
       "schema": "pong",
@@ -54,6 +123,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "group_is_public": {
+          "name": "group_is_public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "group_password": {
           "name": "group_password",
@@ -190,8 +266,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "reciever_id": {
-          "name": "reciever_id",
+        "receiver_id": {
+          "name": "receiver_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -227,13 +303,13 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "message_status_reciever_id_users_intra_user_id_fk": {
-          "name": "message_status_reciever_id_users_intra_user_id_fk",
+        "message_status_receiver_id_users_intra_user_id_fk": {
+          "name": "message_status_receiver_id_users_intra_user_id_fk",
           "tableFrom": "message_status",
           "tableTo": "users",
           "schemaTo": "pong",
           "columnsFrom": [
-            "reciever_id"
+            "receiver_id"
           ],
           "columnsTo": [
             "intra_user_id"
@@ -259,10 +335,10 @@
           "name": "sender_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "reciever_id": {
-          "name": "reciever_id",
+        "receiver_id": {
+          "name": "receiver_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -302,6 +378,34 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "messages_receiver_id_users_intra_user_id_fk": {
+          "name": "messages_receiver_id_users_intra_user_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "users",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "receiver_id"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "messages_group_chat_id_group_chats_group_chat_id_fk": {
+          "name": "messages_group_chat_id_group_chats_group_chat_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "group_chats",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "group_chat_id"
+          ],
+          "columnsTo": [
+            "group_chat_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -311,11 +415,17 @@
       "name": "users",
       "schema": "pong",
       "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
         "intra_user_id": {
           "name": "intra_user_id",
           "type": "integer",
-          "primaryKey": true,
-          "notNull": true
+          "primaryKey": false,
+          "notNull": false
         },
         "user_name": {
           "name": "user_name",
@@ -343,6 +453,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
         "state": {
           "name": "state",
           "type": "user_state",
@@ -362,6 +479,13 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "users_intra_user_id_unique": {
+          "name": "users_intra_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "intra_user_id"
+          ]
+        },
         "users_user_name_unique": {
           "name": "users_user_name_unique",
           "nullsNotDistinct": false,

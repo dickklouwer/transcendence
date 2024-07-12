@@ -1,3 +1,0 @@
-// Description: Groep Message Page
-
-
