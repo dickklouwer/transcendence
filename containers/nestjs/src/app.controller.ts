@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, UseGuards } from '@nestjs/common';
+import { Controller, Get, Headers, UseGuards, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { NewUser, UserChats } from './auth/auth.service';
@@ -22,6 +22,28 @@ export class AppController {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
 
     return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('checkNickname')
+  async checkNickname(@Query('nickname') nickname: string): Promise<boolean> {
+    const isUnique = await this.dbservice.CheckNicknameIsUnque(nickname);
+
+    return isUnique;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('setNickname')
+  async setNickname(
+    @Headers('authorization') token: string,
+    @Query('nickname') nickname: string,
+  ): Promise<boolean> {
+    const response = await this.dbservice.setUserNickname(
+      token.split(' ')[1],
+      nickname,
+    );
+
+    return response;
   }
 
   @UseGuards(JwtAuthGuard)

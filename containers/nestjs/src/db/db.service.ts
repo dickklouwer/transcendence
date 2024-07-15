@@ -56,6 +56,38 @@ export class DbService {
     }
   }
 
+  async CheckNicknameIsUnque(nickname: string): Promise<boolean> {
+    try {
+      const user = await this.drizzleService
+        .select()
+        .from(users)
+        .where(eq(users.nick_name, nickname));
+
+      console.log('Nickname: ', user);
+      if (user.length === 0) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async setUserNickname(jwtToken: string, nickname: string): Promise<boolean> {
+    try {
+      await this.drizzleService
+        .update(users)
+        .set({ nick_name: nickname })
+        .where(eq(users.token, jwtToken));
+
+      console.log('Nickname Set!');
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
   async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
     const result: UserChats[] = [];
 

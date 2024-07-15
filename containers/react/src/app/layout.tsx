@@ -35,9 +35,9 @@ function LoadProfile()
     return ;
 
   return (
-    <Link href={'/profile'} className="flex items-center bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
+    <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
           <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
-          <span className="text-sm">{user.user_name}</span>
+          <span className=" px-1 text-sm">{user.user_name}</span>
       </Link>
   )
 }
