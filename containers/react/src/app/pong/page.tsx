@@ -1,10 +1,12 @@
+"use client";
+
 // PongGame.js
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:4242'); // Update to your backend URL
+const socket = io(`http://${window.location.host}`, {path: "/api/socket.io"});
 
-const PongGame = () => {
+export default function PongGame() {
 	const canvasRef = useRef(null);
 	const [rightPaddle, setRightPaddle] = useState({ y: 150 });
 	// const [leftPaddle, setLeftPaddle] = useState({ y: 150 });
@@ -95,6 +97,4 @@ const PongGame = () => {
 			</div>
 		</>
 	);
-};
-
-export default PongGame;
+}

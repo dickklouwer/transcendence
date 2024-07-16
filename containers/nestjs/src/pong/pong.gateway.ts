@@ -23,7 +23,7 @@ import {
 	vy: number;
   }
   
-  @WebSocketGateway({ cors: { origin: '*' }, credentials: true })
+  @WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, credentials: true, allowEIO3: true })
   export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer() server: Server;
 	private logger: Logger = new Logger('PongGateway');
