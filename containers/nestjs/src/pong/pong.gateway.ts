@@ -53,12 +53,12 @@ import {
 	  if (payload === 'ArrowUp') {
 		this.logger.log('ArrowUp');
 		this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-		this.server.emit('paddle', this.rightPaddle);
+		this.server.emit('rightPaddle', this.rightPaddle);
 	  }
 	  if (payload === 'ArrowDown') {
 		this.logger.log('ArrowDown');
 		this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
-		this.server.emit('paddle', this.rightPaddle);
+		this.server.emit('rightPaddle', this.rightPaddle);
 	  }
 	}
   
@@ -90,6 +90,11 @@ import {
 	startGameLoop() {
 	  this.gameInterval = setInterval(() => this.handleGameUpdate(), 16);
 	}
+
+	changeBallDirection = (paddlePosition: number) => {
+		const diff = this.ball.y - (paddlePosition + paddleHeight / 2);
+		this.ball.vy = diff / 20;
+	  };
   
 	handleGameUpdate() {
 	  // Update ball position
@@ -105,12 +110,20 @@ import {
 	  if (this.ball.x <= paddleWidth + ballSize) {
 		if (this.ball.y >= this.leftPaddle && this.ball.y <= this.leftPaddle + paddleHeight) {
 		  this.ball.vx = -this.ball.vx;
+		  this.changeBallDirection(this.leftPaddle);
 		}
 	  }
 	  if (this.ball.x >= gameWidth - paddleWidth - ballSize) {
 		if (this.ball.y >= this.rightPaddle && this.ball.y <= this.rightPaddle + paddleHeight) {
 		  this.ball.vx = -this.ball.vx;
+		  this.changeBallDirection(this.rightPaddle);
 		}
+	  }
+
+	  if (this.ball.y > (this.leftPaddle + paddleHeight)) {
+		this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 10);
+	  } else if (this.ball.y < this.leftPaddle) {
+		this.leftPaddle = Math.max(0, this.leftPaddle - 10);
 	  }
   
 	  // Ball out of bounds
@@ -120,7 +133,8 @@ import {
   
 	  // Emit updated state to clients
 	  this.server.emit('ball', this.ball);
-	  this.server.emit('paddle', this.rightPaddle);
+	  this.server.emit('rightPaddle', this.rightPaddle);
+	  this.server.emit('leftPaddle', this.leftPaddle);
 	}
   }
   

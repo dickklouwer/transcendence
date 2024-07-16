@@ -9,7 +9,7 @@ const socket = io(`http://${window.location.host}`, {path: "/api/socket.io"});
 export default function PongGame() {
 	const canvasRef = useRef(null);
 	const [rightPaddle, setRightPaddle] = useState({ y: 150 });
-	// const [leftPaddle, setLeftPaddle] = useState({ y: 150 });
+	const [leftPaddle, setLeftPaddle] = useState({ y: 150 });
 	const [ball, setBall] = useState({ x: 200, y: 200 });
 
 	const paddleWidth = 10;
@@ -18,7 +18,7 @@ export default function PongGame() {
 	const gameHeight = 400;
 	const ballSize = 10;
 	const borderWidth = 5;
-	const leftPaddle: number = 150;
+	// const leftPaddle: number = 150;
 
 
 	useEffect(() => {
@@ -43,8 +43,13 @@ export default function PongGame() {
 			context.fillRect(gameWidth - paddleWidth - 10, rightPaddle, paddleWidth, paddleHeight);
 		};
 
-		socket.on('paddle', (paddle) => {
+		socket.on('rightPaddle', (paddle) => {
 			setRightPaddle(paddle);
+			console.log('rightPaddle', rightPaddle);
+		});
+
+		socket.on('leftPaddle', (paddle) => {
+			setLeftPaddle(paddle);
 			console.log('rightPaddle', rightPaddle);
 		});
 
