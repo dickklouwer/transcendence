@@ -1,5 +1,6 @@
 .PHONY: up
 up:
+	cp ~/Desktop/.env .env
 	docker-compose up --build --remove-orphans
 
 .PHONY: down
