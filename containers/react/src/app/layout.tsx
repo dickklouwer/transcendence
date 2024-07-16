@@ -37,7 +37,7 @@ function LoadProfile()
   return (
     <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
           <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
-          <span className=" px-1 text-sm">{user.user_name}</span>
+          {user.nick_name === null ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{user.nick_name}</span>}
       </Link>
   )
 }

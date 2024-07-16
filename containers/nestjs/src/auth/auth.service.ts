@@ -1,4 +1,4 @@
-import { Injectable,InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { users } from '../../drizzle/schema';
@@ -27,7 +27,9 @@ export class AuthService {
     const clientSecret = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      throw new InternalServerErrorException('Client ID or Secret is not defined');
+      throw new InternalServerErrorException(
+        'Client ID or Secret is not defined',
+      );
     }
 
     const tokenUrl = 'https://api.intra.42.fr/oauth/token';
@@ -47,18 +49,21 @@ export class AuthService {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-    });
+      });
 
-    if (!response.data.access_token) {
-      throw new InternalServerErrorException('Access token not received');
+      if (!response.data.access_token) {
+        throw new InternalServerErrorException('Access token not received');
+      }
+
+      console.log('Access Token:', response.data.access_token);
+      return response.data.access_token;
+    } catch (error) {
+      console.error(
+        'Error validating code:',
+        error.response?.data || error.message,
+      );
+      throw new InternalServerErrorException('Error validating access code');
     }
-
-    console.log('Access Token:', response.data.access_token);
-    return response.data.access_token;
-  }catch (error) {
-  console.error('Error validating code:', error.response?.data || error.message);
-  throw new InternalServerErrorException('Error validating access code');
-}
   }
 
   /**

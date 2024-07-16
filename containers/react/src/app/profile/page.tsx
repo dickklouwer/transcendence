@@ -7,14 +7,14 @@ import { Dispatch, SetStateAction } from "react";
 
 type ApiResponse = boolean;
 
-const NicknameForm = ({nickname, setNickname, tempNickname, setTempNickname} : {nickname : string, setNickname: Dispatch<SetStateAction<string>>, tempNickname : string, setTempNickname: Dispatch<SetStateAction<string>>}) => {
+const NicknameForm = ({setNickname, tempNickname, setTempNickname} : {setNickname: Dispatch<SetStateAction<string>>, tempNickname : string, setTempNickname: Dispatch<SetStateAction<string>>}) => {
   const [isUnique, setIsUnique] = useState<boolean>(true);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
 
   useEffect(() => {
     const checkNickname = async () => {
-      if (nickname.trim() === '') {
+      if (tempNickname.trim() === '') {
         setIsUnique(true);
         return;
       }
