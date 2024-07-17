@@ -1,0 +1,21 @@
+/* src/app/globals.css */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply the custom font globally */
+body {
+  font-family: 'Press Start 2P', cursive;
+  background-color: black;
+  color: azure;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+html {
+  height: 100;
+}
