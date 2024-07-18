@@ -59,6 +59,9 @@ export default function PongGame() {
 		});
 
 		const handleKeyDown = (event) => {
+			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+				event.preventDefault(); // Prevent default scrolling behavior
+			}
 			if (event.key === 'ArrowUp') {
 				socket.emit('movement', 'ArrowUp');
 			}

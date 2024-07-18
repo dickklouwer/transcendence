@@ -38,7 +38,10 @@ import {
   
 	handleConnection(client: Socket) {
 	  this.logger.log(`Client connected: ${client.id}`);
+	  this.logger.log(`right paddle: ${this.rightPaddle}`);
+	  this.logger.log(`left paddle: ${this.leftPaddle}`);
 	  client.emit('paddle', this.rightPaddle);
+	  client.emit('paddle', this.leftPaddle);
 	  client.emit('ball', this.ball);
 	}
   
@@ -121,9 +124,9 @@ import {
 	  }
 
 	  if (this.ball.y > (this.leftPaddle + paddleHeight)) {
-		this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 10);
+		this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 5);
 	  } else if (this.ball.y < this.leftPaddle) {
-		this.leftPaddle = Math.max(0, this.leftPaddle - 10);
+		this.leftPaddle = Math.max(0, this.leftPaddle - 5);
 	  }
   
 	  // Ball out of bounds
