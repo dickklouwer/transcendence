@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect, ChangeEvent } from "react";
-import { fetchProfile } from "../page";
+import { fetchPost, fetchProfile } from "../page";
 import Link from 'next/link';
 import { Dispatch, SetStateAction } from "react";
 
@@ -85,6 +85,23 @@ const NicknameForm = ({setNickname, tempNickname, setTempNickname} : {setNicknam
   );
 }
 
+function createMockData() {
+  fetch('/api/createMockData', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  })
+  .then((response) => {
+    console.log('Response: ', response);
+    alert('Mock data created');
+  })
+  .catch((error) => {
+    console.log('Error: ', error);
+    alert('Error creating mock data');
+  });
+}
+
 export default function Profile() {
     const [user, setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [nickname, setNickname] = useState<string>('');
@@ -141,9 +158,14 @@ export default function Profile() {
             </div>
           </div>
         </div>
-      <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
-          Back to Menu
-        </Link>
+        <div className="flex justify-between w-full">
+          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded flex-grow mr-8" href={'/menu'}>
+            Back to Menu
+          </Link>
+          <button className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded flex-grow" onClick={() => createMockData()}>
+            Create mock data
+          </button>
+        </div>
     </div>
   );
 };

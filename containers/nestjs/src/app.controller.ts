@@ -1,4 +1,11 @@
-import { Controller, Get, Headers, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Headers,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { NewUser, UserChats } from './auth/auth.service';
@@ -66,4 +73,19 @@ export class AppController {
     );
     return userChats;
   }
+
+  @Post('createMockData')
+  async mockData(): Promise<boolean> {
+    const hardcoddedIntraId = 77718;
+    const response = await this.dbservice.mockData(hardcoddedIntraId);
+    return response;
+  }
+
+  // not working yet
+  // @Post('createMockData')
+  // async mockData(token: string): Promise<boolean> {
+  //   const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
+  //   const response = await this.dbservice.mockData(user.intra_user_id);
+  //   return response;
+  // }
 }

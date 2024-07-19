@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchProfile, fetchChats } from '@/app/page';
+import { fetchProfile, fetchGet, fetchChats } from '@/app/page';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
@@ -157,12 +157,19 @@ export default function Chats() {
             return userChats;
         });
 
-        // load user chats
+        // load user chats with fetchGet
+        // fetchGet('chats')
+        // .then((data) => {
+        //     console.log('Received Chats Data: ');
+        //     setUserChats(data);
+        // })
+
         fetchChats(localStorage.getItem('token'))
         .then((data) => {
             console.log('Received Chats Data: ');
             setUserChats(data);
         })
+
     }, []);
 
     console.log('Get user data');
