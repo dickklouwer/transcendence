@@ -12,7 +12,7 @@ export default function PongGame() {
 	const [leftPaddle, setLeftPaddle] = useState(150);
 	const [score, setScore] = useState({ left: 0, right: 0 });
 	const [ball, setBall] = useState({ x: 200, y: 200 });
-	const [isGameOver, setIsGameOver] = useState(false);
+	const [Gamestate, SetGameState] = useState("playing");
 
 	const paddleWidth = 10;
 	const paddleHeight = 100;
@@ -61,8 +61,17 @@ export default function PongGame() {
 		});
 
 		socket.on('gameover', (message) => {
-			setIsGameOver(true);
+			SetGameState("GameOver");
 			socket.emit('stop');
+		});
+		
+		socket.on('awaitPlayer', (message) => {
+			SetGameState("AwaitingPlayer");
+			socket.emit('stop');
+		});
+
+		socket.on('playersReady', (message) => {
+			SetGameState("playing");
 		});
 
 		const handleKeyDown = (event) => {
@@ -90,7 +99,7 @@ export default function PongGame() {
 	}, [ball, rightPaddle, leftPaddle, score]);
 
 	const startGame = () => {
-		setIsGameOver(false);
+		SetGameState("playing");
 		socket.emit('start');
 	};
 
@@ -98,10 +107,10 @@ export default function PongGame() {
 		socket.emit('stop');
 	};
 
-	const GameOverComponent = () => (
+	const GameStateComponent = () => (
 		<>
 			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>
-			{isGameOver && (
+			{Gamestate == "GameOver" && (
 				<div style={{
 					position: 'absolute',
 					top: 0,
@@ -122,13 +131,31 @@ export default function PongGame() {
 					</button>
 				</div>
 			)}
+			{Gamestate == "AwaitingPlayer" && (
+				<div style={{
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					width: '100%',
+					height: '100%',
+					backgroundColor: 'rgba(0, 0, 0, 0.5)',
+					color: 'white',
+					display: 'flex',
+					flexDirection: 'column', // Change to column to stack children vertically
+					justifyContent: 'center',
+					alignItems: 'center',
+					fontSize: '2rem'
+				}}>
+					<div>Awaiting Player</div>
+				</div>
+			)}
 		</>
 	);
 
 	return (
 		<div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
 			<div className="flex items-center justify-center mb-6">
-				<GameOverComponent />
+				<GameStateComponent />
 			</div>
 			<div className="flex flex-col items-center justify-center mb-6">
 				<h1>Score</h1>

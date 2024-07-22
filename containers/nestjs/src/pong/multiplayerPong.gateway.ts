@@ -33,7 +33,7 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
 	private score = { left: 0, right: 0 };
 	private gameInterval: NodeJS.Timeout;
-	// private clients: Socket[] = [];
+	private clients: Socket[] = [];
 
 	afterInit(server: Server) {
 		this.logger.log('WebSocket PongGateway initialized');
@@ -41,11 +41,19 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id}`);
+		this.logger.log(`Clients size: ${this.clients.length}`);
+		this.clients.push(client);
+		if (this.clients.length < 2) {
+			this.server.emit('awaitPlayer', 'Awaiting Player');
+			this.logger.log(`awaiting player`);
+		}
+		else if (this.clients.length == 2)
+			this.server.emit('playersReady', 'Players Ready');
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);
-		client.emit('ball', this.ball);
-		client.emit('rightPaddle', this.rightPaddle);
-		client.emit('leftPaddle', this.leftPaddle);
+		this.server.emit('ball', this.ball);
+		this.server.emit('rightPaddle', this.rightPaddle);
+		this.server.emit('leftPaddle', this.leftPaddle);
 	}
 
 	handleDisconnect(client: Socket) {
@@ -56,17 +64,63 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 	@SubscribeMessage('movement')
 	handleMovement(client: Socket, payload: string): void {
+		this.logger.log(`Client id: ${client.id}`);
+		this.logger.log(`Clientd 0 id: ${this.clients[0].id}`);
+		this.logger.log(`Clientd 1 id: ${this.clients[1].id}`);
+		if (client.id === this.clients[0].id){
+			this.logger.log(`Client payload: ${payload}`);
+			this.movePaddle('left', payload);
+		}
+		else if (client.id === this.clients[1].id){
+			this.logger.log(`Client payload: ${payload}`);
+			this.movePaddle('right', payload);
+		}
+		// if (payload === 'ArrowUp') {
+		// 	this.logger.log('ArrowUp');
+		// 	this.rightPaddle = Math.max(0, this.rightPaddle - 5);
+		// 	this.server.emit('rightPaddle', this.rightPaddle);
+		// }
+		// if (payload === 'ArrowDown') {
+		// 	this.logger.log('ArrowDown');
+		// 	this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
+		// 	this.server.emit('rightPaddle', this.rightPaddle);
+		// }
+	}
+
+	movePaddle(side: string, payload: string) :void {
+		if (side === 'left')
+			this.moveLeftPaddle(payload);
+		else if (side === 'right')
+			this.moveRightPaddle(payload);
+	}
+
+	moveLeftPaddle(payload: string) : void {
+		if (payload === 'ArrowUp') {
+			this.logger.log('ArrowUp');
+			this.leftPaddle = Math.max(0, this.leftPaddle - 5);
+			this.server.emit('leftPaddle', this.leftPaddle);
+		}
+		if (payload === 'ArrowDown') {
+			this.logger.log('ArrowDown');
+			this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 5);
+			this.server.emit('leftPaddle', this.leftPaddle);
+		}
+	}
+
+	moveRightPaddle(payload: string) : void {
 		if (payload === 'ArrowUp') {
 			this.logger.log('ArrowUp');
 			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-			client.emit('rightPaddle', this.rightPaddle);
+			this.server.emit('rightPaddle', this.rightPaddle);
 		}
 		if (payload === 'ArrowDown') {
 			this.logger.log('ArrowDown');
 			this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
-			client.emit('rightPaddle', this.rightPaddle);
+			this.server.emit('rightPaddle', this.rightPaddle);
 		}
 	}
+
+			
 
 	@SubscribeMessage('start')
 	handleStart(client: Socket): void {
@@ -127,34 +181,27 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 			}
 		}
 
-		// AI for left paddle
-		if (this.ball.y > (this.leftPaddle + paddleHeight)) {
-			this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 2);
-		} else if (this.ball.y < this.leftPaddle) {
-			this.leftPaddle = Math.max(0, this.leftPaddle - 2);
-		}
-
 		// Ball out of bounds
 		if (this.ball.x <= 0 || this.ball.x >= gameWidth) {
 			if (this.ball.x <= 0) {
 				this.score.right += 1;
-				client.emit('score', { left: this.score.left, right: this.score.right });
+				this.server.emit('score', { left: this.score.left, right: this.score.right });
 			}
 			else if (this.ball.x >= gameWidth) {
 				this.score.left += 1;
-				client.emit('score', { left: this.score.left, right: this.score.right });
+				this.server.emit('score', { left: this.score.left, right: this.score.right });
 			}
 			if (this.score.left == WinScore || this.score.right == WinScore) {
 				this.score = { left: 0, right: 0 };
-				client.emit('score', { left: 0, right: 0 });
-				client.emit('gameover', 'Game Over');
+				this.server.emit('score', { left: 0, right: 0 });
+				this.server.emit('gameover', 'Game Over');
 			}
 			this.resetGame();
 		}
 
 		// Emit updated state to clients
-		client.emit('ball', this.ball);
-		client.emit('rightPaddle', this.rightPaddle);
-		client.emit('leftPaddle', this.leftPaddle);
+		this.server.emit('ball', this.ball);
+		this.server.emit('rightPaddle', this.rightPaddle);
+		this.server.emit('leftPaddle', this.leftPaddle);
 	}
 }
