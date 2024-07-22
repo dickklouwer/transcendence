@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import type { NewUser } from "@repo/db";
+import type { NewUser } from "@repo/db/src";
 
 export type UserChats = {
   messageId: number;
