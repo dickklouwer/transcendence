@@ -1,0 +1,30 @@
+{
+  "name": "@repo/db",
+  "version": "0.0.0",
+  "scripts": {
+    "generate":	"drizzle-kit generate",
+    "migrate":	"drizzle-kit migrate",
+    "update":	  "drizzle-kit generate && drizzle-kit migrate",
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
+  "exports": {
+    "./schema": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "drizzle-kit": "^0.23.0"
+  },
+  "peerDependencies": {
+    "typescript": "latest"
+  },
+  "author": "Trancendence",
+  "dependencies": {
+    "drizzle-orm": "^0.32.0",
+    "drizzle-zod": "^0.5.1",
+    "postgres": "^3.4.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

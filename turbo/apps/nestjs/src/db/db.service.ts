@@ -1,18 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../drizzle/schema';
-import { users, messages } from '../../drizzle/schema';
-import { NewUser, UserChats } from '../auth/auth.service';
+import * as schema from '@repo/db/src';
+import { users, messages, db } from '@repo/db/src';
+import type { NewUser, UserChats } from '@repo/db/src';
 import { eq, or } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
   constructor(
-    @Inject('DB') private drizzleService: PostgresJsDatabase<typeof schema>,
   ) {}
   async createUserInDataBase(user: NewUser): Promise<boolean> {
     try {
-      await this.drizzleService
+      await db
         .insert(users)
         .values(user)
         .onConflictDoUpdate({
@@ -28,7 +26,7 @@ export class DbService {
 
   async getUserFromDataBase(jwtToken: string): Promise<NewUser | null> {
     try {
-      const user = await this.drizzleService
+      const user = await db
         .select()
         .from(users)
         .where(eq(users.token, jwtToken));
@@ -43,7 +41,7 @@ export class DbService {
 
   async getAnyUserFromDataBase(intra_user_id: number): Promise<NewUser | null> {
     try {
-      const user = await this.drizzleService
+      const user = await db
         .select()
         .from(users)
         .where(eq(users.intra_user_id, intra_user_id));
@@ -58,7 +56,7 @@ export class DbService {
 
   async CheckNicknameIsUnque(nickname: string): Promise<boolean> {
     try {
-      const user = await this.drizzleService
+      const user = await db
         .select()
         .from(users)
         .where(eq(users.nick_name, nickname));
@@ -76,7 +74,7 @@ export class DbService {
 
   async setUserNickname(jwtToken: string, nickname: string): Promise<boolean> {
     try {
-      await this.drizzleService
+      await db
         .update(users)
         .set({ nick_name: nickname })
         .where(eq(users.token, jwtToken));
@@ -99,7 +97,7 @@ export class DbService {
       } else {
         console.log('user: none');
       }
-      const dbMessages = await this.drizzleService
+      const dbMessages = await db
         .select()
         .from(messages)
         .where(
@@ -148,7 +146,7 @@ export class DbService {
           field.unreadMessages = 0;
         }
         if (isGroupChat) {
-          const groupChat = await this.drizzleService
+          const groupChat = await db
             .select()
             .from(schema.groupChats)
             .where(eq(schema.groupChats.group_chat_id, message.group_chat_id));

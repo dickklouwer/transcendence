@@ -1,9 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { users } from '../../drizzle/schema';
+import type { NewUser } from "@repo/db/src";
 
-export type NewUser = typeof users.$inferInsert;
 export type UserChats = {
   messageId: number;
   type: string;

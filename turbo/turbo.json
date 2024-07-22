@@ -4,7 +4,8 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["JWT_SECRET", "DATABASE_URL", "DATABASE_URL_LOCAL", "NEXT_PUBLIC_FORTY_TWO_CLIENT_ID", "NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET"]
     },
     "lint": {
       "dependsOn": ["^lint"]

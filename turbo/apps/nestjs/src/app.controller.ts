@@ -11,7 +11,7 @@ import {
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { UserChats } from './auth/auth.service';
-import type { NewUser } from './auth/auth.service';
+import type { NewUser } from '@repo/db/src';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 
