@@ -39,10 +39,13 @@
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
     "passport-oauth2": "^1.8.0",
     "postgres": "^3.4.4",
+    "qrcode": "^1.5.3",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "speakeasy": "^2.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

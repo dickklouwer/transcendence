@@ -1,7 +1,10 @@
-import { Injectable,InternalServerErrorException } from '@nestjs/common';
+import {Injectable,InternalServerErrorException, Controller, Get, Body, Post, Query, Res, Req } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { users } from '../../drizzle/schema';
+import { users } from '../../drizzle/schema'
+import { DbService } from '../db/db.service';
+import { TwoFactorAuthenticationService } from './2fa.service';
+import { User } from './user.interface';
 
 export type NewUser = typeof users.$inferInsert;
 export type UserChats = {
@@ -16,7 +19,12 @@ export type UserChats = {
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private twoFactorAuthenticationService: TwoFactorAuthenticationService,
+    private dbService: DbService,
+  ) {}
+
   /**
    * This Method is used to validate the access code.
    * first creating an url with the access code and other required parameters
@@ -55,12 +63,36 @@ export class AuthService {
 
     console.log('Access Token:', response.data.access_token);
     return response.data.access_token;
-  }catch (error) {
-  console.error('Error validating code:', error.response?.data || error.message);
-  throw new InternalServerErrorException('Error validating access code');
-}
+    } catch (error) {
+      console.error('Error validating code:', error.response?.data || error.message);
+      throw new InternalServerErrorException('Error validating access code'); 
+    }
   }
 
+  async enableTwoFactorAuthentication(user: User) {
+    const secret = this.twoFactorAuthenticationService.generateSecret();
+    const qrCode = await this.twoFactorAuthenticationService.generateQrcode(secret.otpauthUrl);
+
+    // const user = req.user as User;
+    console.log('User:', user);
+    await this.dbService.updateUserTwoFactorSecret(user.user_id, secret.base32);
+
+    return { secret: secret.base32, qrCode };
+  }
+
+  async setTwoFactorAuthenticationEnabled(userId: number, enabled: boolean) {
+    await this.dbService.setUserTwoFactorEnabled(userId, enabled);
+  }
+
+  async verifyTwoFactorAuthentication(user: User, token: string) {
+    const userSecret = user.two_factor_secret;
+    
+    if (!userSecret) {
+      throw new InternalServerErrorException('2FA secret not found');
+    }
+
+    return this.twoFactorAuthenticationService.verifytoken(userSecret, token);
+  }
   /**
    * This Method is used to validate the access token.
    * @returns {Promise<any>} - Returns the user profile
@@ -79,11 +111,12 @@ export class AuthService {
       token: null,
       email: profile.email,
       state: 'Online',
-      image: profile.image.link,
+      image_url: profile.image.link,
     };
 
     return tmp;
   }
+  
   async CreateJWT(user: NewUser): Promise<string> {
     const jwt_arguments = {
       userEmail: user.email,

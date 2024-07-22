@@ -2,9 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { SessionProvider } from 'next-auth/react';
-import { NewUser, UserChats } from '../../../nestjs/src/auth/auth.service';
+import { User, UserChats } from '../../../nestjs/src/auth/auth.service';
 
-export async function fetchProfile(token : string | null): Promise<NewUser> {
+export async function fetchProfile(token : string | null): Promise<User> {
   const profile = await fetch('api/profile', {
     headers: {
       Authorization: `Bearer ${token}`,

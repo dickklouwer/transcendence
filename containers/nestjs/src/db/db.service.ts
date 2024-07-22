@@ -10,6 +10,31 @@ export class DbService {
   constructor(
     @Inject('DB') private drizzleService: PostgresJsDatabase<typeof schema>,
   ) {}
+
+  async setUserTwoFactorEnabled(userId: number, enabled: boolean): Promise<void> {
+    try {
+      await this.drizzleService
+        .update(users)
+        .set({ is_two_factor_enabled: enabled })
+        .where(eq(users.user_id, userId));
+      console.log('User 2FA status updated');
+    } catch (error) {
+      console.error('Error updating 2FA status:', error);
+    }
+  }
+
+  async updateUserTwoFactorSecret(userId: number, secret: string): Promise<void> {
+    try {
+      await this.drizzleService
+        .update(users)
+        .set({ two_factor_secret: secret })
+        .where(eq(users.user_id, userId));
+      console.log('User 2FA secret updated');
+    } catch (error) {
+      console.error('Error updating 2FA secret:', error);
+    }
+  }
+
   async createUserInDataBase(user: NewUser): Promise<boolean> {
     try {
       await this.drizzleService
@@ -110,7 +135,7 @@ export class DbService {
           field.title = otherUser.nick_name
             ? otherUser.nick_name
             : otherUser.user_name;
-          field.image = otherUser.image;
+          field.image = otherUser.image_url;
           field.lastMessage = message.message;
           field.time = message.sent_at;
           field.unreadMessages = 0;

@@ -60,14 +60,16 @@ CREATE TABLE IF NOT EXISTS "pong"."messages" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."users" (
 	"user_id" serial PRIMARY KEY NOT NULL,
-	"intra_user_id" integer,
+	"intra_user_id" integer NOT NULL,
 	"user_name" text NOT NULL,
 	"nick_name" text DEFAULT null,
 	"token" text DEFAULT null,
+	"two_factor_secret" text DEFAULT null,
+	"is_two_factor_enabled" boolean DEFAULT false,
 	"email" text NOT NULL,
 	"password" text DEFAULT null,
 	"state" "pong"."user_state" DEFAULT 'Online' NOT NULL,
-	"image_url" text,
+	"image_url" text DEFAULT null,
 	CONSTRAINT "users_intra_user_id_unique" UNIQUE("intra_user_id"),
 	CONSTRAINT "users_user_name_unique" UNIQUE("user_name"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")

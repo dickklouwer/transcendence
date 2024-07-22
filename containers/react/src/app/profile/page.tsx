@@ -50,6 +50,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
+      <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/2fa'}> Enable 2FA</Link>
       <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
           Back to Menu
         </Link>

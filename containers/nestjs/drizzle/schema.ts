@@ -18,15 +18,17 @@ export const user_state = mySchema.enum('user_state', [
 ]);
 
 export const users = mySchema.table('users', {
-  user_id: serial('user_id').primaryKey(),
-  intra_user_id: integer('intra_user_id').unique(),
-  user_name: text('user_name').notNull().unique(),
+  user_id: serial('user_id').primaryKey().notNull(),
+  intra_user_id: integer('intra_user_id').unique().notNull(),
+  user_name: text('user_name').unique().notNull(),
   nick_name: text('nick_name').default(null),
   token: text('token').default(null),
-  email: text('email').notNull().unique(),
+  two_factor_secret: text('two_factor_secret').default(null),
+  is_two_factor_enabled: boolean('is_two_factor_enabled').default(false),
+  email: text('email').unique().notNull(),
   password: text('password').default(null),
   state: user_state('state').notNull().default('Online'),
-  image: text('image_url'),
+  image_url: text('image_url').default(null),
 });
 
 export const friends = mySchema.table('friends', {
