@@ -1,3 +1,4 @@
+import { z } from 'zod';
 export declare const mySchema: import("drizzle-orm/pg-core").PgSchema<"pong">;
 export declare const user_state: import("drizzle-orm/pg-core").PgEnum<["Online", "Offline", "In-Game", "Idle"]>;
 export declare const users: import("drizzle-orm/pg-core").PgTableWithColumns<{
@@ -737,17 +738,17 @@ export declare const messageStatus: import("drizzle-orm/pg-core").PgTableWithCol
     };
     dialect: "pg";
 }>;
-export declare const userInsert: import("zod").ZodObject<{
-    user_id: import("zod").ZodOptional<import("zod").ZodNumber>;
-    intra_user_id: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodNumber>>;
-    user_name: import("zod").ZodString;
-    nick_name: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodString>>;
-    token: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodString>>;
-    email: import("zod").ZodString;
-    password: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodString>>;
-    state: import("zod").ZodOptional<import("zod").ZodEnum<["Online", "Offline", "In-Game", "Idle"]>>;
-    image: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodString>>;
-}, import("zod").UnknownKeysParam, import("zod").ZodTypeAny, {
+export declare const userInsert: z.ZodObject<{
+    user_id: z.ZodOptional<z.ZodNumber>;
+    intra_user_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    user_name: z.ZodString;
+    nick_name: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    token: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    email: z.ZodString;
+    password: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    state: z.ZodOptional<z.ZodEnum<["Online", "Offline", "In-Game", "Idle"]>>;
+    image: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
     user_name: string;
     email: string;
     user_id?: number | undefined;
@@ -768,14 +769,45 @@ export declare const userInsert: import("zod").ZodObject<{
     state?: "Online" | "Offline" | "In-Game" | "Idle" | undefined;
     image?: string | null | undefined;
 }>;
-export declare const messagesInsert: import("zod").ZodObject<{
-    group_chat_id: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodNumber>>;
-    message_id: import("zod").ZodOptional<import("zod").ZodNumber>;
-    sender_id: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodNumber>>;
-    receiver_id: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodNumber>>;
-    message: import("zod").ZodString;
-    sent_at: import("zod").ZodOptional<import("zod").ZodNullable<import("zod").ZodDate>>;
-}, import("zod").UnknownKeysParam, import("zod").ZodTypeAny, {
+export declare const userSelect: z.ZodObject<{
+    user_id: z.ZodNumber;
+    intra_user_id: z.ZodNullable<z.ZodNumber>;
+    user_name: z.ZodString;
+    nick_name: z.ZodNullable<z.ZodString>;
+    token: z.ZodNullable<z.ZodString>;
+    email: z.ZodString;
+    password: z.ZodNullable<z.ZodString>;
+    state: z.ZodEnum<["Online", "Offline", "In-Game", "Idle"]>;
+    image: z.ZodNullable<z.ZodString>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    user_id: number;
+    intra_user_id: number | null;
+    user_name: string;
+    nick_name: string | null;
+    token: string | null;
+    email: string;
+    password: string | null;
+    state: "Online" | "Offline" | "In-Game" | "Idle";
+    image: string | null;
+}, {
+    user_id: number;
+    intra_user_id: number | null;
+    user_name: string;
+    nick_name: string | null;
+    token: string | null;
+    email: string;
+    password: string | null;
+    state: "Online" | "Offline" | "In-Game" | "Idle";
+    image: string | null;
+}>;
+export declare const messagesInsert: z.ZodObject<{
+    group_chat_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    message_id: z.ZodOptional<z.ZodNumber>;
+    sender_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    receiver_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    message: z.ZodString;
+    sent_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
     message: string;
     group_chat_id?: number | null | undefined;
     message_id?: number | undefined;
@@ -790,5 +822,5 @@ export declare const messagesInsert: import("zod").ZodObject<{
     receiver_id?: number | null | undefined;
     sent_at?: Date | null | undefined;
 }>;
-export type NewUser = typeof users.$inferInsert;
+export type NewUser = z.infer<typeof userInsert>;
 //# sourceMappingURL=schema.d.ts.map

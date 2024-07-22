@@ -6,7 +6,9 @@ import {
   pgSchema,
   boolean,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
+
 
 export const mySchema = pgSchema('pong');
 
@@ -90,6 +92,9 @@ export const messageStatus = mySchema.table('message_status', {
 });
 
 export const userInsert = createInsertSchema(users);
+export const userSelect = createSelectSchema(users);
 export const messagesInsert = createInsertSchema(messages);
 
-export type NewUser = typeof users.$inferInsert;
+export type NewUser = z.infer<typeof userInsert>;
+
+

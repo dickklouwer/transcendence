@@ -1,5 +1,5 @@
 import type { NewUser } from './schema.ts';
-import { users, messages } from './schema.ts';
+import { users, messages, groupChats } from './schema.ts';
 declare const db: import("drizzle-orm/postgres-js").PostgresJsDatabase<Record<string, never>>;
 type UserChats = {
     messageId: number;
@@ -11,5 +11,5 @@ type UserChats = {
     unreadMessages: number;
 };
 export type { NewUser, UserChats };
-export { users, db, messages };
+export { users, db, messages, groupChats };
 //# sourceMappingURL=index.d.ts.map

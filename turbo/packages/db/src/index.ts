@@ -1,5 +1,5 @@
 import type { NewUser } from './schema.ts';
-import { users, messages } from './schema.ts';
+import { users, messages, groupChats } from './schema.ts';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres = require('postgres');
 
@@ -22,4 +22,4 @@ type UserChats = {
   };
 
 export type { NewUser, UserChats };
-export { users, db, messages };
+export { users, db, messages, groupChats };

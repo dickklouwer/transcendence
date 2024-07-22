@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import * as schema from '@repo/db/src';
-import { users, messages, db } from '@repo/db/src';
+// import * as schema from '@repo/db/src';
+import { users, messages, db, groupChats } from '@repo/db/src';
 import type { NewUser, UserChats } from '@repo/db/src';
 import { eq, or } from 'drizzle-orm';
 
