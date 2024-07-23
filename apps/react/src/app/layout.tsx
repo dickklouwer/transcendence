@@ -6,6 +6,7 @@ import { fetchProfile, fetchGet } from './page';
 import Link from 'next/link';
 import Image from 'next/image';
 import './globals.css';
+import { User } from '@repo/db';
 
 export const NicknameContext = createContext<NicknameFormProps | undefined>(undefined);
 
@@ -16,7 +17,7 @@ export interface NicknameFormProps {
 
 function LoadProfile()
 {
-  const [user , setUser] = useState<any>(null);
+  const [user , setUser] = useState<User>();
   const Router = useRouter();
   const token = useSearchParams().get('token');
   const nicknameProps : NicknameFormProps | undefined = useContext(NicknameContext);
@@ -30,9 +31,9 @@ function LoadProfile()
       localStorage.setItem('token', token);
       Router.push('/');
     }
-    fetchGet('api/profile')
-    .then((user) => {
-      setUser(user);
+    fetchGet<User>('api/profile')
+    .then((res) => {
+      setUser(res);
     })
     .catch((error) => {
       console.log('Error: ', error);

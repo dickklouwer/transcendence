@@ -11,7 +11,7 @@ import {
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { UserChats } from './auth/auth.service';
-import type { NewUser } from './auth/auth.service';
+import type { User } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 
@@ -20,7 +20,8 @@ export class AppController {
   constructor(
     private appService: AppService,
     private dbservice: DbService,
-  ) {}
+  ) {
+  }
 
   @Get()
   getHello(): string {
@@ -29,10 +30,13 @@ export class AppController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Headers('authorization') token: string): Promise<NewUser> {
-    const user: NewUser = await this.dbservice.getUserFromDataBase(
+  async getProfile(@Headers('authorization') token: string): Promise<User> {
+    const user: User | null = await this.dbservice.getUserFromDataBase(
       token.split(' ')[1],
     );
+
+    if (!user)
+      throw Error("Failed to fetch user");
 
     return user;
   }
@@ -68,8 +72,11 @@ export class AppController {
   @Get('user')
   async getUser(
     @Headers('authorization') intra_user_id: number,
-  ): Promise<NewUser> {
+  ): Promise<User> {
     const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
+
+    if (!user)
+      throw Error("Failed to fetch user");
 
     return user;
   }
@@ -82,6 +89,10 @@ export class AppController {
     const userChats = await this.dbservice.getChatsFromDataBase(
       token.split(' ')[1],
     );
+
+    if (!userChats)
+      throw Error("Failed to fetch user");
+
     return userChats;
   }
 }

@@ -28,7 +28,7 @@ export class AuthController {
       console.log('JWT::', jwt);
       user.token = jwt;
 
-      await this.dbservice.createUserInDataBase(user);
+      await this.dbservice.upsertUserInDataBase(user);
 
       return res.redirect(`http://localhost:4433/?token=${user.token}`);
     } catch (error) {

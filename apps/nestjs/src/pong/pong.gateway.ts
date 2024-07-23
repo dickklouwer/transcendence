@@ -75,7 +75,6 @@ import {
 	  if (this.gameInterval) {
 		this.logger.log('Stopping game loop');
 		clearInterval(this.gameInterval);
-		this.gameInterval = undefined;
 	  }
 	}
   

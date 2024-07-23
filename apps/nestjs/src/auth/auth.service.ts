@@ -1,9 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { users } from '../../drizzle/schema';
 
-export type NewUser = typeof users.$inferInsert;
 export type UserChats = {
   messageId: number;
   type: string;
@@ -13,6 +11,15 @@ export type UserChats = {
   time: Date;
   unreadMessages: number;
 };
+
+export type FortyTwoUser = {
+  intra_user_id: number,
+  user_name: string,
+  email: string,
+  state: 'Online',
+  image: string,
+  token: string | null
+}
 
 @Injectable()
 export class AuthService {
@@ -70,7 +77,7 @@ export class AuthService {
    * This Method is used to validate the access token.
    * @returns {Promise<any>} - Returns the user profile
    */
-  async validateToken(accessToken: string): Promise<NewUser> {
+  async validateToken(accessToken: string): Promise<FortyTwoUser> {
     const response = await axios.get('https://api.intra.42.fr/v2/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -78,18 +85,16 @@ export class AuthService {
     const profile = response.data;
     console.log(profile.image.link);
 
-    const tmp: NewUser = {
-      intra_user_id: profile.id,
-      user_name: profile.login,
-      token: null,
-      email: profile.email,
+    return {
+      intra_user_id: profile.id as number,
+      user_name: profile.login as string,
+      email: profile.email as string,
       state: 'Online',
-      image: profile.image.link,
+      image: profile.image.link as string,
+      token: null,
     };
-
-    return tmp;
   }
-  async CreateJWT(user: NewUser): Promise<string> {
+  async CreateJWT(user: FortyTwoUser): Promise<string> {
     const jwt_arguments = {
       userEmail: user.email,
       user_id: user.intra_user_id,

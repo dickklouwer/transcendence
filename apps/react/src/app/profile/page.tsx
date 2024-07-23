@@ -5,6 +5,7 @@ import { fetchGet, fetchPost } from "../page";
 import Link from "next/link";
 import { Dispatch, SetStateAction } from "react";
 import { NicknameContext, NicknameFormProps } from "../layout";
+import type { User } from "@repo/db"
 
 type ApiResponse = boolean;
 
@@ -103,7 +104,7 @@ const NicknameForm = ({
 };
 
 export default function Profile() {
-  const [user, setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
+  const [user, setUser] = useState<User>(); // This Any needs to be replaced with the correct type that we will get from the backend
   const [tempNickname, setTempNickname] = useState<string>("");
   const nicknameContext: NicknameFormProps | undefined = useContext(NicknameContext);
 
@@ -113,11 +114,11 @@ export default function Profile() {
     throw new Error("Cannot find NicknameContext");
 
   useEffect(() => {
-    fetchGet<any>("api/profile")
-      .then((newUser) => {
-        setUser(newUser);
-        if (newUser.nick_name !== null && newUser.nick_name !== undefined)
-          nicknameContext.setNickname(newUser.nick_name);
+    fetchGet<User>("api/profile")
+      .then((res) => {
+        setUser(res);
+        if (res.nick_name !== null && res.nick_name !== undefined)
+          nicknameContext.setNickname(res.nick_name);
       })
       .catch((error) => {
         console.log("Error: ", error);

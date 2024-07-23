@@ -5,9 +5,12 @@ import { AuthModule } from './auth/auth.module';
 import { DbModule } from './db/db.module';
 import { DbService } from './db/db.service';
 import { PongModule } from './pong/pong.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [AuthModule, DbModule, PongModule],
+  imports: [ConfigModule.forRoot({
+    envFilePath: '.env',
+  }), AuthModule, DbModule, PongModule],
   controllers: [AppController],
   providers: [AppService, DbService],
 })
