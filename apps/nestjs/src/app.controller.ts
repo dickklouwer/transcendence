@@ -20,8 +20,7 @@ export class AppController {
   constructor(
     private appService: AppService,
     private dbservice: DbService,
-  ) {
-  }
+  ) {}
 
   @Get()
   getHello(): string {
@@ -34,9 +33,10 @@ export class AppController {
     const user: User | null = await this.dbservice.getUserFromDataBase(
       token.split(' ')[1],
     );
-
-    if (!user)
-      throw Error("Failed to fetch user");
+    console.log('User Fetched!:', user);
+    if (!user) {
+      throw Error('Failed to fetch user');
+    }
 
     return user;
   }
@@ -75,8 +75,7 @@ export class AppController {
   ): Promise<User> {
     const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
 
-    if (!user)
-      throw Error("Failed to fetch user");
+    if (!user) throw Error('Failed to fetch user');
 
     return user;
   }
@@ -90,8 +89,7 @@ export class AppController {
       token.split(' ')[1],
     );
 
-    if (!userChats)
-      throw Error("Failed to fetch user");
+    if (!userChats) throw Error('Failed to fetch user');
 
     return userChats;
   }

@@ -12,7 +12,7 @@ services:
     ports:
       - "4242:4242"
     volumes:
-      - shared_src:/apps
+      - shared_src:/nestjs
     depends_on:
       - react 
       - db     # Ensures that the database service is started before this service
@@ -30,7 +30,7 @@ services:
     ports:
       - "2424:2424"
     volumes:
-      - shared_src:/apps
+      - shared_src:/usr/src/app
 
   nginx:
     image: nginx:latest

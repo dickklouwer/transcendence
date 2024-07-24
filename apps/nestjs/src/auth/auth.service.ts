@@ -13,13 +13,13 @@ export type UserChats = {
 };
 
 export type FortyTwoUser = {
-  intra_user_id: number,
-  user_name: string,
-  email: string,
-  state: 'Online',
-  image: string,
-  token: string | null
-}
+  intra_user_id: number;
+  user_name: string;
+  email: string;
+  state: 'Online';
+  image: string;
+  token: string | null;
+};
 
 @Injectable()
 export class AuthService {

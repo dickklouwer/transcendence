@@ -2,15 +2,17 @@
 
 // PongGame.js
 import React, { useEffect, useState, useRef } from 'react';
-import io from 'socket.io-client';
+import io  from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}`, {path: "/api/socket.io"});
+const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io" });
 
 export default function PongGame() {
 	const canvasRef = useRef(null);
-	const [rightPaddle, setRightPaddle] = useState({ y: 150 });
-	const [leftPaddle, setLeftPaddle] = useState({ y: 150 });
+	const [rightPaddle, setRightPaddle] = useState(150);
+	const [leftPaddle, setLeftPaddle] = useState(150);
+	const [score, setScore] = useState({ left: 0, right: 0 });
 	const [ball, setBall] = useState({ x: 200, y: 200 });
+	const [Gamestate, SetGameState] = useState("playing");
 
 	const paddleWidth = 10;
 	const paddleHeight = 100;
@@ -18,14 +20,12 @@ export default function PongGame() {
 	const gameHeight = 400;
 	const ballSize = 10;
 	const borderWidth = 5;
-	// const leftPaddle: number = 150;
-
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		const context = canvas.getContext('2d');
 
-		const drawGame = (context, rightPaddle, ball) => {
+		const drawGame = (context) => {
 			context.clearRect(0, 0, gameWidth, gameHeight);
 
 			// Draw ball
@@ -34,7 +34,7 @@ export default function PongGame() {
 			context.arc(ball.x, ball.y, ballSize / 2, 0, Math.PI * 2);
 			context.fill();
 
-			// Draw left paddle (static position for now)
+			// Draw left paddle
 			context.fillStyle = 'white';
 			context.fillRect(10, leftPaddle, paddleWidth, paddleHeight);
 
@@ -45,20 +45,39 @@ export default function PongGame() {
 
 		socket.on('rightPaddle', (paddle) => {
 			setRightPaddle(paddle);
-			console.log('rightPaddle', rightPaddle);
 		});
 
 		socket.on('leftPaddle', (paddle) => {
 			setLeftPaddle(paddle);
-			console.log('rightPaddle', rightPaddle);
 		});
 
 		socket.on('ball', (ball) => {
 			setBall(ball);
-			drawGame(context, rightPaddle, ball);
+			drawGame(context);
+		});
+
+		socket.on('score', (score) => {
+			setScore(score);
+		});
+
+		socket.on('gameover', (message) => {
+			SetGameState("GameOver");
+			socket.emit('stop');
+		});
+		
+		socket.on('awaitPlayer', (message) => {
+			SetGameState("AwaitingPlayer");
+			socket.emit('stop');
+		});
+
+		socket.on('playersReady', (message) => {
+			SetGameState("playing");
 		});
 
 		const handleKeyDown = (event) => {
+			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+				event.preventDefault(); // Prevent default scrolling behavior
+			}
 			if (event.key === 'ArrowUp') {
 				socket.emit('movement', 'ArrowUp');
 			}
@@ -71,12 +90,16 @@ export default function PongGame() {
 
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
-			socket.off('paddle');
+			socket.off('leftPaddle');
+			socket.off('rightPaddle');
 			socket.off('ball');
+			socket.off('score');
+			socket.off('gameover');
 		};
-	}, [rightPaddle]);
+	}, [ball, rightPaddle, leftPaddle, score]);
 
 	const startGame = () => {
+		SetGameState("playing");
 		socket.emit('start');
 	};
 
@@ -84,22 +107,80 @@ export default function PongGame() {
 		socket.emit('stop');
 	};
 
+	const GameStateComponent = () => (
+		<>
+			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>
+			{Gamestate == "GameOver" && (
+				<div style={{
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					width: '100%',
+					height: '100%',
+					backgroundColor: 'rgba(0, 0, 0, 0.5)',
+					color: 'white',
+					display: 'flex',
+					flexDirection: 'column', // Change to column to stack children vertically
+					justifyContent: 'center',
+					alignItems: 'center',
+					fontSize: '2rem'
+				}}>
+					<div>Game Over!</div>
+					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={startGame}>
+						New Game
+					</button>
+				</div>
+			)}
+			{Gamestate == "AwaitingPlayer" && (
+				<div style={{
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					width: '100%',
+					height: '100%',
+					backgroundColor: 'rgba(0, 0, 0, 0.5)',
+					color: 'white',
+					display: 'flex',
+					flexDirection: 'column', // Change to column to stack children vertically
+					justifyContent: 'center',
+					alignItems: 'center',
+					fontSize: '2rem'
+				}}>
+					<div>Awaiting Player</div>
+				</div>
+			)}
+		</>
+	);
 
 	return (
-		<>
-			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
-				<button onClick={startGame}>Start</button>
-				<button onClick={stopGame}>Stop</button>
+		<div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
+			<div className="flex items-center justify-center mb-6">
+				<GameStateComponent />
 			</div>
-			<canvas
-				ref={canvasRef}
-				width={gameWidth}
-				height={gameHeight}
-				style={{ border: `${borderWidth}px solid white` }}
-			/>
-			<div>
-				<h1>Pong Game</h1>
+			<div className="flex flex-col items-center justify-center mb-6">
+				<h1>Score</h1>
+				<h1 style={{ marginTop: '-5px' }}> {score.left} - {score.right} </h1>
 			</div>
-		</>
+			<div className="flex items-center justify-center">
+				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Computer</div>
+				<canvas
+					ref={canvasRef}
+					width={gameWidth}
+					height={gameHeight}
+					style={{ border: `${borderWidth}px solid white` }}
+				/>
+				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>Player</div>
+			</div>
+			<div className="flex items-center justify-center mb-6">
+				<div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around', width: '100%' }}>
+					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={startGame}>
+						Start
+					</button>
+					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={stopGame}>
+						Stop
+					</button>
+				</div>
+			</div>
+		</div>
 	);
 }
