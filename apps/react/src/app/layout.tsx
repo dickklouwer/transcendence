@@ -10,49 +10,52 @@ import { User } from '@repo/db';
 
 export const NicknameContext = createContext<NicknameFormProps | undefined>(undefined);
 
-export interface NicknameFormProps {
-  nickname: string; 
-  setNickname: Dispatch<SetStateAction<string>>;
+export type NicknameFormProps = {
+  nickname: string | undefined; 
+  setNickname: Dispatch<SetStateAction<string | undefined>>;
 }
 
-function LoadProfile()
+function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<string | undefined>> })
 {
   const [user , setUser] = useState<User>();
   const Router = useRouter();
-  const token = useSearchParams().get('token');
+  const searchParams = useSearchParams();
   const nicknameProps : NicknameFormProps | undefined = useContext(NicknameContext);
-
+  
+  if (!searchParams)
+    throw new Error('SearchParams is undefined');
+  
+  const token = searchParams.get('token');
+  
   if (nicknameProps === undefined)
     throw new Error('useNickname must be used within a NicknameProvider');
-
+  
   useEffect(() => {
+    console.log('token: ', token);
     if (token)
-    {
-      localStorage.setItem('token', token);
-      Router.push('/');
+      {
+        localStorage.setItem('token', token);
+      Router.push('/', { scroll: false });
     }
     fetchGet<User>('api/profile')
     .then((res) => {
       setUser(res);
+      if (res.nick_name !== null)
+        setNickname(res.nick_name);
     })
     .catch((error) => {
       console.log('Error: ', error);
       Router.push('/login', { scroll: false });
     })
-  }, [nicknameProps.nickname]);
+  }, [Router, setNickname, nicknameProps.nickname, token]);
   
   if (!user)
     return ;
-  if (nicknameProps.nickname === '' && user.nick_name !== null)
-  {
-    nicknameProps.setNickname(user.nick_name);
-  }
-
-
-  return (
+    
+    return (
       <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
           <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
-          {nicknameProps.nickname === '' ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
+          {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
       </Link>
   )
 }
@@ -60,8 +63,8 @@ function LoadProfile()
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   
-  const [nickname, setNickname] = useState<string>('');
-
+  const [nickname, setNickname] = useState<string>();
+  
   return (
     <html lang="en">
         <head>
@@ -70,8 +73,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className='relative flex-grow flex-col min-h-screen w-full'>
           <NicknameContext.Provider value={{nickname, setNickname}}>    
             <header className="text-white flex p-2  justify-between">
-              <h1 className="inline-block text-3xl">PONG!</h1>
-              <LoadProfile />
+              <Link href="/menu">
+                <h1 className="inline-block text-3xl">PONG!</h1>
+              </Link>
+              <LoadProfile setNickname={setNickname} />
             </header>
           <main className="flex-grow flex items-center justify-center min-h-[100vh]">
             {children}</main>

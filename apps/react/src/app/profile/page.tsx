@@ -14,7 +14,7 @@ const NicknameForm = ({
   tempNickname,
   setTempNickname,
 }: {
-  setNickname: Dispatch<SetStateAction<string>>;
+  setNickname: Dispatch<SetStateAction<string | undefined>>;
   tempNickname: string;
   setTempNickname: Dispatch<SetStateAction<string>>;
 }) => {
@@ -108,8 +108,6 @@ export default function Profile() {
   const [tempNickname, setTempNickname] = useState<string>("");
   const nicknameContext: NicknameFormProps | undefined = useContext(NicknameContext);
 
-  console.log("Nickname Context: ", nicknameContext);
-
   if (nicknameContext == undefined)
     throw new Error("Cannot find NicknameContext");
 
@@ -117,8 +115,6 @@ export default function Profile() {
     fetchGet<User>("api/profile")
       .then((res) => {
         setUser(res);
-        if (res.nick_name !== null && res.nick_name !== undefined)
-          nicknameContext.setNickname(res.nick_name);
       })
       .catch((error) => {
         console.log("Error: ", error);
@@ -139,7 +135,7 @@ export default function Profile() {
           className="w-24 h-24 rounded-full"
         />
         <div>
-          {nicknameContext.nickname === "" ? (
+          {nicknameContext.nickname === undefined ? (
             <h1 className="text-2xl">{user.user_name}</h1>
           ) : (
             <h1 className="text-2xl">
