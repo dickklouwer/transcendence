@@ -26,8 +26,8 @@ function LoadProfile()
       setUser(data);
     })
     .catch((error) => {
-      console.log('Error: ', error);
-      Router.push('/login', { scroll: false });
+      // console.log('Error: ', error);
+      // Router.push('/login', { scroll: false });
     })
   }, []);
 

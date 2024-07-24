@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}`, { path: "/api/socket.io" });
+const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io" });
 
 export default function PongGame() {
 	const canvasRef = useRef(null);
