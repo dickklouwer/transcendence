@@ -1,20 +1,25 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 // import * as schema from '@repo/db/src';
-import { users, messages, groupChats, createQueryClient, createDrizzleClient} from '@repo/db';
+import {
+  users,
+  messages,
+  groupChats,
+  createQueryClient,
+  createDrizzleClient,
+} from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type { User, UserChats } from '@repo/db';
 import { eq, or } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
-  db: ReturnType<typeof createDrizzleClient>
+  db: ReturnType<typeof createDrizzleClient>;
   constructor() {
-    if (!process.env.DATABASE_URL_LOCAL)
-    {
-      throw Error("Env DATABASE_URL_LOCAL is undefined")
+    if (!process.env.DATABASE_URL_LOCAL) {
+      throw Error('Env DATABASE_URL_LOCAL is undefined');
     }
 
-    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL_LOCAL))
+    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
   async upsertUserInDataBase(user: FortyTwoUser): Promise<boolean> {
     try {
@@ -28,7 +33,7 @@ export class DbService {
       console.log('User Created2!');
       return true;
     } catch (error) {
-      console.log('User Could be already Created!');
+      console.log('User Could be already Created!', error);
     }
     return false;
   }
@@ -65,7 +70,7 @@ export class DbService {
 
   async CheckNicknameIsUnque(nickname: string): Promise<boolean> {
     try {
-      const user : User[] = await this.db
+      const user: User[] = await this.db
         .select()
         .from(users)
         .where(eq(users.nick_name, nickname));
@@ -101,8 +106,7 @@ export class DbService {
     try {
       console.log('In function getChatsFromDataBase');
       const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) 
-        throw Error("Failed to fetch User!");
+      if (!user) throw Error('Failed to fetch User!');
       const dbMessages = await this.db
         .select()
         .from(messages)
@@ -112,8 +116,7 @@ export class DbService {
             eq(messages.receiver_id, user.intra_user_id),
           ),
         );
-      if (!dbMessages) 
-        throw Error("failed to fetch dbMessages");
+      if (!dbMessages) throw Error('failed to fetch dbMessages');
 
       for (let i = 0; i < dbMessages.length; i++) {
         const message = dbMessages[i];
@@ -133,8 +136,7 @@ export class DbService {
             message.sender_id === user.intra_user_id
               ? message.receiver_id
               : message.sender_id;
-              if (!otherUserId)
-                throw Error("otherUserId is Invalid");
+          if (!otherUserId) throw Error('otherUserId is Invalid');
           const otherUser = await this.getAnyUserFromDataBase(otherUserId);
           if (!otherUser) {
             continue;
@@ -154,7 +156,12 @@ export class DbService {
           const groupChat = await this.db
             .select()
             .from(groupChats)
-            .where(eq(groupChats.group_chat_id, message.group_chat_id === null ? -1 : message.group_chat_id));
+            .where(
+              eq(
+                groupChats.group_chat_id,
+                message.group_chat_id === null ? -1 : message.group_chat_id,
+              ),
+            );
           if (!groupChat) {
             continue;
           }

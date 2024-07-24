@@ -8,9 +8,14 @@ import { PongModule } from './pong/pong.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    envFilePath: '.env',
-  }), AuthModule, DbModule, PongModule],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+    }),
+    AuthModule,
+    DbModule,
+    PongModule,
+  ],
   controllers: [AppController],
   providers: [AppService, DbService],
 })
