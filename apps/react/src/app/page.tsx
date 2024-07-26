@@ -2,12 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { SessionProvider } from 'next-auth/react';
-import { NewUser, UserChats } from '../../../nestjs/src/auth/auth.service';
+import type { User, UserChats } from '@repo/db'
 
-export async function fetchProfile(token : string | null): Promise<NewUser> {
+export async function fetchProfile(token : string | null): Promise<User> {
   const profile = await fetch('api/profile', {
     headers: {
-      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,      
     },
   })
 
@@ -18,6 +19,46 @@ export async function fetchProfile(token : string | null): Promise<NewUser> {
   if (user.statusCode !== 401)
     return user;
   throw `Unauthorized ${user.statusCode}`;
+}
+
+export async function fetchGet<T> (url: string): Promise<T> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+  
+    if (response.status !== 200)
+      throw `Unauthorized ${response.status}`;
+    const data : T = await response.json();
+    return data;
+  } catch (error) {
+    throw `Fetch Error ${error}`;
+  }
+}
+
+export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(body),
+    })
+
+    if(response.status !== 200)
+      throw `Unauthorized ${response.status}`;
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw `Fetch Error ${error}`;
+  }
 }
 
 export async function fetchChats(token : string | null): Promise<UserChats[]> {
@@ -35,23 +76,6 @@ export async function fetchChats(token : string | null): Promise<UserChats[]> {
     return chats;
   throw `Unauthorized ${chats.statusCode}`;
 }
-
-async function SetNickname( name: string ): Promise<any> {
-  const nickname = await fetch('/auth/setNickname', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  })
-  .catch((error) => {
-    throw `Unauthorized ${error}`;
-  });
-  const user = await nickname.json();
-  if (user.statusCode !== 401)
-    return user;
-  throw `Unauthorized ${user.statusCode}`;
-}
-
 
 
 /* The app function manages the state to determine which function (page) is being rendered. 

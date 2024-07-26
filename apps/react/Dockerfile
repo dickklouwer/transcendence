@@ -2,12 +2,10 @@ FROM node
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY . .
 
 RUN npm install
 
-COPY . .
-
 EXPOSE 2424
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--filter=front-end"]
