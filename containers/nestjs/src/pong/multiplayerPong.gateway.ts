@@ -88,14 +88,14 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 			secondClient.join(roomId);
 
 			// Emit begin state to the room
-			this.server.to(roomId).emit('playersReady', 'Players Ready');
+			this.server.to(roomId).emit('playersReady');
 			this.server.to(roomId).emit('ball', room.ball);
 			this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
 			this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
 
 		} else {
 			// If it's the first client, just notify them to wait for another player
-			client.emit('awaitPlayer', 'Awaiting Player');
+			client.emit('awaitPlayer');
 		}
 	}
 
@@ -250,7 +250,7 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 				room.players[0].score = 0;
 				room.players[1].score = 0;
 				this.server.to(room.roomID).emit('score', { left: room.players[0].score, right: room.players[1].score });
-				this.server.to(room.roomID).emit('gameover', 'Game Over');
+				this.server.to(room.roomID).emit('gameover');
 			}
 			this.resetGame(room);
 		}

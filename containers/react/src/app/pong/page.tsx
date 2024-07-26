@@ -6,12 +6,22 @@ import io from 'socket.io-client';
 
 const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io" });
 
+interface Ball {
+	x: number;
+	y: number;
+}
+
+interface Score {
+	left: number;
+	right: number;
+}
+
 export default function PongGame() {
 	const canvasRef = useRef(null);
 	const [rightPaddle, setRightPaddle] = useState(150);
 	const [leftPaddle, setLeftPaddle] = useState(150);
-	const [score, setScore] = useState({ left: 0, right: 0 });
-	const [ball, setBall] = useState({ x: 200, y: 200 });
+	const [score, setScore] = useState<Score>({ left: 0, right: 0 });
+	const [ball, setBall] = useState<Ball>({ x: 200, y: 200 });
 	const [Gamestate, SetGameState] = useState("playing");
 
 	const paddleWidth = 10;
@@ -43,34 +53,34 @@ export default function PongGame() {
 			context.fillRect(gameWidth - paddleWidth - 10, rightPaddle, paddleWidth, paddleHeight);
 		};
 
-		socket.on('rightPaddle', (paddle) => {
+		socket.on('rightPaddle', (paddle: number) => {
 			setRightPaddle(paddle);
 		});
 
-		socket.on('leftPaddle', (paddle) => {
+		socket.on('leftPaddle', (paddle: number) => {
 			setLeftPaddle(paddle);
 		});
 
-		socket.on('ball', (ball) => {
+		socket.on('ball', (ball: Ball) => {
 			setBall(ball);
 			drawGame(context);
 		});
 
-		socket.on('score', (score) => {
+		socket.on('score', (score: Score) => {
 			setScore(score);
 		});
 
-		socket.on('gameover', (message) => {
+		socket.on('gameover', () => {
 			SetGameState("GameOver");
 			socket.emit('stop');
 		});
 		
-		socket.on('awaitPlayer', (message) => {
+		socket.on('awaitPlayer', () => {
 			SetGameState("AwaitingPlayer");
 			socket.emit('stop');
 		});
 
-		socket.on('playersReady', (message) => {
+		socket.on('playersReady', () => {
 			SetGameState("playing");
 		});
 
