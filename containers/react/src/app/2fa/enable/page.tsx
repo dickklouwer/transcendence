@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 const Enable2FA = () => {
@@ -8,15 +9,16 @@ const Enable2FA = () => {
   const [secret, setSecret] = useState(null);
   const [token, setToken] = useState('');
   const [message, setMessage] = useState('');
+  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const router = useRouter();
 
   const handleEnable2FA = async () => {
     try {
       const authToken = localStorage.getItem('token');
       if (!authToken) {
-        console.error('No token found');
+        console.error('No auth token found');
         return;
       }
-      console.log('Token found:', authToken);
 
       const response = await axios.post('http://localhost:4242/auth/2fa/enable', {}, {
         headers: {
@@ -38,15 +40,18 @@ const Enable2FA = () => {
         console.error('No auth token found');
         return;
       }
-      console.log('Auth Token found:', authToken);
-      
+
       const response = await axios.post('http://localhost:4242/auth/2fa/verify', { token }, {
         headers: {
           Authorization: `Bearer ${authToken}`
         }
       });
-      
+
       setMessage('2FA verification successful');
+      setIs2FAEnabled(true);
+      setTimeout(() => {
+        router.push('/profile'); // Redirect to profile page after a delay
+      }, 2000);
     } catch (error) {
       setMessage('Invalid 2FA token');
       console.error('Error verifying 2FA', error.response ? error.response.data : error.message);
@@ -65,7 +70,7 @@ const Enable2FA = () => {
             Enable 2FA
           </button>
         )}
-        {qrCode && (
+{qrCode && (
           <div className="mt-6">
             <p className="text-center mb-4 text-black">Scan this QR code with your 2FA app</p>
             <div className="flex justify-center">
@@ -84,7 +89,12 @@ const Enable2FA = () => {
             >
               Verify 2FA
             </button>
-            {message && <p className="text-center mt-4">{message}</p>}
+            {message && <p className="text-center mt-4 text-black">{message}</p>}
+          </div>
+        )}
+        {is2FAEnabled && (
+          <div className="mt-6">
+            <p className="text-center mb-4 text-black">2FA Enabled</p>
           </div>
         )}
       </div>
