@@ -1,5 +1,3 @@
-export type UserState = 'Online' | 'Offline' | 'In-Game' | 'Idle';
-
 export interface User {
   user_id: number;
   intra_user_id: number;

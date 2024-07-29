@@ -47,7 +47,6 @@ export class AuthController {
   @Post('2fa/enable')
   async enableTwoFactorAuthentication(@Request() req, @Res() res: Response) {
     const user = req.user as User;
-    console.log('User:', user);
     const { secret, qrCode } = await this.authService.enableTwoFactorAuthentication(user);
     res.send({ secret, qrCode });
   }
@@ -57,16 +56,17 @@ export class AuthController {
   async verifyTwoFactorAuthentication(@Request() req, @Body() body: { token: string }, @Res() res: Response) {
     console.log("Verifying 2FA Token");
     const user = req.user as User;
+    
+    console.log(user.two_factor_secret, user.is_two_factor_enabled);
   
-    console.log(user);
     const isValid = await this.authService.verifyTwoFactorAuthentication(user, body.token);
-
-    console.log(isValid, user, body.token);
+  
+    console.log(isValid, user, body.token, "2FA CODE <");
     if (isValid) {
       await this.authService.setTwoFactorAuthenticationEnabled(user.user_id, true);
       res.send({ message: '2FA verification successful' });
     } else {
-      console.log("Verifying 2FA Token");
+      console.log("Invalid 2FA Token");
       res.status(400).send({ message: 'Invalid 2FA token' });
     }
   }

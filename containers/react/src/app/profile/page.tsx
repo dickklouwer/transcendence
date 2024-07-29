@@ -18,42 +18,45 @@ export default function Profile() {
 
     if (!user)
         return <div>Loading...</div>;
-    return ( 
-      <div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
+
+    return (
+      <div className="bg-white shadow-lg rounded-lg p-6 h-full max-h-md w-full max-w-2xl">
         <div className="flex items-center space-x-4 mb-6">
-          <Image src={user.image} alt="Profile Image" width={100} height={100} className="w-24 h-24 rounded-full" />
-            <div>
-              <h1 className="text-2xl">{user.user_name}</h1>
-              <p className="text-blue-400">{user.email}</p>
-            </div>
+          <Image src={user.image_url} alt="Profile Image" width={100} height={100} className="w-24 h-24 rounded-full" />
+          <div>
+            <h1 className="text-2xl text-black">{user.user_name}</h1>
+            <p className="text-blue-400">{user.email}</p>
+          </div>
         </div>
         <div className="mb-6">
           <label className="block text-blue-400 mb-2">Custom Nickname</label>
-          <input type="text" id="nickname" className="w-full text-black p-2 border rounded" placeholder="Enter your custom nickname" maxLength={10}/>
+          <input type="text" id="nickname" className="w-full text-black p-2 border rounded" placeholder="Enter your custom nickname" maxLength={10} />
         </div>
         <div className="mb-6">
-          <h2 className="text-xl mb-4">Achievements</h2>
+          <h2 className="text-xl text-black mb-4">Achievements</h2>
           <ul className="list-disc list-inside">
-            <li>Achievement Speed Deamon</li>
-            <li>Achievement Skill Shot</li>
-            <li>Achievement Streak King</li>
+            <li className="text-black">Achievement Speed Deamon</li>
+            <li className="text-black">Achievement Skill Shot</li>
+            <li className="text-black">Achievement Streak King</li>
           </ul>
         </div>
         <div className="mb-6">
-          <h2 className="text-xl mb-4">Wins and Losses</h2>
+          <h2 className="text-xl text-black mb-4">Wins and Losses</h2>
           <div className="flex space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-lg">Wins: 10</span> {/* This 10 should be replaced with the actual number of wins */}
+              <span className="text-lg text-black">Wins: 10</span> {/* This 10 should be replaced with the actual number of wins */}
             </div>
             <div className="flex items-center space-x-2">
-             <span className="text-lg">Losses: 5</span> {/* This 5 should be replaced with the actual number of losses */}
+              <span className="text-lg text-black">Losses: 5</span> {/* This 5 should be replaced with the actual number of losses */}
             </div>
           </div>
         </div>
-      <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/2fa'}> Enable 2FA</Link>
-      <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
+        <Link className="bg-blue-500 text-white flex justify-center px-4 py-2 rounded-lg mt-4 hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
+          Enable 2FA
+        </Link>
+        <Link className="bg-blue-500 text-white flex justify-center px-4 py-2 rounded-lg mt-4 hover:bg-blue-600 transition duration-300" href={'/menu'}>
           Back to Menu
         </Link>
-    </div>
+      </div>
   );
 };
