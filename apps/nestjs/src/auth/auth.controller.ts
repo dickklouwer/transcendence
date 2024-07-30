@@ -1,6 +1,6 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { AuthService } from './auth.service';
+import { AuthService, FortyTwoUser } from './auth.service';
 import { DbService } from '../db/db.service';
 
 @Controller('auth')
@@ -35,5 +35,41 @@ export class AuthController {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');
     }
+  }
+
+  @Post('dev_validate')
+  async devValidateTranscendence(
+    @Body('username') username: string,
+    @Res() res: Response,
+  ) {
+    if (!username) {
+      return res.status(400).send('Username Undefined Authorization Failed!');
+    }
+
+    console.log('Starting code validation ...');
+
+    let uuid: number = 0;
+
+    for (let i = 0; i < username.length; i++) {
+      uuid += username.charCodeAt(i);
+    }
+
+    const user: FortyTwoUser = {
+      intra_user_id: uuid,
+      user_name: username + '_dev',
+      email: username + '@dev.com',
+      state: 'Online',
+      image:
+        'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg',
+      token: null,
+    };
+    user.token = await this.authService.CreateJWT(user);
+    console.log('JWT::', user.token);
+
+    await this.dbservice.upsertUserInDataBase(user).then((result) => {
+      if (result == false)
+        return res.status(500).send('User Could be already Created!');
+    });
+    return res.redirect(`http://localhost:4433/?token=${user.token}`);
   }
 }

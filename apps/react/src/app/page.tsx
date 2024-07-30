@@ -57,7 +57,7 @@ export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
     const data = await response.json();
     return data;
   } catch (error) {
-    throw `Fetch Error ${error}`;
+    throw 'Fetch Error: ' + error;
   }
 }
 
