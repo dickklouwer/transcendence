@@ -29,15 +29,18 @@ export class AppController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Headers('authorization') token: string): Promise<User> {
+  async getProfile(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ): Promise<User> {
     const user: User | null = await this.dbservice.getUserFromDataBase(
       token.split(' ')[1],
     );
     console.log('User Fetched!:', user);
     if (!user) {
-      throw Error('Failed to fetch user');
+      res.status(404).send("User doesn't exist");
     }
-
+    res.status(200).send(user);
     return user;
   }
 
@@ -72,11 +75,15 @@ export class AppController {
   @Get('user')
   async getUser(
     @Headers('authorization') intra_user_id: number,
+    @Res() res: Response,
   ): Promise<User> {
     const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
 
-    if (!user) throw Error('Failed to fetch user');
+    if (!user) {
+      res.status(404).send("User doesn't exist");
+    }
 
+    res.status(200).send(user);
     return user;
   }
 
