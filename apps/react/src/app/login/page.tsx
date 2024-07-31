@@ -2,7 +2,7 @@
 
 
 // import { signIn } from 'next-auth/react';
-import { signIn, signOut } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 //  { callbackUrl: 'http://localhost:2424/api/auth/signin'
 
 export default function Login({children}:{children: React.ReactNode}) {

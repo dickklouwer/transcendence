@@ -31,7 +31,6 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
     throw new Error('useNickname must be used within a NicknameProvider');
   
   useEffect(() => {
-    console.log('token: ', token);
     if (token)
       {
         localStorage.setItem('token', token);
