@@ -1,6 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
+import type { User } from '@repo/db';
+import { DbService } from '../db/db.service';
+import { TwoFactorAuthenticationService } from './2fa.service';
+import * as speakeasy from 'speakeasy';
 
 export type UserChats = {
   messageId: number;
@@ -23,7 +27,12 @@ export type FortyTwoUser = {
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private twoFactorAuthenticationService: TwoFactorAuthenticationService,
+    private dbService: DbService,
+  ) {}
+
   /**
    * This Method is used to validate the access code.
    * first creating an url with the access code and other required parameters
@@ -71,6 +80,43 @@ export class AuthService {
       );
       throw new InternalServerErrorException('Error validating access code');
     }
+  }
+
+  async enableTwoFactorAuthentication(user: User) {
+    const secret = this.twoFactorAuthenticationService.generateSecret();
+    const qrCode = await this.twoFactorAuthenticationService.generateQrcode(
+      secret.otpauthUrl,
+    );
+
+    await this.dbService.updateUserTwoFactorSecret(user.user_id, secret.base32);
+
+    return { secret: secret.base32, qrCode };
+  }
+
+  async setTwoFactorAuthenticationEnabled(userId: number, enabled: boolean) {
+    await this.dbService.setUserTwoFactorEnabled(userId, enabled);
+  }
+
+  async verifyTwoFactorAuthentication(user: User, token: string) {
+    const userSecret = user.two_factor_secret;
+    if (!userSecret) {
+      throw new InternalServerErrorException('2FA secret not found');
+    }
+
+    console.log('User Secret:', userSecret);
+    console.log('Token:', token);
+
+    // Verify the TOTP token
+    const isValid = speakeasy.totp.verify({
+      secret: userSecret,
+      encoding: 'base32',
+      token: token,
+      window: 1, // Allows a tolerance for time drift
+    });
+
+    console.log('Is Valid:', isValid);
+
+    return isValid;
   }
 
   /**

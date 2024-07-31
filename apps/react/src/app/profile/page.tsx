@@ -176,12 +176,17 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      <Link
-        className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded"
-        href={"/menu"}
-      >
-        Back to Menu
-      </Link>
-    </div>
-  );
+      {user.is_two_factor_enabled ? (
+          <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
+            2FA Enabled
+          </button>
+        ) : (
+          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
+            Enable 2FA
+          </Link>
+        )}
+        <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
+          Back to Menu
+        </Link>
+      </div>
 }

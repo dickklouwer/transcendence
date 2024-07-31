@@ -21,6 +21,37 @@ export class DbService {
 
     this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
+
+  async setUserTwoFactorEnabled(
+    userId: number,
+    enabled: boolean,
+  ): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({ is_two_factor_enabled: enabled })
+        .where(eq(users.user_id, userId));
+      console.log('User 2FA status updated');
+    } catch (error) {
+      console.error('Error updating 2FA status:', error);
+    }
+  }
+
+  async updateUserTwoFactorSecret(
+    userId: number,
+    secret: string,
+  ): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({ two_factor_secret: secret })
+        .where(eq(users.user_id, userId));
+      console.log('User 2FA secret updated');
+    } catch (error) {
+      console.error('Error updating 2FA secret:', error);
+    }
+  }
+
   async upsertUserInDataBase(user: FortyTwoUser): Promise<boolean> {
     try {
       await this.db
@@ -147,7 +178,7 @@ export class DbService {
           field.title = otherUser.nick_name
             ? otherUser.nick_name
             : otherUser.user_name;
-          field.image = otherUser.image;
+          field.image = otherUser.image_url;
           field.lastMessage = message.message;
           field.time = message.sent_at;
           field.unreadMessages = 0;

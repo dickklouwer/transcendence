@@ -1,5 +1,9 @@
 {
+<<<<<<<< HEAD:packages/db/drizzle/meta/0000_snapshot.json
   "id": "f055895e-3f72-4bd0-bad3-1547975d1965",
+========
+  "id": "20c45b16-1dfe-4484-92e2-cc51d48b6954",
+>>>>>>>> 2FA:apps/nestjs/drizzle/meta/0000_snapshot.json
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -440,6 +444,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "two_factor_secret": {
+          "name": "two_factor_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "is_two_factor_enabled": {
+          "name": "is_two_factor_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "email": {
           "name": "email",
           "type": "text",
@@ -464,7 +482,12 @@
           "name": "image_url",
           "type": "text",
           "primaryKey": false,
+<<<<<<<< HEAD:packages/db/drizzle/meta/0000_snapshot.json
           "notNull": true
+========
+          "notNull": false,
+          "default": null
+>>>>>>>> 2FA:apps/nestjs/drizzle/meta/0000_snapshot.json
         }
       },
       "indexes": {},
