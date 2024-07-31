@@ -88,8 +88,13 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/enable')
-  async enableTwoFactorAuthentication(@Request() req, @Res() res: Response) {
-    const user = req.user as User;
+  async enableTwoFactorAuthentication(
+    @Headers('authorization') JWTtoken: string,
+    @Res() res: Response,
+  ) {
+    const user: User = await this.dbservice.getUserFromDataBase(
+      JWTtoken.split(' ')[1],
+    );
     const { secret, qrCode } =
       await this.authService.enableTwoFactorAuthentication(user);
     res.send({ secret, qrCode });
