@@ -82,7 +82,7 @@ const NicknameForm = ({
           className={`w-full text-black p-2 border rounded  ${
             isUnique ? "border-green-500" : "border-red-500"
           }`}
-          maxLength={20}
+          maxLength={15}
         />
         <button
           className={` bg-green-500 hover:bg-green-700 disabled:bg-red-500 disabled:hover:bg-red-700 text-white px-2 py-2 rounded  transition-all duration-150`}
