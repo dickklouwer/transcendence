@@ -36,10 +36,10 @@ interface Player {
 	score: number;
 }
 
-@WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, credentials: true, allowEIO3: true })
-export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway({ cors: { origin: 'http://localhost:2424', namespace: 'multiplayer'}, credentials: true, allowEIO3: true })
+export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer() server: Server;
-	private logger: Logger = new Logger('PongGateway');
+	private logger: Logger = new Logger('MultiplayerPongGateway');
 	private gameInterval: NodeJS.Timeout;
 	private clients: Socket[] = [];
 	private roomIdCounter = 1;
@@ -57,11 +57,14 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	}
 
 	afterInit(server: Server) {
-		this.logger.log('WebSocket PongGateway initialized');
+		this.logger.log('WebSocket MultiplayerPongGateway initialized');
 	}
 
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id}`);
+		for (const [key, value] of this.clientRoomMap.entries()) {
+			this.logger.log(`Player: ${key}, room: ${value}`);
+		}
 		this.clients.push(client);
 
 		if (this.clients.length % 2 === 0) {
@@ -96,6 +99,7 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		} else {
 			// If it's the first client, just notify them to wait for another player
 			client.emit('awaitPlayer');
+			this.logger.log('client waiting, client length: ' + this.clients.length);
 		}
 	}
 
@@ -106,15 +110,22 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		let roomIdToDelete: string | null = null;
 		const roomId = this.clientRoomMap.get(client.id);
 
+		for (const [key, value] of this.clientRoomMap.entries()) {
+			this.logger.log(`Player: ${key}, room: ${value}`);
+		}
+		this.logger.log(`Rooms: ${roomId}`);
+		this.logger.log(`Room : ${roomId} lost a player with ${client.id} `);
 		if (roomId) {
 			const room = this.rooms.get(roomId);
 			if (room) {
-				room.players = room.players.filter(player => player.client?.id !== client.id);
-				if (room.players.length === 0) {
+				// room.players = room.players.filter(player => player.client?.id !== client.id);
+				if (room.players.length === 1) {
 					// If the room is empty, mark it for deletion
 					roomIdToDelete = roomId;
-				} else if (room.players.length === 1) {
+					this.logger.log(`Room : ${roomId} deleted!`);
+				} else if (room.players.length === 2) {
 					// Notify the remaining player that they are waiting for another player
+					this.logger.log(`Room : ${roomId} still has 1 player with id: ${room.players[0].client?.id}`);
 					room.players[0].client?.emit('awaitPlayer', 'Awaiting Player');
 				}
 			}
@@ -128,6 +139,9 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 			// Remove the client from the clients array and clientRoomMap
 			this.clients = this.clients.filter(c => c.id !== client.id);
 			this.clientRoomMap.delete(client.id);
+		}
+		else {
+			this.clients = this.clients.filter(c => c.id !== client.id);
 		}
 	}
 

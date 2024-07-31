@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io" });
+const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
 
 interface Ball {
 	x: number;
@@ -181,7 +181,7 @@ export default function PongGame() {
 				/>
 				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>Player</div>
 			</div>
-			<div className="flex items-center justify-center mb-6">
+			{/* <div className="flex items-center justify-center mb-6">
 				<div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around', width: '100%' }}>
 					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={startGame}>
 						Start
@@ -190,7 +190,7 @@ export default function PongGame() {
 						Stop
 					</button>
 				</div>
-			</div>
+			</div> */}
 		</div>
 	);
 }

@@ -24,10 +24,10 @@ interface Ball {
 	vy: number;
 }
 
-@WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, credentials: true, allowEIO3: true })
-export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway({ cors: { origin: 'http://localhost:2424', namespace: 'singleplayer' }, credentials: true, allowEIO3: true })
+export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer() server: Server;
-	private logger: Logger = new Logger('PongGateway');
+	private logger: Logger = new Logger('SingleplayerPongGateway');
 	private leftPaddle: number = 150;
 	private rightPaddle: number = 150;
 	private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
@@ -36,11 +36,11 @@ export class PongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	// private clients: Socket[] = [];
 
 	afterInit(server: Server) {
-		this.logger.log('WebSocket PongGateway initialized');
+		this.logger.log('WebSocket SingleplayerPongGateway initialized');
 	}
 
 	handleConnection(client: Socket) {
-		this.logger.log(`Client connected: ${client.id}`);
+		this.logger.log(`Client connected: ${client.id} to single player game`);
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);
 		client.emit('ball', this.ball);

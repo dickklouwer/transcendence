@@ -44,7 +44,7 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
     })
     .catch((error) => {
       console.log('Error: ', error);
-      Router.push('/login', { scroll: false });
+      // Router.push('/login', { scroll: false });
     })
   }, [Router, setNickname, nicknameProps.nickname, token]);
   
