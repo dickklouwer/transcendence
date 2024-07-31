@@ -5,8 +5,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { DbService } from '../db/db.service';
 import { TwoFactorAuthenticationService } from './2fa.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
-
 
 @Module({
   imports: [

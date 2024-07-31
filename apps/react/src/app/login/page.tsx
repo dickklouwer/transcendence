@@ -3,7 +3,6 @@
 
 // import { signIn } from 'next-auth/react';
 import { signIn } from 'next-auth/react';
-import { fetchPost } from '../page';
 import { ChangeEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 

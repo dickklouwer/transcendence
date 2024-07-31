@@ -7,6 +7,7 @@ import {
   Query,
   Request,
   Res,
+  Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { DbService } from '../db/db.service';
@@ -42,13 +43,7 @@ export class AuthController {
 
       await this.dbservice.upsertUserInDataBase(user);
 
-      if (user.is_two_factor_enabled) {
-        return res.redirect(
-          `http://localhost:4433/?token=${user.token}&2fa=true`,
-        );
-      } else {
-        return res.redirect(`http://localhost:4433/?token=${user.token}`);
-      }
+      return res.redirect(`http://localhost:4433/?token=${user.token}`);
     } catch (error) {
       console.log(error);
       res.status(500).send('Authentication Failed Please Try again');
@@ -103,12 +98,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('2fa/verify')
   async verifyTwoFactorAuthentication(
-    @Request() req,
     @Body() body: { token: string },
     @Res() res: Response,
+    @Headers('authorization') JWTtoken: string,
   ) {
     console.log('Verifying 2FA Token');
-    const user = req.user as User;
+    const user: User = await this.dbservice.getUserFromDataBase(
+      JWTtoken.split(' ')[1],
+    );
 
     console.log(user.two_factor_secret, user.is_two_factor_enabled);
 

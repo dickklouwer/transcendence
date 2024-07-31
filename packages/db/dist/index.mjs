@@ -23,6 +23,8 @@ var users = mySchema.table("users", {
   token: text("token"),
   email: text("email").notNull().unique(),
   password: text("password"),
+  two_factor_secret: text("two_factor_secret"),
+  is_two_factor_enabled: boolean("is_two_factor_enabled").default(false),
   state: user_state("state").notNull().default("Online"),
   image: text("image_url").notNull()
 });

@@ -55,30 +55,21 @@ CREATE TABLE IF NOT EXISTS "pong"."messages" (
 	"receiver_id" integer,
 	"group_chat_id" integer,
 	"message" text NOT NULL,
-	"sent_at" timestamp DEFAULT now()
+	"sent_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."users" (
 	"user_id" serial PRIMARY KEY NOT NULL,
 	"intra_user_id" integer NOT NULL,
 	"user_name" text NOT NULL,
-<<<<<<<< HEAD:packages/db/drizzle/0000_breezy_freak.sql
 	"nick_name" text,
 	"token" text,
-========
-	"nick_name" text DEFAULT null,
-	"token" text DEFAULT null,
-	"two_factor_secret" text DEFAULT null,
-	"is_two_factor_enabled" boolean DEFAULT false,
->>>>>>>> 2FA:apps/nestjs/drizzle/0000_nebulous_tombstone.sql
 	"email" text NOT NULL,
 	"password" text,
+	"two_factor_secret" text,
+	"is_two_factor_enabled" boolean DEFAULT false,
 	"state" "pong"."user_state" DEFAULT 'Online' NOT NULL,
-<<<<<<<< HEAD:packages/db/drizzle/0000_breezy_freak.sql
 	"image_url" text NOT NULL,
-========
-	"image_url" text DEFAULT null,
->>>>>>>> 2FA:apps/nestjs/drizzle/0000_nebulous_tombstone.sql
 	CONSTRAINT "users_intra_user_id_unique" UNIQUE("intra_user_id"),
 	CONSTRAINT "users_user_name_unique" UNIQUE("user_name"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")

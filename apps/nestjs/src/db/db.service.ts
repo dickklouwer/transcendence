@@ -168,7 +168,8 @@ export class DbService {
               ? message.receiver_id
               : message.sender_id;
           if (!otherUserId) throw Error('otherUserId is Invalid');
-          const otherUser = await this.getAnyUserFromDataBase(otherUserId);
+          const otherUser: User =
+            await this.getAnyUserFromDataBase(otherUserId);
           if (!otherUser) {
             continue;
           }
@@ -178,7 +179,7 @@ export class DbService {
           field.title = otherUser.nick_name
             ? otherUser.nick_name
             : otherUser.user_name;
-          field.image = otherUser.image_url;
+          field.image = otherUser.image;
           field.lastMessage = message.message;
           field.time = message.sent_at;
           field.unreadMessages = 0;

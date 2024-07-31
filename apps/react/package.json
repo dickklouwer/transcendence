@@ -21,6 +21,7 @@
     "websockets": "^0.2.0"
   },
   "devDependencies": {
+    "@repo/db": "*",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -1,11 +1,10 @@
 "use client";
 import Image from "next/image";
-import { useState, useEffect, ChangeEvent, useContext } from "react";
+import { useState, useEffect, ChangeEvent, useContext, SetStateAction, Dispatch } from "react";
 import { fetchGet, fetchPost } from "../page";
 import Link from "next/link";
-import { Dispatch, SetStateAction } from "react";
 import { NicknameContext, NicknameFormProps } from "../layout";
-import type { User } from "@repo/db"
+import { User } from "@repo/db"
 
 type ApiResponse = boolean;
 
@@ -189,4 +188,5 @@ export default function Profile() {
           Back to Menu
         </Link>
       </div>
+  )
 }
