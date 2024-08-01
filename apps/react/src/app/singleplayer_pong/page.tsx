@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}/singleplayer`, { path: "/ws/socket.io" });
+const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io/singleplayer" });
 
 interface Ball {
 	x: number;
@@ -23,7 +23,7 @@ export default function PongGame() {
 	const [score, setScore] = useState<Score>({ left: 0, right: 0 });
 	const [ball, setBall] = useState<Ball>({ x: 200, y: 200 });
 	const [Gamestate, SetGameState] = useState("playing");
-
+	
 	const paddleWidth = 10;
 	const paddleHeight = 100;
 	const gameWidth = 400;
@@ -32,11 +32,11 @@ export default function PongGame() {
 	const borderWidth = 5;
 
 	useEffect(() => {
-		console.log("url = " + window.location.host);
 		const canvas = canvasRef.current;
 		const context = canvas.getContext('2d');
-
+		
 		const drawGame = (context) => {
+			console.log("TEST");
 			context.clearRect(0, 0, gameWidth, gameHeight);
 
 			// Draw ball
@@ -75,11 +75,6 @@ export default function PongGame() {
 			SetGameState("GameOver");
 			socket.emit('stop');
 		});
-		
-		socket.on('awaitPlayer', () => {
-			SetGameState("AwaitingPlayer");
-			socket.emit('stop');
-		});
 
 		socket.on('playersReady', () => {
 			SetGameState("playing");
@@ -106,6 +101,7 @@ export default function PongGame() {
 			socket.off('ball');
 			socket.off('score');
 			socket.off('gameover');
+			socket.off('playersReady');
 		};
 	}, [ball, rightPaddle, leftPaddle, score]);
 
@@ -140,24 +136,6 @@ export default function PongGame() {
 					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={startGame}>
 						New Game
 					</button>
-				</div>
-			)}
-			{Gamestate == "AwaitingPlayer" && (
-				<div style={{
-					position: 'absolute',
-					top: 0,
-					left: 0,
-					width: '100%',
-					height: '100%',
-					backgroundColor: 'rgba(0, 0, 0, 0.5)',
-					color: 'white',
-					display: 'flex',
-					flexDirection: 'column', // Change to column to stack children vertically
-					justifyContent: 'center',
-					alignItems: 'center',
-					fontSize: '2rem'
-				}}>
-					<div>Awaiting Player</div>
 				</div>
 			)}
 		</>

@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
+const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io/multiplayer" });
 
 interface Ball {
 	x: number;
@@ -105,6 +105,8 @@ export default function PongGame() {
 			socket.off('ball');
 			socket.off('score');
 			socket.off('gameover');
+			socket.off('awaitPlayer');
+			socket.off('playersReady');
 		};
 	}, [ball, rightPaddle, leftPaddle, score]);
 

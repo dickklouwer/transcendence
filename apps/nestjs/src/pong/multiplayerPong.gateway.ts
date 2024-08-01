@@ -61,7 +61,7 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 	}
 
 	handleConnection(client: Socket) {
-		this.logger.log(`Client connected: ${client.id}`);
+		this.logger.log(`Client connected: ${client.id} to multiplayer game`);
 		for (const [key, value] of this.clientRoomMap.entries()) {
 			this.logger.log(`Player: ${key}, room: ${value}`);
 		}
