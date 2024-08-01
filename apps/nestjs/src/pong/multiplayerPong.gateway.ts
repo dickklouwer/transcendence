@@ -36,7 +36,7 @@ interface Player {
 	score: number;
 }
 
-@WebSocketGateway({ cors: { origin: 'http://localhost:2424', namespace: 'multiplayer'}, credentials: true, allowEIO3: true })
+@WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, namespace: 'multiplayer', credentials: true, allowEIO3: true })
 export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer() server: Server;
 	private logger: Logger = new Logger('MultiplayerPongGateway');
@@ -91,12 +91,13 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			secondClient.join(roomId);
 
 			// Emit begin state to the room
-			this.server.to(roomId).emit('playersReady');
 			this.server.to(roomId).emit('ball', room.ball);
 			this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
 			this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
-
-		} else {
+			this.server.to(roomId).emit('playersReady');
+			this.startGameLoop(room);
+		} 
+		else {
 			// If it's the first client, just notify them to wait for another player
 			client.emit('awaitPlayer');
 			this.logger.log('client waiting, client length: ' + this.clients.length);

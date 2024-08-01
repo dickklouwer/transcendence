@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}`, { path: "/ws/socket.io/singleplayer" });
+const socket = io(`http://${window.location.host}/singleplayer`, { path: "/ws/socket.io" });
 
 interface Ball {
 	x: number;
@@ -17,7 +17,7 @@ interface Score {
 }
 
 export default function PongGame() {
-	const canvasRef = useRef(null);
+	const canvasRef = useRef<HTMLCanvasElement>();
 	const [rightPaddle, setRightPaddle] = useState(150);
 	const [leftPaddle, setLeftPaddle] = useState(150);
 	const [score, setScore] = useState<Score>({ left: 0, right: 0 });
@@ -33,7 +33,7 @@ export default function PongGame() {
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
-		const context = canvas.getContext('2d');
+		const context = canvas!.getContext('2d');
 		
 		const drawGame = (context) => {
 			console.log("TEST");

@@ -24,7 +24,7 @@ interface Ball {
 	vy: number;
 }
 
-@WebSocketGateway({ cors: { origin: 'http://localhost:2424', namespace: 'singleplayer' }, credentials: true, allowEIO3: true })
+@WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, namespace: 'singleplayer', credentials: true, allowEIO3: true })
 export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer() server: Server;
 	private logger: Logger = new Logger('SingleplayerPongGateway');
