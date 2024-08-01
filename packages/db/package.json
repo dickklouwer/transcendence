@@ -3,7 +3,7 @@
   "license": "MIT",
   "version": "1.0.0",
   "main": "./dist/index.js",
-  "module": "dist/index.mjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
     "generate": "drizzle-kit generate",

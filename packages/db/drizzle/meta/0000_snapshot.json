@@ -1,5 +1,5 @@
 {
-  "id": "f055895e-3f72-4bd0-bad3-1547975d1965",
+  "id": "82ff85bc-2c50-439d-8407-06c3d1df3a7b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -354,7 +354,7 @@
           "name": "sent_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         }
       },
@@ -451,6 +451,19 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "two_factor_secret": {
+          "name": "two_factor_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_two_factor_enabled": {
+          "name": "is_two_factor_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "state": {
           "name": "state",

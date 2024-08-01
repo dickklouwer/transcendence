@@ -8,6 +8,12 @@ const nextConfig = {
                 hostname: 'cdn.intra.42.fr',
                 port: '',
                 pathname: '/users/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'static.vecteezy.com',
+                port: '',
+                pathname: '/**',
             }
         ],
     }

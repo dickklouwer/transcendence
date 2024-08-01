@@ -55,6 +55,8 @@ var users = mySchema.table("users", {
   token: (0, import_pg_core.text)("token"),
   email: (0, import_pg_core.text)("email").notNull().unique(),
   password: (0, import_pg_core.text)("password"),
+  two_factor_secret: (0, import_pg_core.text)("two_factor_secret"),
+  is_two_factor_enabled: (0, import_pg_core.boolean)("is_two_factor_enabled").default(false),
   state: user_state("state").notNull().default("Online"),
   image: (0, import_pg_core.text)("image_url").notNull()
 });

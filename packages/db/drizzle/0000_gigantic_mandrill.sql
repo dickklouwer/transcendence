@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "pong"."messages" (
 	"receiver_id" integer,
 	"group_chat_id" integer,
 	"message" text NOT NULL,
-	"sent_at" timestamp DEFAULT now()
+	"sent_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."users" (
@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS "pong"."users" (
 	"token" text,
 	"email" text NOT NULL,
 	"password" text,
+	"two_factor_secret" text,
+	"is_two_factor_enabled" boolean DEFAULT false,
 	"state" "pong"."user_state" DEFAULT 'Online' NOT NULL,
 	"image_url" text NOT NULL,
 	CONSTRAINT "users_intra_user_id_unique" UNIQUE("intra_user_id"),

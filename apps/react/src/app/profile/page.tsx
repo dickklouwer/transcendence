@@ -1,11 +1,10 @@
 "use client";
 import Image from "next/image";
-import { useState, useEffect, ChangeEvent, useContext } from "react";
+import { useState, useEffect, ChangeEvent, useContext, SetStateAction, Dispatch } from "react";
 import { fetchGet, fetchPost } from "../page";
 import Link from "next/link";
-import { Dispatch, SetStateAction } from "react";
 import { NicknameContext, NicknameFormProps } from "../layout";
-import type { User } from "@repo/db"
+import { User } from "@repo/db"
 
 type ApiResponse = boolean;
 
@@ -82,7 +81,7 @@ const NicknameForm = ({
           className={`w-full text-black p-2 border rounded  ${
             isUnique ? "border-green-500" : "border-red-500"
           }`}
-          maxLength={20}
+          maxLength={15}
         />
         <button
           className={` bg-green-500 hover:bg-green-700 disabled:bg-red-500 disabled:hover:bg-red-700 text-white px-2 py-2 rounded  transition-all duration-150`}
@@ -176,12 +175,18 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      <Link
-        className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded"
-        href={"/menu"}
-      >
-        Back to Menu
-      </Link>
-    </div>
-  );
+      {user.is_two_factor_enabled ? (
+          <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
+            2FA Enabled
+          </button>
+        ) : (
+          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
+            Enable 2FA
+          </Link>
+        )}
+        <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
+          Back to Menu
+        </Link>
+      </div>
+  )
 }

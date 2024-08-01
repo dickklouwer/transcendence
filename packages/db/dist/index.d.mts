@@ -119,6 +119,38 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
+        two_factor_secret: drizzle_orm_pg_core.PgColumn<{
+            name: "two_factor_secret";
+            tableName: "users";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        is_two_factor_enabled: drizzle_orm_pg_core.PgColumn<{
+            name: "is_two_factor_enabled";
+            tableName: "users";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
         state: drizzle_orm_pg_core.PgColumn<{
             name: "state";
             tableName: "users";
@@ -368,6 +400,8 @@ declare const userSelect: z.ZodObject<{
     token: z.ZodNullable<z.ZodString>;
     email: z.ZodString;
     password: z.ZodNullable<z.ZodString>;
+    two_factor_secret: z.ZodNullable<z.ZodString>;
+    is_two_factor_enabled: z.ZodNullable<z.ZodBoolean>;
     state: z.ZodEnum<["Online", "Offline", "In-Game", "Idle"]>;
     image: z.ZodString;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
@@ -378,6 +412,8 @@ declare const userSelect: z.ZodObject<{
     token: string | null;
     email: string;
     password: string | null;
+    two_factor_secret: string | null;
+    is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game" | "Idle";
     image: string;
 }, {
@@ -388,6 +424,8 @@ declare const userSelect: z.ZodObject<{
     token: string | null;
     email: string;
     password: string | null;
+    two_factor_secret: string | null;
+    is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game" | "Idle";
     image: string;
 }>;
