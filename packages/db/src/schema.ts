@@ -35,8 +35,8 @@ export const users = mySchema.table('users', {
 
 export const friends = mySchema.table('friends', {
   friend_id: serial('friend_id').primaryKey(),
-  user_id_send: integer('user_id_send').notNull(),
-  user_id_receive: integer('user_id_receive').notNull(),
+  user_id_send: integer('user_id_send').notNull().references(() => users.intra_user_id),
+  user_id_receive: integer('user_id_receive').references(() => users.intra_user_id),
   is_approved: boolean('is_approved').notNull().default(false),
 });
 
