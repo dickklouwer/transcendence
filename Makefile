@@ -2,6 +2,7 @@
 up:
 	cp ~/Desktop/.env .env
 	docker-compose up 
+
 .PHONY: build
 build:
 	cp ~/Desktop/.env .env
