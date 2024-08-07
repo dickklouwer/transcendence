@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS "pong"."group_chats" (
 	"group_chat_id" serial PRIMARY KEY NOT NULL,
 	"group_name" text NOT NULL,
 	"group_is_public" boolean DEFAULT false,
-	"group_password" text DEFAULT null,
-	"group_image" text DEFAULT null,
+	"group_password" text,
+	"group_image" text,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "pong"."group_chats_users" (
 	"is_owner" boolean DEFAULT false NOT NULL,
 	"is_admin" boolean DEFAULT false NOT NULL,
 	"is_banned" boolean DEFAULT false NOT NULL,
-	"mute_untill" timestamp DEFAULT null,
+	"mute_untill" timestamp,
 	"joined_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS "pong"."message_status" (
 	"message_status_id" serial PRIMARY KEY NOT NULL,
 	"message_id" integer NOT NULL,
 	"receiver_id" integer NOT NULL,
-	"receivet_at" timestamp DEFAULT null,
-	"read_at" timestamp DEFAULT null
+	"receivet_at" timestamp,
+	"read_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."messages" (
@@ -55,19 +55,21 @@ CREATE TABLE IF NOT EXISTS "pong"."messages" (
 	"receiver_id" integer,
 	"group_chat_id" integer,
 	"message" text NOT NULL,
-	"sent_at" timestamp DEFAULT now()
+	"sent_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."users" (
 	"user_id" serial PRIMARY KEY NOT NULL,
-	"intra_user_id" integer,
+	"intra_user_id" integer NOT NULL,
 	"user_name" text NOT NULL,
-	"nick_name" text DEFAULT null,
-	"token" text DEFAULT null,
+	"nick_name" text,
+	"token" text,
 	"email" text NOT NULL,
-	"password" text DEFAULT null,
+	"password" text,
+	"two_factor_secret" text,
+	"is_two_factor_enabled" boolean DEFAULT false,
 	"state" "pong"."user_state" DEFAULT 'Online' NOT NULL,
-	"image_url" text,
+	"image_url" text NOT NULL,
 	CONSTRAINT "users_intra_user_id_unique" UNIQUE("intra_user_id"),
 	CONSTRAINT "users_user_name_unique" UNIQUE("user_name"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")

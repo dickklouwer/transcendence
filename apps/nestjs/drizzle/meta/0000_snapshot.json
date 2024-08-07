@@ -1,5 +1,5 @@
 {
-  "id": "4b1f66af-b74b-4663-bcc9-e42af103f251",
+  "id": "82ff85bc-2c50-439d-8407-06c3d1df3a7b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -135,15 +135,13 @@
           "name": "group_password",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         },
         "group_image": {
           "name": "group_image",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -205,8 +203,7 @@
           "name": "mute_untill",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         },
         "joined_at": {
           "name": "joined_at",
@@ -276,15 +273,13 @@
           "name": "receivet_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         },
         "read_at": {
           "name": "read_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         }
       },
       "indexes": {},
@@ -359,7 +354,7 @@
           "name": "sent_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         }
       },
@@ -425,7 +420,7 @@
           "name": "intra_user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "user_name": {
           "name": "user_name",
@@ -437,15 +432,13 @@
           "name": "nick_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         },
         "token": {
           "name": "token",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": null
+          "notNull": false
         },
         "email": {
           "name": "email",
@@ -457,8 +450,20 @@
           "name": "password",
           "type": "text",
           "primaryKey": false,
+          "notNull": false
+        },
+        "two_factor_secret": {
+          "name": "two_factor_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_two_factor_enabled": {
+          "name": "is_two_factor_enabled",
+          "type": "boolean",
+          "primaryKey": false,
           "notNull": false,
-          "default": null
+          "default": false
         },
         "state": {
           "name": "state",
@@ -472,7 +477,7 @@
           "name": "image_url",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -518,6 +523,7 @@
   "schemas": {
     "pong": "pong"
   },
+  "sequences": {},
   "_meta": {
     "columns": {},
     "schemas": {},

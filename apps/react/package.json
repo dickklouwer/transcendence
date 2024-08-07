@@ -1,5 +1,5 @@
 {
-  "name": "react",
+  "name": "front-end",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@repo/db": "*",
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.1",
     "i": "^0.3.7",
@@ -20,6 +21,7 @@
     "websockets": "^0.2.0"
   },
   "devDependencies": {
+    "@repo/db": "*",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

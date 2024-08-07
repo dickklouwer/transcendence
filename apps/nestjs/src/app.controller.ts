@@ -1,15 +1,19 @@
 import {
   Controller,
   Get,
-  Post,
   Headers,
   UseGuards,
   Query,
+  Post,
+  Body,
+  Res,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { NewUser, UserChats } from './auth/auth.service';
+import { UserChats } from './auth/auth.service';
+import type { User } from '@repo/db';
 import { DbService } from './db/db.service';
+import { Response } from 'express';
 
 @Controller('api')
 export class AppController {
@@ -25,9 +29,18 @@ export class AppController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Headers('authorization') token: string): Promise<NewUser> {
-    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
-
+  async getProfile(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ): Promise<User> {
+    const user: User | null = await this.dbservice.getUserFromDataBase(
+      token.split(' ')[1],
+    );
+    console.log('User Fetched!:', user);
+    if (!user) {
+      res.status(404).send("User doesn't exist");
+    }
+    res.status(200).send(user);
     return user;
   }
 
@@ -40,26 +53,37 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('setNickname')
+  @Post('setNickname')
   async setNickname(
     @Headers('authorization') token: string,
-    @Query('nickname') nickname: string,
-  ): Promise<boolean> {
+    @Body('nickname') nickname: string,
+    @Res() res: Response,
+  ) {
+    const isUnique = await this.dbservice.CheckNicknameIsUnque(nickname);
+
+    if (!isUnique) {
+      res.status(400).send(`Nickname is not unique`);
+    }
     const response = await this.dbservice.setUserNickname(
       token.split(' ')[1],
       nickname,
     );
-
-    return response;
+    res.status(200).send(response);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('user')
   async getUser(
     @Headers('authorization') intra_user_id: number,
-  ): Promise<NewUser> {
+    @Res() res: Response,
+  ): Promise<User> {
     const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
 
+    if (!user) {
+      res.status(404).send("User doesn't exist");
+    }
+
+    res.status(200).send(user);
     return user;
   }
 
@@ -71,6 +95,9 @@ export class AppController {
     const userChats = await this.dbservice.getChatsFromDataBase(
       token.split(' ')[1],
     );
+
+    if (!userChats) throw Error('Failed to fetch user');
+
     return userChats;
   }
 

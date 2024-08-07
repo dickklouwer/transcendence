@@ -3,7 +3,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { DbService } from 'src/db/db.service';
+import { DbService } from '../db/db.service';
+import { TwoFactorAuthenticationService } from './2fa.service';
 
 @Module({
   imports: [
@@ -12,7 +13,12 @@ import { DbService } from 'src/db/db.service';
       signOptions: { expiresIn: '1w' },
     }),
   ],
-  providers: [AuthService, JwtStrategy, DbService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    DbService,
+    TwoFactorAuthenticationService,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })
