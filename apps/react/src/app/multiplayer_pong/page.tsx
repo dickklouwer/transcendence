@@ -4,6 +4,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Countdown from './countdown';
 import io from 'socket.io-client';
+import { User } from '@repo/db';
+import { fetchProfile, fetchGet } from '../page';
 
 const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
 
@@ -17,6 +19,11 @@ interface Score {
 	right: number;
 }
 
+interface userNames {
+	left: string;
+	right: string;
+}
+
 export default function PongGame() {
 	const canvasRef = useRef(null);
 	const [rightPaddle, setRightPaddle] = useState(150);
@@ -24,6 +31,9 @@ export default function PongGame() {
 	const [score, setScore] = useState<Score>({ left: 0, right: 0 });
 	const [ball, setBall] = useState<Ball>({ x: 200, y: 200 });
 	const [Gamestate, SetGameState] = useState("AwaitingPlayer");
+	const [userNames, setUserNames] = useState<userNames>({ left: '', right: '' });
+	const [user, setUser] = useState<User>();
+
 
 	const paddleWidth = 10;
 	const paddleHeight = 100;
@@ -31,6 +41,24 @@ export default function PongGame() {
 	const gameHeight = 400;
 	const ballSize = 10;
 	const borderWidth = 5;
+
+	useEffect(() => {
+		fetchGet<User>('api/profile')
+			.then((res) => {
+				setUser(res);
+				if (res.intra_user_id !== null && res.user_name !== null) {
+					console.log('User intra id:', res.intra_user_id);
+					console.log('User name:', res.user_name);
+					socket.emit('registerUser', { intra_id: res.intra_user_id, user_name: res.user_name });
+				} else {
+					console.error('Error fetching user profile:');
+				}
+			})
+			.catch((error) => {
+				// Handle fetch error
+				console.error('Error fetching user profile:', error);
+			});
+	}, []);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -75,15 +103,25 @@ export default function PongGame() {
 			SetGameState("GameOver");
 			socket.emit('stop');
 		});
-		
+
 		socket.on('awaitPlayer', () => {
 			SetGameState("AwaitingPlayer");
 			socket.emit('stop');
 		});
 
+		socket.on('leftUser', (user: string) => {
+			console.log('Left user:', user);
+			setUserNames({ ...userNames, left: user });
+		});
+
+		socket.on('rightUser', (user: string) => {
+			console.log('Right user:', user);
+			setUserNames({ ...userNames, right: user });
+		});
+
 		socket.on('playersReady', () => {
 			SetGameState("Countdown");
-			setTimeout(() => {SetGameState("Playing")}, 3000);
+			setTimeout(() => { SetGameState("Playing") }, 3000);
 		});
 
 		const handleKeyDown = (event) => {
@@ -126,8 +164,8 @@ export default function PongGame() {
 		<>
 			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>
 			{Gamestate === "Countdown" && (
-                <Countdown />
-            )}
+				<Countdown />
+			)}
 			{Gamestate == "GameOver" && (
 				<div style={{
 					position: 'absolute',
@@ -180,14 +218,14 @@ export default function PongGame() {
 				<h1 style={{ marginTop: '-5px' }}> {score.left} - {score.right} </h1>
 			</div>
 			<div className="flex items-center justify-center">
-				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Player1</div>
+				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>{userNames.left}</div>
 				<canvas
 					ref={canvasRef}
 					width={gameWidth}
 					height={gameHeight}
 					style={{ border: `${borderWidth}px solid white` }}
 				/>
-				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>Player2</div>
+				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>{userNames.right}</div>
 			</div>
 			{/* <div className="flex items-center justify-center mb-6">
 				<div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around', width: '100%' }}>

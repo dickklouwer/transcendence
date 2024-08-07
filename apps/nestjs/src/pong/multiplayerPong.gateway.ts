@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { subscribe } from 'diagnostics_channel';
 
 const gameWidth = 400;
 const gameHeight = 400;
@@ -98,7 +99,7 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			setTimeout(() => {
 				this.startGameLoop(room);
 			}, 3000);
-		} 
+		}
 		else {
 			// If it's the first client, just notify them to wait for another player
 			client.emit('awaitPlayer');
@@ -145,6 +146,33 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		}
 		else {
 			this.clients = this.clients.filter(c => c.id !== client.id);
+		}
+	}
+
+	@SubscribeMessage('registerUser')
+	handleRegistration(client: Socket, payload: { intra_id: number; user_name: string }): void {
+		this.logger.log(`Client id: ${client.id}`);
+		this.logger.log(`intra ID: ${payload.intra_id}`);
+		this.logger.log(`User Name: ${payload.user_name}`);
+
+		// Optionally, store these values in the client object for future reference
+		client.data.intra_id = payload.intra_id;
+		client.data.user_name = payload.user_name;
+		const roomId = this.clientRoomMap.get(client.id);
+		this.logger.log(`Room ID: ${roomId}`);
+		const room = this.rooms.get(roomId);
+		if (room) {
+			this.logger.log(`client 0: ${room.players[0].client.id}`);
+			this.logger.log(`client 1: ${room.players[1].client.id}`);
+			if (client.id === room.players[0].client.id) {
+				this.server.to(room.roomID).emit('leftUser', payload.user_name);
+			}
+			else if (client.id === room.players[1].client.id) {
+				this.server.to(room.roomID).emit('rightUser', payload.user_name);
+			}
+		}
+		else {
+			this.logger.log('Room not found');
 		}
 	}
 
