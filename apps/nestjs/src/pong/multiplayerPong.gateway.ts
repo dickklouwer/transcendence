@@ -95,7 +95,9 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
 			this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
 			this.server.to(roomId).emit('playersReady');
-			this.startGameLoop(room);
+			setTimeout(() => {
+				this.startGameLoop(room);
+			}, 3000);
 		} 
 		else {
 			// If it's the first client, just notify them to wait for another player

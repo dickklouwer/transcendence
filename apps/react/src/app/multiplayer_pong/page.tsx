@@ -2,6 +2,7 @@
 
 // PongGame.js
 import React, { useEffect, useState, useRef } from 'react';
+import Countdown from './countdown';
 import io from 'socket.io-client';
 
 const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
@@ -22,7 +23,7 @@ export default function PongGame() {
 	const [leftPaddle, setLeftPaddle] = useState(150);
 	const [score, setScore] = useState<Score>({ left: 0, right: 0 });
 	const [ball, setBall] = useState<Ball>({ x: 200, y: 200 });
-	const [Gamestate, SetGameState] = useState("playing");
+	const [Gamestate, SetGameState] = useState("AwaitingPlayer");
 
 	const paddleWidth = 10;
 	const paddleHeight = 100;
@@ -81,7 +82,8 @@ export default function PongGame() {
 		});
 
 		socket.on('playersReady', () => {
-			SetGameState("playing");
+			SetGameState("Countdown");
+			setTimeout(() => {SetGameState("Playing")}, 3000);
 		});
 
 		const handleKeyDown = (event) => {
@@ -110,18 +112,22 @@ export default function PongGame() {
 		};
 	}, [ball, rightPaddle, leftPaddle, score]);
 
-	const startGame = () => {
-		SetGameState("playing");
-		socket.emit('start');
-	};
+	// const startGame = () => {
+	// 	SetGameState("playing");
+	// 	socket.emit('start');
+	// };
 
-	const stopGame = () => {
-		socket.emit('stop');
-	};
+	// const stopGame = () => {
+	// 	socket.emit('stop');
+	// };
+
 
 	const GameStateComponent = () => (
 		<>
 			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>
+			{Gamestate === "Countdown" && (
+                <Countdown />
+            )}
 			{Gamestate == "GameOver" && (
 				<div style={{
 					position: 'absolute',
@@ -174,14 +180,14 @@ export default function PongGame() {
 				<h1 style={{ marginTop: '-5px' }}> {score.left} - {score.right} </h1>
 			</div>
 			<div className="flex items-center justify-center">
-				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Computer</div>
+				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Player1</div>
 				<canvas
 					ref={canvasRef}
 					width={gameWidth}
 					height={gameHeight}
 					style={{ border: `${borderWidth}px solid white` }}
 				/>
-				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>Player</div>
+				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>Player2</div>
 			</div>
 			{/* <div className="flex items-center justify-center mb-6">
 				<div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around', width: '100%' }}>
