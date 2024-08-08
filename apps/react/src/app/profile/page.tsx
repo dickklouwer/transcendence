@@ -180,21 +180,23 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      {user.is_two_factor_enabled ? (
-          <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
-            2FA Enabled
+      <div className="flex flex-col gap-4">
+        {user.is_two_factor_enabled ? (
+            <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
+              2FA Enabled
+            </button>
+          ) : (
+            <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
+              Enable 2FA
+            </Link>
+          )}
+          <button className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" onClick={() => createMockData()}>
+            Create mock data
           </button>
-        ) : (
-          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
-            Enable 2FA
+          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/menu'}>
+            Back to Menu
           </Link>
-        )}
-        <button className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded flex-grow" onClick={() => createMockData()}>
-          Create mock data
-        </button>
-        <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
-          Back to Menu
-        </Link>
       </div>
+    </div>
   )
 }

@@ -219,30 +219,33 @@ export class DbService {
   async mockData(own_intra_id: number): Promise<boolean> {
     // Create Users
     try {
-      await this.drizzleService.insert(users).values({
+      await this.db.insert(users).values({
         intra_user_id: 1,
         user_name: 'user 1',
         email: 'user1@user.com',
+        image: '',
       });
       console.log('User 1 Created!');
     } catch (error) {
       console.log('Error: ', error);
     }
     try {
-      await this.drizzleService.insert(users).values({
+      await this.db.insert(users).values({
         intra_user_id: 2,
         user_name: 'user 2',
         email: 'user2@user.com',
+        image: '',
       });
       console.log('User 2 Created!');
     } catch (error) {
       console.log('Error: ', error);
     }
     try {
-      await this.drizzleService.insert(users).values({
+      await this.db.insert(users).values({
         intra_user_id: 3,
         user_name: 'user 3',
         email: 'user3@user.com',
+        image: '',
       });
       console.log('User 3 Created!');
     } catch (error) {
@@ -250,7 +253,7 @@ export class DbService {
     }
     // Create Messages
     try {
-      await this.drizzleService.insert(messages).values({
+      await this.db.insert(messages).values({
         sender_id: 1,
         receiver_id: own_intra_id,
         message: 'Hello from user 1',
@@ -260,7 +263,7 @@ export class DbService {
       console.log('Error: ', error);
     }
     try {
-      await this.drizzleService.insert(messages).values({
+      await this.db.insert(messages).values({
         sender_id: 2,
         receiver_id: own_intra_id,
         message: 'Hello from User 2',
