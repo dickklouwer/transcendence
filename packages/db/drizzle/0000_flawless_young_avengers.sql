@@ -9,7 +9,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS "pong"."friends" (
 	"friend_id" serial PRIMARY KEY NOT NULL,
 	"user_id_send" integer NOT NULL,
-	"user_id_receive" integer NOT NULL,
+	"user_id_receive" integer,
 	"is_approved" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
@@ -59,8 +59,7 @@ CREATE TABLE IF NOT EXISTS "pong"."messages" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."users" (
-	"user_id" serial PRIMARY KEY NOT NULL,
-	"intra_user_id" integer NOT NULL,
+	"intra_user_id" integer PRIMARY KEY NOT NULL,
 	"user_name" text NOT NULL,
 	"nick_name" text,
 	"token" text,
@@ -70,10 +69,21 @@ CREATE TABLE IF NOT EXISTS "pong"."users" (
 	"is_two_factor_enabled" boolean DEFAULT false,
 	"state" "pong"."user_state" DEFAULT 'Online' NOT NULL,
 	"image_url" text NOT NULL,
-	CONSTRAINT "users_intra_user_id_unique" UNIQUE("intra_user_id"),
 	CONSTRAINT "users_user_name_unique" UNIQUE("user_name"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pong"."friends" ADD CONSTRAINT "friends_user_id_send_users_intra_user_id_fk" FOREIGN KEY ("user_id_send") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pong"."friends" ADD CONSTRAINT "friends_user_id_receive_users_intra_user_id_fk" FOREIGN KEY ("user_id_receive") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "pong"."games" ADD CONSTRAINT "games_player1_id_users_intra_user_id_fk" FOREIGN KEY ("player1_id") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;

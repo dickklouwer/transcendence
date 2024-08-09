@@ -8,8 +8,8 @@ import {
   createDrizzleClient,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats } from '@repo/db';
-import { eq, or } from 'drizzle-orm';
+import type { User, UserChats, ExternalUser } from '@repo/db';
+import { eq, or, not } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
@@ -30,7 +30,7 @@ export class DbService {
       await this.db
         .update(users)
         .set({ is_two_factor_enabled: enabled })
-        .where(eq(users.user_id, userId));
+        .where(eq(users.intra_user_id, userId));
       console.log('User 2FA status updated');
     } catch (error) {
       console.error('Error updating 2FA status:', error);
@@ -45,7 +45,7 @@ export class DbService {
       await this.db
         .update(users)
         .set({ two_factor_secret: secret })
-        .where(eq(users.user_id, userId));
+        .where(eq(users.intra_user_id, userId));
       console.log('User 2FA secret updated');
     } catch (error) {
       console.error('Error updating 2FA secret:', error);
@@ -131,6 +131,29 @@ export class DbService {
       return false;
     }
   }
+
+  async getAllExternalUsers(jwtToken: string): Promise<ExternalUser[] | null> {
+    try {
+      const user: ExternalUser[] = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+        })
+        .from(users)
+        .where(not(eq(users.token, jwtToken)));
+
+      console.log('User: ', user);
+      return user;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
   async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
     const result: UserChats[] = [];
 

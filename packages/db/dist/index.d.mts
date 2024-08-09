@@ -7,22 +7,6 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
     name: "users";
     schema: "pong";
     columns: {
-        user_id: drizzle_orm_pg_core.PgColumn<{
-            name: "user_id";
-            tableName: "users";
-            dataType: "number";
-            columnType: "PgSerial";
-            data: number;
-            driverParam: number;
-            notNull: true;
-            hasDefault: true;
-            isPrimaryKey: true;
-            isAutoincrement: false;
-            hasRuntimeDefault: false;
-            enumValues: undefined;
-            baseColumn: never;
-            generated: undefined;
-        }, {}, {}>;
         intra_user_id: drizzle_orm_pg_core.PgColumn<{
             name: "intra_user_id";
             tableName: "users";
@@ -32,7 +16,7 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             driverParam: string | number;
             notNull: true;
             hasDefault: false;
-            isPrimaryKey: false;
+            isPrimaryKey: true;
             isAutoincrement: false;
             hasRuntimeDefault: false;
             enumValues: undefined;
@@ -393,7 +377,6 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
     dialect: "pg";
 }>;
 declare const userSelect: z.ZodObject<{
-    user_id: z.ZodNumber;
     intra_user_id: z.ZodNumber;
     user_name: z.ZodString;
     nick_name: z.ZodNullable<z.ZodString>;
@@ -405,7 +388,6 @@ declare const userSelect: z.ZodObject<{
     state: z.ZodEnum<["Online", "Offline", "In-Game", "Idle"]>;
     image: z.ZodString;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
-    user_id: number;
     intra_user_id: number;
     user_name: string;
     nick_name: string | null;
@@ -417,7 +399,6 @@ declare const userSelect: z.ZodObject<{
     state: "Online" | "Offline" | "In-Game" | "Idle";
     image: string;
 }, {
-    user_id: number;
     intra_user_id: number;
     user_name: string;
     nick_name: string | null;
@@ -442,5 +423,13 @@ type UserChats = {
     time: Date;
     unreadMessages: number;
 };
+type ExternalUser = {
+    intra_user_id: number;
+    user_name: string;
+    nick_name: string;
+    email: string;
+    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    image: string;
+};
 
-export { type User, type UserChats, createDrizzleClient, createQueryClient, groupChats, messages, users };
+export { type ExternalUser, type User, type UserChats, createDrizzleClient, createQueryClient, groupChats, messages, users };

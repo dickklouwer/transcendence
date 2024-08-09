@@ -88,7 +88,10 @@ export class AuthService {
       secret.otpauthUrl,
     );
 
-    await this.dbService.updateUserTwoFactorSecret(user.user_id, secret.base32);
+    await this.dbService.updateUserTwoFactorSecret(
+      user.intra_user_id,
+      secret.base32,
+    );
 
     return { secret: secret.base32, qrCode };
   }

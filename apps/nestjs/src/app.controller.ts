@@ -11,7 +11,7 @@ import {
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { UserChats } from './auth/auth.service';
-import type { User } from '@repo/db';
+import type { User, ExternalUser } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 
@@ -100,5 +100,21 @@ export class AppController {
     if (!userChats) throw Error('Failed to fetch user');
 
     return userChats;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getExternalUsers')
+  async searchUser(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ): Promise<ExternalUser[]> {
+    const users = await this.dbservice.getAllExternalUsers(token.split(' ')[1]);
+
+    if (!users) {
+      res.status(404).send('No users found');
+      return;
+    }
+
+    res.status(200).send(users);
   }
 }

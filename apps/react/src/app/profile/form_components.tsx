@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, ChangeEvent,SetStateAction, Dispatch } from "react";
+import Image from "next/image";
 import { fetchGet, fetchPost } from "../page";
+import type { ExternalUser } from "@repo/db";
 
 export const NicknameForm = ({
     setNickname,
@@ -97,56 +99,63 @@ export const NicknameForm = ({
   };
 
 export const FriendsForm = () => {
-    const [tempFriend, setTempFriend] = useState<string>("");
-    const [friends, setFriends] = useState<string[]>([]);
+    const [searchName, setSearchName] = useState<string>("");
+    const [ExternalUsers, setExternalUsers] = useState<ExternalUser[]>([]);
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
     useEffect(() => {
-        const fetchFriends = async () => {
-            setIsLoaded(true);
-            try {
-                const data = await fetchGet<any>("/api/friends"); // type needs to be changed!
-                setFriends(data);
-            } catch (error) {
-                console.error("Error Fetching Friends:", error);
-            } finally {
-                setIsLoaded(false);
-            }
-        };
-
-        fetchFriends();
-    }, []);
+      try {
+          fetchGet<ExternalUser[]>("/api/getExternalUsers")
+          .then((data) => {
+          setExternalUsers(data);
+          });
+      } catch (error) {
+          console.error("Error Getting Friends:", error);
+      }
+    }, [searchName]);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setTempFriend(e.target.value);
+        setSearchName(e.target.value);
     };
+
+    console.log(ExternalUsers);
 
     return (
         <div>
-
-            <div className="flex w-auto items-center space-x-4">
+            <div className="flex w-auto items-center justify-center space-x-4">
                 <input
                     type="text" 
-                    placeholder="Enter your friend's name"
-                    value={tempFriend}
+                    placeholder="Search..."
+                    value={searchName}
                     onChange={handleChange}
-                    className="w-full text-black p-2 border rounded"
+                    className="w-72 text-black p-2 border rounded"
                     maxLength={15} />
-                    <button
-                        className={`flex bg-blue-500 hover:bg-blue-700 disabled:bg-red-500 disabled:hover:bg-red-700 text-white px-2 py-2 rounded  transition-all duration-150`}>
-                    <svg className="w-6 m-1 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                    </svg>
-                    </button>
-                    
             </div>
+            <p className="flex justify-center m-4 w-auto whitespace-nowrap">&#60;---------------------------------&#62;</p>
             <div>
-                <ul className="list-disc list-inside">
-                    <li>Friend 1</li>
-                    <li>Friend 2</li>
-                    <li>Friend 3</li>
-                </ul>
-            </div>
+                {ExternalUsers.map((user) => (
+                    <div key={user.intra_user_id} className=" justify-center">
+                        <div className="flex bg-slate-950 m-2 rounded-md items-center space-x-4 p-2 px-4 justify-between">
+                            <div className="flex items-center space-x-4">
+                                <Image
+                                    src={user.image}
+                                    alt="Profile Image"
+                                    className="w-11 h-11 rounded-full"
+                                    width={100}
+                                    height={100}
+                                />
+                                <div className="flex-grow min-w-0 mb-4 break-all">
+                                    <h1 className="text-1xl">{user.user_name}</h1>
+                                    <p className="text-blue-400 break-all">{user.email}</p>
+                                </div>
+                            </div>
+                              <button className=" bg-green-500 p-2 rounded-md">
+                                  Add
+                              </button>
+                        </div>
+                    </div>
+                ))}
+              </div>
         </div>
     );
 }

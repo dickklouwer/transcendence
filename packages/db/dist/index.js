@@ -48,8 +48,7 @@ var user_state = mySchema.enum("user_state", [
   "Idle"
 ]);
 var users = mySchema.table("users", {
-  user_id: (0, import_pg_core.serial)("user_id").primaryKey(),
-  intra_user_id: (0, import_pg_core.integer)("intra_user_id").notNull().unique(),
+  intra_user_id: (0, import_pg_core.integer)("intra_user_id").primaryKey(),
   user_name: (0, import_pg_core.text)("user_name").notNull().unique(),
   nick_name: (0, import_pg_core.text)("nick_name"),
   token: (0, import_pg_core.text)("token"),
@@ -62,8 +61,8 @@ var users = mySchema.table("users", {
 });
 var friends = mySchema.table("friends", {
   friend_id: (0, import_pg_core.serial)("friend_id").primaryKey(),
-  user_id_send: (0, import_pg_core.integer)("user_id_send").notNull(),
-  user_id_receive: (0, import_pg_core.integer)("user_id_receive").notNull(),
+  user_id_send: (0, import_pg_core.integer)("user_id_send").notNull().references(() => users.intra_user_id),
+  user_id_receive: (0, import_pg_core.integer)("user_id_receive").references(() => users.intra_user_id),
   is_approved: (0, import_pg_core.boolean)("is_approved").notNull().default(false)
 });
 var games = mySchema.table("games", {

@@ -16,8 +16,7 @@ var user_state = mySchema.enum("user_state", [
   "Idle"
 ]);
 var users = mySchema.table("users", {
-  user_id: serial("user_id").primaryKey(),
-  intra_user_id: integer("intra_user_id").notNull().unique(),
+  intra_user_id: integer("intra_user_id").primaryKey(),
   user_name: text("user_name").notNull().unique(),
   nick_name: text("nick_name"),
   token: text("token"),
@@ -30,8 +29,8 @@ var users = mySchema.table("users", {
 });
 var friends = mySchema.table("friends", {
   friend_id: serial("friend_id").primaryKey(),
-  user_id_send: integer("user_id_send").notNull(),
-  user_id_receive: integer("user_id_receive").notNull(),
+  user_id_send: integer("user_id_send").notNull().references(() => users.intra_user_id),
+  user_id_receive: integer("user_id_receive").references(() => users.intra_user_id),
   is_approved: boolean("is_approved").notNull().default(false)
 });
 var games = mySchema.table("games", {

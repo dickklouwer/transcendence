@@ -1,5 +1,5 @@
 {
-  "id": "82ff85bc-2c50-439d-8407-06c3d1df3a7b",
+  "id": "33b798ca-7929-4ed5-948b-0fa37af2dd69",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -24,7 +24,7 @@
           "name": "user_id_receive",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "is_approved": {
           "name": "is_approved",
@@ -35,7 +35,36 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "friends_user_id_send_users_intra_user_id_fk": {
+          "name": "friends_user_id_send_users_intra_user_id_fk",
+          "tableFrom": "friends",
+          "tableTo": "users",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "user_id_send"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "friends_user_id_receive_users_intra_user_id_fk": {
+          "name": "friends_user_id_receive_users_intra_user_id_fk",
+          "tableFrom": "friends",
+          "tableTo": "users",
+          "schemaTo": "pong",
+          "columnsFrom": [
+            "user_id_receive"
+          ],
+          "columnsTo": [
+            "intra_user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -410,16 +439,10 @@
       "name": "users",
       "schema": "pong",
       "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
         "intra_user_id": {
           "name": "intra_user_id",
           "type": "integer",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true
         },
         "user_name": {
@@ -484,13 +507,6 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_intra_user_id_unique": {
-          "name": "users_intra_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "intra_user_id"
-          ]
-        },
         "users_user_name_unique": {
           "name": "users_user_name_unique",
           "nullsNotDistinct": false,

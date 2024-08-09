@@ -20,8 +20,7 @@ export const user_state = mySchema.enum('user_state', [
 ]);
 
 export const users = mySchema.table('users', {
-  user_id: serial('user_id').primaryKey(),
-  intra_user_id: integer('intra_user_id').notNull().unique(),
+  intra_user_id: integer('intra_user_id').primaryKey(),
   user_name: text('user_name').notNull().unique(),
   nick_name: text('nick_name'),
   token: text('token'),

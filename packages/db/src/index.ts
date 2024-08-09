@@ -16,5 +16,14 @@ type UserChats = {
     unreadMessages: number;
   };
 
-export type { User, UserChats }
+type ExternalUser = {
+    intra_user_id: number;
+    user_name: string;
+    nick_name: string;
+    email: string;
+    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    image: string;
+  };
+
+export type { User, UserChats, ExternalUser }
 export { users, messages, groupChats};
