@@ -63,7 +63,7 @@ export class AppController {
 
     if (!isUnique) {
       res.status(422).send(`Nickname is not unique`);
-      return
+      return;
     }
     const response = await this.dbservice.setUserNickname(
       token.split(' ')[1],
