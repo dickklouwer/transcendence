@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import io from 'socket.io-client';
 
 interface TMessage {
     message_id: number;
@@ -14,6 +15,7 @@ interface TMessage {
 
 // Assuming the current user's ID
 const myId = 42;
+const socket = io(`http://${window.location.host}/chat`, { path: "/ws/socket.io" });
 
 /* TABLE messages
   message_id: serial('message_id').primaryKey(),
@@ -43,39 +45,41 @@ const databaseMessages = [
         message: 'Hi',
         sent_at: '13:05'
     },
-    {
-        message_id: 3,
-        sender_id: 43,
-        receiver_id: 42,
-        group_chat_id: null,
-        message: 'How are you?',
-        sent_at: '13:06'
-    },
-    {
-        message_id: 4,
-        sender_id: 42,
-        receiver_id: 43,
-        group_chat_id: null,
-        message: 'I am fine :)\nThanks for asking!',
-        sent_at: '13:07'
-    },
-    {
-        message_id: 5,
-        sender_id: 42,
-        receiver_id: 43,
-        group_chat_id: null,
-        message: 'How are you?',
-        sent_at: '13:08'
-    },
-    {
-        message_id: 6,
-        sender_id: 43,
-        receiver_id: 42,
-        group_chat_id: null,
-        message: 'Good',
-        sent_at: '13:09'
-    },
+    // {
+    //     message_id: 3,
+    //     sender_id: 43,
+    //     receiver_id: 42,
+    //     group_chat_id: null,
+    //     message: 'How are you?',
+    //     sent_at: '13:06'
+    // },
+    // {
+    //     message_id: 4,
+    //     sender_id: 42,
+    //     receiver_id: 43,
+    //     group_chat_id: null,
+    //     message: 'I am fine :)\nThanks for asking!',
+    //     sent_at: '13:07'
+    // },
+    // {
+    //     message_id: 5,
+    //     sender_id: 42,
+    //     receiver_id: 43,
+    //     group_chat_id: null,
+    //     message: 'How are you?',
+    //     sent_at: '13:08'
+    // },
+    // {
+    //     message_id: 6,
+    //     sender_id: 43,
+    //     receiver_id: 42,
+    //     group_chat_id: null,
+    //     message: 'Good',
+    //     sent_at: '13:09'
+    // },
 ];
+
+// const databaseMessages = [{}];
 
 function Message({ message }: { message:TMessage }) {
     const isMyMessage = message.sender_id === myId;
@@ -132,10 +136,20 @@ export default function DC() {
     const [messages, setMessages] = useState(databaseMessages);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); /* Auto scroll to last message */
+      socket.on('msgToClient', (message) => {
+        alert('Received message: ' + message);
+        setMessages([...messages, message]);
+      });
+
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); /* Auto scroll to last message */
     }, [messages]);
+  
+    const sendMessage = () => {
+      socket.emit('msgToServer', newMessage);
+      setNewMessage('');
+    };
 
     const handleSendMessage = () => {
         if (newMessage.trim() === '') return;
@@ -150,7 +164,7 @@ export default function DC() {
         };
 
         setMessages([...messages, message]);
-        setNewMessage('');
+        sendMessage();
     };
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
