@@ -39,6 +39,7 @@ export class AppController {
     console.log('User Fetched!:', user);
     if (!user) {
       res.status(404).send("User doesn't exist");
+      return;
     }
     res.status(200).send(user);
     return user;

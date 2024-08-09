@@ -90,6 +90,7 @@ var createDrizzleClient = (client) => drizzle(client);
 export {
   createDrizzleClient,
   createQueryClient,
+  games,
   groupChats,
   messages,
   users

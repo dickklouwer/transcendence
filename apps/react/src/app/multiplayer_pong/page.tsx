@@ -150,15 +150,14 @@ export default function PongGame() {
 		};
 	}, [ball, rightPaddle, leftPaddle, score]);
 
-	// const startGame = () => {
-	// 	SetGameState("playing");
-	// 	socket.emit('start');
-	// };
+	const startGame = () => {
+		SetGameState("playing");
+		socket.emit('start');
+	};
 
 	// const stopGame = () => {
 	// 	socket.emit('stop');
 	// };
-
 
 	const GameStateComponent = () => (
 		<>

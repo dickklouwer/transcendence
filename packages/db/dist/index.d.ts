@@ -186,6 +186,93 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
     };
     dialect: "pg";
 }>;
+declare const games: drizzle_orm_pg_core.PgTableWithColumns<{
+    name: "games";
+    schema: "pong";
+    columns: {
+        game_id: drizzle_orm_pg_core.PgColumn<{
+            name: "game_id";
+            tableName: "games";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        player1_id: drizzle_orm_pg_core.PgColumn<{
+            name: "player1_id";
+            tableName: "games";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        player2_id: drizzle_orm_pg_core.PgColumn<{
+            name: "player2_id";
+            tableName: "games";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        player1_score: drizzle_orm_pg_core.PgColumn<{
+            name: "player1_score";
+            tableName: "games";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        player2_score: drizzle_orm_pg_core.PgColumn<{
+            name: "player2_score";
+            tableName: "games";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 declare const groupChats: drizzle_orm_pg_core.PgTableWithColumns<{
     name: "group_chats";
     schema: "pong";
@@ -443,4 +530,4 @@ type UserChats = {
     unreadMessages: number;
 };
 
-export { type User, type UserChats, createDrizzleClient, createQueryClient, groupChats, messages, users };
+export { type User, type UserChats, createDrizzleClient, createQueryClient, games, groupChats, messages, users };
