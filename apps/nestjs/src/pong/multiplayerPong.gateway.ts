@@ -46,6 +46,7 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 	private roomIdCounter = 1;
 	private rooms: Map<string, Room> = new Map(); // Maps room ID to Room object
 	private clientRoomMap: Map<string, string> = new Map(); // Maps client ID to room ID
+	// private clientPlayerMap: Map<string, Player> = new Map(); // Maps client ID to player object
 
 	private createPlayer(client: Socket | null): Player {
 		return { client: client, paddle: 150, score: 0 };
@@ -162,16 +163,24 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		this.logger.log(`Room ID: ${roomId}`);
 		const room = this.rooms.get(roomId);
 		if (room) {
-			this.logger.log(`client 0: ${room.players[0].client.id}`);
-			this.logger.log(`client 1: ${room.players[1].client.id}`);
-			if (client.id === room.players[0].client.id) {
-				this.server.to(room.roomID).emit('leftUser', payload.user_name);
-			}
-			else if (client.id === room.players[1].client.id) {
-				this.server.to(room.roomID).emit('rightUser', payload.user_name);
-			}
+			const player1 = room.players[0].client.data.user_name;
+			const player2 = room.players[1].client.data.user_name;
+			this.logger.log(`client 0: ${room.players[0].client.id}, username: ${player1}`);
+			this.logger.log(`client 1: ${room.players[1].client.id}, username: ${player2}`);
+			console.log('left user: ', player1);
+			console.log('right user: ', player2);
+			this.server.to(room.roomID).emit('leftUser', player1);
+			this.server.to(room.roomID).emit('rightUser', player2);
+			// if (client.id === room.players[0].client.id) {
+			// }
+			// else if (client.id === room.players[1].client.id) {
+			// 	this.server.to(room.roomID).emit('leftUser', player1);
+			// 	this.server.to(room.roomID).emit('rightUser', player2);
+			// 	// this.server.to(room.roomID).emit('rightUser', payload.user_name);
+			// }
 		}
 		else {
+			client.emit('leftUser', payload.user_name);
 			this.logger.log('Room not found');
 		}
 	}
