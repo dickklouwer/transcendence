@@ -109,15 +109,15 @@ export default function PongGame() {
 			socket.emit('stop');
 		});
 
-		socket.on('leftUser', (user: string) => {
+		socket.on('names', (user: string[]) => {
 			console.log('Left user:', user);
-			setUserNames({ ...userNames, left: user });
+			setUserNames({left: user[0], right: user[1]})
 		});
 
-		socket.on('rightUser', (user: string) => {
-			console.log('Right user:', user);
-			setUserNames({ ...userNames, right: user });
-		});
+		// socket.on('rightUser', (user: string) => {
+		// 	console.log('Right user:', user);
+		// 	setUserNames({ ...userNames, right: user });
+		// });
 
 		socket.on('playersReady', () => {
 			SetGameState("Countdown");

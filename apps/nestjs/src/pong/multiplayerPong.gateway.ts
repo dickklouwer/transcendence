@@ -113,6 +113,7 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 
 		// Find the room containing the disconnected client
 		let roomIdToDelete: string | null = null;
+		let otherClient: Socket | null = null;
 		const roomId = this.clientRoomMap.get(client.id);
 
 		for (const [key, value] of this.clientRoomMap.entries()) {
@@ -123,31 +124,40 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		if (roomId) {
 			const room = this.rooms.get(roomId);
 			if (room) {
-				// room.players = room.players.filter(player => player.client?.id !== client.id);
-				if (room.players.length === 1) {
-					// If the room is empty, mark it for deletion
-					roomIdToDelete = roomId;
-					this.logger.log(`Room : ${roomId} deleted!`);
-				} else if (room.players.length === 2) {
-					// Notify the remaining player that they are waiting for another player
+				room.players = room.players.filter(player => player.client?.id !== client.id);
+				// if (room.players.length === 1) {
+				// If the room is empty, mark it for deletion
+				roomIdToDelete = roomId;
+				// Notify the remaining player that they are waiting for another player
+				if (room.players.length > 0) {
+					otherClient = room.players[0].client;
 					this.logger.log(`Room : ${roomId} still has 1 player with id: ${room.players[0].client?.id}`);
 					room.players[0].client?.emit('awaitPlayer', 'Awaiting Player');
 				}
 			}
-
 			// Delete the empty room if needed
 			if (roomIdToDelete) {
-				this.rooms.delete(roomIdToDelete);
-				this.logger.log(`Room deleted: ${roomIdToDelete}`);
+				if (this.rooms.delete(roomIdToDelete))
+					this.logger.log(`Room deleted: ${roomIdToDelete} in rooms array`);
+				else
+					this.logger.log(`Room NOT deleted: ${roomIdToDelete} in rooms array`);
 			}
-
 			// Remove the client from the clients array and clientRoomMap
 			this.clients = this.clients.filter(c => c.id !== client.id);
-			this.clientRoomMap.delete(client.id);
+			if (this.clientRoomMap.delete(client.id))
+				this.logger.log(`client deleted: ${client.id} in clientRoomMap`);
+			else
+				this.logger.log(`client NOT deleted : ${client.id} in clientRoomMap`);
+			if (this.clientRoomMap.delete(otherClient.id))
+				this.logger.log(`client deleted: ${otherClient.id} in clientRoomMap`);
+			else
+				this.logger.log(`client NOT deleted: ${otherClient.id} in clientRoomMap`);
+			// if (this.clientRoomMap.delete(roomId))
+			// 	this.logger.log(`room deleted: ${roomId} in clientRoomMap`);
+			// else
+			// 	this.logger.log(`room NOT deleted: ${roomId} in clientRoomMap`);
 		}
-		else {
-			this.clients = this.clients.filter(c => c.id !== client.id);
-		}
+		this.clients = this.clients.filter(c => c.id !== client.id);
 	}
 
 	@SubscribeMessage('registerUser')
@@ -169,8 +179,8 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			this.logger.log(`client 1: ${room.players[1].client.id}, username: ${player2}`);
 			console.log('left user: ', player1);
 			console.log('right user: ', player2);
-			this.server.to(room.roomID).emit('leftUser', player1);
-			this.server.to(room.roomID).emit('rightUser', player2);
+			this.server.to(room.roomID).emit('names', [player1, player2]);
+			// this.server.to(room.roomID).emit('rightUser', player2);
 			// if (client.id === room.players[0].client.id) {
 			// }
 			// else if (client.id === room.players[1].client.id) {
@@ -184,6 +194,8 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			this.logger.log('Room not found');
 		}
 	}
+
+
 
 	@SubscribeMessage('movement')
 	handleMovement(client: Socket, payload: string): void {
