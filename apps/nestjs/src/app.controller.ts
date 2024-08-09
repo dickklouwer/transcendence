@@ -100,4 +100,19 @@ export class AppController {
 
     return userChats;
   }
+
+  @Post('createMockData')
+  async mockData(): Promise<boolean> {
+    const hardcoddedIntraId = 77718;
+    const response = await this.dbservice.mockData(hardcoddedIntraId);
+    return response;
+  }
+
+  // not working yet
+  // @Post('createMockData')
+  // async mockData(token: string): Promise<boolean> {
+  //   const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
+  //   const response = await this.dbservice.mockData(user.intra_user_id);
+  //   return response;
+  // }
 }

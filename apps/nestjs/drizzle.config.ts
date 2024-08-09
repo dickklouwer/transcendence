@@ -6,7 +6,7 @@ export default defineConfig({
   dbCredentials: {
     url: "postgres://postgres:postgres@localhost:5432/postgres"
   },
-  migrations: { schema: './migrations' },
+  migrations: { schema: './drizzle' },
   verbose: true,
   strict: true,
 });

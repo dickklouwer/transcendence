@@ -57,50 +57,55 @@ const NicknameForm = ({
     if (!isUnique) {
       return;
     }
-    await fetchPost<{nickname: string}, ApiResponse>("/api/setNickname", { nickname: tempNickname })
-    .then(() => {
-        setNickname(tempNickname);
-        setIsConfirmed(true);
-        setTempNickname("");
-      })
-    .catch((error) => {
-      setIsConfirmed(false);
-      console.error("Error Setting Nickname:", error);
-    });
+    try {
+      const response = await fetch(`/api/setNickname?nickname=${tempNickname}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setNickname(tempNickname);
+      setIsConfirmed(true);
+      setTempNickname('');
+    } catch (error) {
+      console.error('Error Setting Nickname:', error);
+    }
   }
 
-  return (
+  return ( 
     <div>
       <div className="flex space-x-2">
         <input
-          type="text"
-          value={tempNickname}
-          onChange={handleChange}
-          placeholder="Enter your nickname"
-          onKeyUp={(e) => {e.code == "Enter" && dbSetNickname()}}
-          className={`w-full text-black p-2 border rounded  ${
-            isUnique ? "border-green-500" : "border-red-500"
-          }`}
-          maxLength={15}
-        />
-        <button
-          className={` bg-green-500 hover:bg-green-700 disabled:bg-red-500 disabled:hover:bg-red-700 text-white px-2 py-2 rounded  transition-all duration-150`}
-          onClick={dbSetNickname}
-          disabled={!isUnique || tempNickname.trim() === ""}
-        >
-          Save
-        </button>
+        type="text"
+        value={tempNickname}
+        onChange={handleChange}
+        placeholder="Enter your nickname"
+        className={`w-full text-black p-2 border rounded  ${isUnique ? 'border-green-500' : 'border-red-500'}`}
+        maxLength={20}/>
+        <button className={` ${isUnique ? 'bg-green-500 hover:bg-green-700' : 'bg-red-500 hover:bg-red-700'} text-white px-2 py-2 rounded  transition-all duration-150`} onClick={dbSetNickname} disabled={!isUnique || tempNickname.trim() === ''}> Save </button>
       </div>
-      {isLoaded && <p>Checking...</p>}
-      {!isLoaded && !isUnique && (
-        <p className="text-red-500">Nickname is already been taken</p>
-      )}
-      {!isLoaded && isUnique && isConfirmed && (
-        <p className="text-green-500">Nickname has been set</p>
-      )}
+        {isLoaded && <p>Checking...</p>}
+        {!isLoaded && !isUnique && <p className="text-red-500">Nickname is already been taken</p>}
+        {!isLoaded && isUnique && isConfirmed && <p className="text-green-500">Nickname has been set</p>}
     </div>
   );
-};
+}
+
+function createMockData() {
+  fetch('/api/createMockData', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  })
+  .then((response) => {
+    console.log('Response: ', response);
+    alert('Mock data created');
+  })
+  .catch((error) => {
+    console.log('Error: ', error);
+    alert('Error creating mock data');
+  });
+}
 
 export default function Profile() {
   const [user, setUser] = useState<User>(); // This Any needs to be replaced with the correct type that we will get from the backend
@@ -175,18 +180,23 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      {user.is_two_factor_enabled ? (
-          <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
-            2FA Enabled
+      <div className="flex flex-col gap-4">
+        {user.is_two_factor_enabled ? (
+            <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
+              2FA Enabled
+            </button>
+          ) : (
+            <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
+              Enable 2FA
+            </Link>
+          )}
+          <button className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" onClick={() => createMockData()}>
+            Create mock data
           </button>
-        ) : (
-          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/2fa/enable'}>
-            Enable 2FA
+          <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded hover:bg-blue-600 transition duration-300" href={'/menu'}>
+            Back to Menu
           </Link>
-        )}
-        <Link className="bg-blue-500 text-white flex justify-center px-4 py-4 rounded" href={'/menu'}>
-          Back to Menu
-        </Link>
       </div>
+    </div>
   )
 }
