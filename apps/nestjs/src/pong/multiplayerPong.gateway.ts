@@ -1,13 +1,14 @@
 import {
-  SubscribeMessage,
-  WebSocketGateway,
-  OnGatewayInit,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  WebSocketServer,
+	SubscribeMessage,
+	WebSocketGateway,
+	OnGatewayInit,
+	OnGatewayConnection,
+	OnGatewayDisconnect,
+	WebSocketServer,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { subscribe } from 'diagnostics_channel';
 
 const gameWidth = 400;
 const gameHeight = 400;
@@ -18,208 +19,299 @@ const paddleHeight = 100;
 const WinScore = 5;
 
 interface Ball {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+	x: number;
+	y: number;
+	vx: number;
+	vy: number;
 }
 
-@WebSocketGateway({
-  cors: { origin: 'http://localhost:2424' },
-  credentials: true,
-  allowEIO3: true,
-})
-export class PongGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
-  @WebSocketServer() server: Server;
-  private logger: Logger = new Logger('PongGateway');
-  private leftPaddle: number = 150;
-  private rightPaddle: number = 150;
-  private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
-  private score = { left: 0, right: 0 };
-  private gameInterval: NodeJS.Timeout;
-  private clients: Socket[] = [];
+interface Room {
+	roomID: string;
+	players: Player[];
+	ball: Ball;
+}
 
-  afterInit(server: Server) {
-    this.logger.log('WebSocket PongGateway initialized');
-  }
+interface Player {
+	client: Socket | null;
+	paddle: number;
+	score: number;
+}
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
-    this.logger.log(`Clients size: ${this.clients.length}`);
-    this.clients.push(client);
-    if (this.clients.length < 2) {
-      this.server.emit('awaitPlayer', 'Awaiting Player');
-      this.logger.log(`awaiting player`);
-    } else if (this.clients.length == 2)
-      this.server.emit('playersReady', 'Players Ready');
-    // client.emit('rightPaddle', this.rightPaddle);
-    // client.emit('leftPaddle', this.leftPaddle);
-    this.server.emit('ball', this.ball);
-    this.server.emit('rightPaddle', this.rightPaddle);
-    this.server.emit('leftPaddle', this.leftPaddle);
-  }
+@WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, namespace: 'multiplayer', credentials: true, allowEIO3: true })
+export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+	@WebSocketServer() server: Server;
+	private logger: Logger = new Logger('MultiplayerPongGateway');
+	private gameInterval: NodeJS.Timeout;
+	private clients: Socket[] = [];
+	private roomIdCounter = 1;
+	private rooms: Map<string, Room> = new Map(); // Maps room ID to Room object
+	private clientRoomMap: Map<string, string> = new Map(); // Maps client ID to room ID
+	// private clientPlayerMap: Map<string, Player> = new Map(); // Maps client ID to player object
 
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
-    this.clients = this.clients.filter((c) => c.id !== client.id);
-    clearInterval(this.gameInterval);
-    this.resetGame();
-  }
+	private createPlayer(client: Socket | null): Player {
+		return { client: client, paddle: 150, score: 0 };
+	}
+	private createRoom(roomID: string, players: Player[], ball: Ball): Room {
+		return { roomID, players, ball };
+	}
+	private createBall(): Ball {
+		return { x: 200, y: 200, vx: 2, vy: 0 };
+	}
 
-  @SubscribeMessage('movement')
-  handleMovement(client: Socket, payload: string): void {
-    this.logger.log(`Client id: ${client.id}`);
-    this.logger.log(`Clientd 0 id: ${this.clients[0].id}`);
-    this.logger.log(`Clientd 1 id: ${this.clients[1].id}`);
-    if (client.id === this.clients[0].id) {
-      this.logger.log(`Client payload: ${payload}`);
-      this.movePaddle('left', payload);
-    } else if (client.id === this.clients[1].id) {
-      this.logger.log(`Client payload: ${payload}`);
-      this.movePaddle('right', payload);
-    }
-    // if (payload === 'ArrowUp') {
-    // 	this.logger.log('ArrowUp');
-    // 	this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-    // 	this.server.emit('rightPaddle', this.rightPaddle);
-    // }
-    // if (payload === 'ArrowDown') {
-    // 	this.logger.log('ArrowDown');
-    // 	this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
-    // 	this.server.emit('rightPaddle', this.rightPaddle);
-    // }
-  }
+	afterInit(server: Server) {
+		this.logger.log('WebSocket MultiplayerPongGateway initialized');
+	}
 
-  movePaddle(side: string, payload: string): void {
-    if (side === 'left') this.moveLeftPaddle(payload);
-    else if (side === 'right') this.moveRightPaddle(payload);
-  }
+	handleConnection(client: Socket) {
+		this.logger.log(`Client connected: ${client.id} to multiplayer game`);
+		for (const [key, value] of this.clientRoomMap.entries()) {
+			this.logger.log(`Player: ${key}, room: ${value}`);
+		}
+		this.clients.push(client);
 
-  moveLeftPaddle(payload: string): void {
-    if (payload === 'ArrowUp') {
-      this.logger.log('ArrowUp');
-      this.leftPaddle = Math.max(0, this.leftPaddle - 5);
-      this.server.emit('leftPaddle', this.leftPaddle);
-    }
-    if (payload === 'ArrowDown') {
-      this.logger.log('ArrowDown');
-      this.leftPaddle = Math.min(
-        gameHeight - paddleHeight,
-        this.leftPaddle + 5,
-      );
-      this.server.emit('leftPaddle', this.leftPaddle);
-    }
-  }
+		if (this.clients.length % 2 === 0) {
+			// When the second client connects, create a room for these two clients
+			const roomId = `room_${this.roomIdCounter++}`;
+			const firstClient = this.clients[this.clients.length - 2]; // Second last client
+			const secondClient = client; // Last client
 
-  moveRightPaddle(payload: string): void {
-    if (payload === 'ArrowUp') {
-      this.logger.log('ArrowUp');
-      this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-      this.server.emit('rightPaddle', this.rightPaddle);
-    }
-    if (payload === 'ArrowDown') {
-      this.logger.log('ArrowDown');
-      this.rightPaddle = Math.min(
-        gameHeight - paddleHeight,
-        this.rightPaddle + 5,
-      );
-      this.server.emit('rightPaddle', this.rightPaddle);
-    }
-  }
+			// Create players and ball
+			const leftPlayer = this.createPlayer(firstClient);
+			const rightPlayer = this.createPlayer(secondClient);
+			const players = [leftPlayer, rightPlayer];
+			const ball = this.createBall();
+			const room = this.createRoom(roomId, players, ball);
 
-  @SubscribeMessage('start')
-  handleStart(client: Socket): void {
-    if (!this.gameInterval) {
-      this.logger.log('Starting game loop');
-      this.startGameLoop(client);
-    }
-  }
+			this.rooms.set(roomId, room);
+			this.clientRoomMap.set(firstClient.id, roomId);
+			this.clientRoomMap.set(secondClient.id, roomId);
 
-  @SubscribeMessage('stop')
-  handleStop(client: Socket): void {
-    if (this.gameInterval) {
-      this.logger.log('Stopping game loop');
-      clearInterval(this.gameInterval);
-      this.gameInterval = undefined;
-    }
-  }
+			this.logger.log(`Room created: ${roomId} with players ${firstClient.id} and ${secondClient.id}`);
 
-  resetGame = () => {
-    this.ball.vx = 2;
-    this.ball.vy = 0;
-    this.ball.x = 200;
-    this.ball.y = 200;
-    this.rightPaddle = 150;
-  };
+			// Join both clients to the room
+			firstClient.join(roomId);
+			secondClient.join(roomId);
 
-  startGameLoop(client: Socket) {
-    this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
-  }
+			// Emit begin state to the room
+			this.server.to(roomId).emit('ball', room.ball);
+			this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
+			this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
+			this.server.to(roomId).emit('playersReady');
+			setTimeout(() => {
+				this.startGameLoop(room);
+			}, 3000);
+		}
+		else {
+			// If it's the first client, just notify them to wait for another player
+			client.emit('awaitPlayer');
+			this.logger.log('client waiting, client length: ' + this.clients.length);
+		}
+	}
 
-  changeBallDirection = (paddlePosition: number) => {
-    const diff = this.ball.y - (paddlePosition + paddleHeight / 2);
-    this.ball.vy = diff / 20;
-  };
+	handleDisconnect(client: Socket) {
+		this.logger.log(`Client disconnected: ${client.id}`);
 
-  handleGameUpdate(client: Socket) {
-    // Update ball position
-    this.ball.x += this.ball.vx;
-    this.ball.y += this.ball.vy;
+		// Find the room containing the disconnected client
+		let roomIdToDelete: string | null = null;
+		const roomId = this.clientRoomMap.get(client.id);
 
-    // Ball collision with walls
-    if (this.ball.y <= borderWidth || this.ball.y >= gameHeight - borderWidth) {
-      this.ball.vy = -this.ball.vy;
-    }
+		for (const [key, value] of this.clientRoomMap.entries()) {
+			this.logger.log(`Player: ${key}, room: ${value}`);
+		}
+		this.logger.log(`Rooms: ${roomId}`);
+		this.logger.log(`Room : ${roomId} lost a player with ${client.id} `);
+		if (roomId) {
+			const room = this.rooms.get(roomId);
+			if (room) {
+				// room.players = room.players.filter(player => player.client?.id !== client.id);
+				if (room.players.length === 1) {
+					// If the room is empty, mark it for deletion
+					roomIdToDelete = roomId;
+					this.logger.log(`Room : ${roomId} deleted!`);
+				} else if (room.players.length === 2) {
+					// Notify the remaining player that they are waiting for another player
+					this.logger.log(`Room : ${roomId} still has 1 player with id: ${room.players[0].client?.id}`);
+					room.players[0].client?.emit('awaitPlayer', 'Awaiting Player');
+				}
+			}
 
-    // Ball collision with left paddle
-    if (this.ball.x <= paddleWidth + ballSize + 4) {
-      if (
-        this.ball.y >= this.leftPaddle &&
-        this.ball.y <= this.leftPaddle + paddleHeight
-      ) {
-        this.ball.vx = -this.ball.vx;
-        this.changeBallDirection(this.leftPaddle);
-      }
-    }
-    // Ball collision with right paddle
-    else if (this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
-      if (
-        this.ball.y >= this.rightPaddle &&
-        this.ball.y <= this.rightPaddle + paddleHeight
-      ) {
-        this.ball.vx = -this.ball.vx;
-        this.changeBallDirection(this.rightPaddle);
-      }
-    }
+			// Delete the empty room if needed
+			if (roomIdToDelete) {
+				this.rooms.delete(roomIdToDelete);
+				this.logger.log(`Room deleted: ${roomIdToDelete}`);
+			}
 
-    // Ball out of bounds
-    if (this.ball.x <= 0 || this.ball.x >= gameWidth) {
-      if (this.ball.x <= 0) {
-        this.score.right += 1;
-        this.server.emit('score', {
-          left: this.score.left,
-          right: this.score.right,
-        });
-      } else if (this.ball.x >= gameWidth) {
-        this.score.left += 1;
-        this.server.emit('score', {
-          left: this.score.left,
-          right: this.score.right,
-        });
-      }
-      if (this.score.left == WinScore || this.score.right == WinScore) {
-        this.score = { left: 0, right: 0 };
-        this.server.emit('score', { left: 0, right: 0 });
-        this.server.emit('gameover', 'Game Over');
-      }
-      this.resetGame();
-    }
+			// Remove the client from the clients array and clientRoomMap
+			this.clients = this.clients.filter(c => c.id !== client.id);
+			this.clientRoomMap.delete(client.id);
+		}
+		else {
+			this.clients = this.clients.filter(c => c.id !== client.id);
+		}
+	}
 
-    // Emit updated state to clients
-    this.server.emit('ball', this.ball);
-    this.server.emit('rightPaddle', this.rightPaddle);
-    this.server.emit('leftPaddle', this.leftPaddle);
-  }
+	@SubscribeMessage('registerUser')
+	handleRegistration(client: Socket, payload: { intra_id: number; user_name: string }): void {
+		this.logger.log(`Client id: ${client.id}`);
+		this.logger.log(`intra ID: ${payload.intra_id}`);
+		this.logger.log(`User Name: ${payload.user_name}`);
+
+		// Optionally, store these values in the client object for future reference
+		client.data.intra_id = payload.intra_id;
+		client.data.user_name = payload.user_name;
+		const roomId = this.clientRoomMap.get(client.id);
+		this.logger.log(`Room ID: ${roomId}`);
+		const room = this.rooms.get(roomId);
+		if (room) {
+			const player1 = room.players[0].client.data.user_name;
+			const player2 = room.players[1].client.data.user_name;
+			this.logger.log(`client 0: ${room.players[0].client.id}, username: ${player1}`);
+			this.logger.log(`client 1: ${room.players[1].client.id}, username: ${player2}`);
+			console.log('left user: ', player1);
+			console.log('right user: ', player2);
+			this.server.to(room.roomID).emit('leftUser', player1);
+			this.server.to(room.roomID).emit('rightUser', player2);
+			// if (client.id === room.players[0].client.id) {
+			// }
+			// else if (client.id === room.players[1].client.id) {
+			// 	this.server.to(room.roomID).emit('leftUser', player1);
+			// 	this.server.to(room.roomID).emit('rightUser', player2);
+			// 	// this.server.to(room.roomID).emit('rightUser', payload.user_name);
+			// }
+		}
+		else {
+			client.emit('leftUser', payload.user_name);
+			this.logger.log('Room not found');
+		}
+	}
+
+	@SubscribeMessage('movement')
+	handleMovement(client: Socket, payload: string): void {
+		this.logger.log(`Client id: ${client.id}`);
+		const roomId = this.clientRoomMap.get(client.id);
+		if (roomId) {
+			const room = this.rooms.get(roomId);
+			if (room) {
+				if (client.id === room.players[0].client.id) {
+					this.logger.log(`Client payload: ${payload}`);
+					this.moveLeftPaddle(room, payload);
+				} else if (client.id === room.players[1].client.id) {
+					this.logger.log(`Client payload: ${payload}`);
+					this.moveRightPaddle(room, payload);
+				}
+			}
+		}
+	}
+
+	moveLeftPaddle(room: Room, payload: string): void {
+		if (payload === 'ArrowUp') {
+			this.logger.log('ArrowUp');
+			room.players[0].paddle = Math.max(0, room.players[0].paddle - 5);
+			this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+		}
+		if (payload === 'ArrowDown') {
+			this.logger.log('ArrowDown');
+			room.players[0].paddle = Math.min(gameHeight - paddleHeight, room.players[0].paddle + 5);
+			this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+		}
+	}
+
+	moveRightPaddle(room: Room, payload: string): void {
+		if (payload === 'ArrowUp') {
+			this.logger.log('ArrowUp');
+			room.players[1].paddle = Math.max(0, room.players[1].paddle - 5);
+			this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+		}
+		if (payload === 'ArrowDown') {
+			this.logger.log('ArrowDown');
+			room.players[1].paddle = Math.min(gameHeight - paddleHeight, room.players[1].paddle + 5);
+			this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+		}
+	}
+
+	@SubscribeMessage('start')
+	handleStart(client: Socket): void {
+		const roomId = this.clientRoomMap.get(client.id);
+		if (roomId) {
+			const room = this.rooms.get(roomId);
+			if (room && !this.gameInterval) {
+				this.logger.log('Starting game loop in room: ' + room.roomID);
+				this.startGameLoop(room);
+			}
+		}
+	}
+
+	@SubscribeMessage('stop')
+	handleStop(client: Socket): void {
+		if (this.gameInterval) {
+			this.logger.log('Stopping game loop');
+			clearInterval(this.gameInterval);
+			this.gameInterval = undefined;
+		}
+	}
+
+	resetGame = (room: Room) => {
+		room.ball = { x: 200, y: 200, vx: 2, vy: 0 };
+		room.players[0].paddle = 150;
+		room.players[1].paddle = 150;
+	}
+
+	startGameLoop(room: Room) {
+		this.gameInterval = setInterval(() => this.handleGameUpdate(room), 16);
+	}
+
+	changeBallDirection = (paddlePosition: number, room: Room) => {
+		const diff = room.ball.y - (paddlePosition + paddleHeight / 2);
+		room.ball.vy = diff / 20;
+	};
+
+	handleGameUpdate(room: Room) {
+		// Update ball position
+		room.ball.x += room.ball.vx;
+		room.ball.y += room.ball.vy;
+
+		// Ball collision with walls
+		if (room.ball.y <= borderWidth || room.ball.y >= gameHeight - borderWidth) {
+			room.ball.vy = -room.ball.vy;
+		}
+
+		// Ball collision with left paddle
+		if (room.ball.x <= paddleWidth + ballSize + 4) {
+			if (room.ball.y >= room.players[0].paddle && room.ball.y <= room.players[0].paddle + paddleHeight) {
+				room.ball.vx = -room.ball.vx;
+				this.changeBallDirection(room.players[0].paddle, room);
+			}
+		}
+		// Ball collision with right paddle
+		else if (room.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
+			if (room.ball.y >= room.players[1].paddle && room.ball.y <= room.players[1].paddle + paddleHeight) {
+				room.ball.vx = -room.ball.vx;
+				this.changeBallDirection(room.players[1].paddle, room);
+			}
+		}
+
+		// Ball out of bounds
+		if (room.ball.x <= 0 || room.ball.x >= gameWidth) {
+			if (room.ball.x <= 0) {
+				room.players[1].score += 1;
+				this.server.to(room.roomID).emit('score', { left: room.players[0].score, right: room.players[1].score });
+			}
+			else if (room.ball.x >= gameWidth) {
+				room.players[0].score += 1;
+				this.server.to(room.roomID).emit('score', { left: room.players[0].score, right: room.players[1].score });
+			}
+			if (room.players[0].score == WinScore || room.players[1].score == WinScore) {
+				room.players[0].score = 0;
+				room.players[1].score = 0;
+				this.server.to(room.roomID).emit('score', { left: room.players[0].score, right: room.players[1].score });
+				this.server.to(room.roomID).emit('gameover');
+			}
+			this.resetGame(room);
+		}
+
+		// Emit updated state to clients
+		this.server.to(room.roomID).emit('ball', room.ball);
+		this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+		this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+	}
 }
