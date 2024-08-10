@@ -35,7 +35,7 @@ export const users = mySchema.table('users', {
 export const friends = mySchema.table('friends', {
   friend_id: serial('friend_id').primaryKey(),
   user_id_send: integer('user_id_send').notNull().references(() => users.intra_user_id),
-  user_id_receive: integer('user_id_receive').references(() => users.intra_user_id),
+  user_id_receive: integer('user_id_receive').notNull().references(() => users.intra_user_id),
   is_approved: boolean('is_approved').notNull().default(false),
 });
 
@@ -94,6 +94,8 @@ export const messageStatus = mySchema.table('message_status', {
 
 export const userInsert = createInsertSchema(users);
 export const userSelect = createSelectSchema(users);
+export const friendsSelect = createSelectSchema(friends);
 export const messagesInsert = createInsertSchema(messages);
 
 export type User = z.infer<typeof userSelect>;
+export type Friends = z.infer<typeof friendsSelect>;

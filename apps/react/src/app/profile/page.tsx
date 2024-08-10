@@ -31,7 +31,7 @@ export default function Profile() {
   return (
     <div className="flex flex-grow justify-center space-x-12 p-12 w-full">
       <div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl ">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 w-[35rem]">
           <Image
             src={user.image}
             alt="Profile Image"
@@ -47,7 +47,7 @@ export default function Profile() {
                 {nicknameContext.nickname} aka ({user.user_name})
               </h1>
             )}
-            <p className="text-blue-400 break-all">{user.email}</p>
+            <p className="text-blue-400 break-all ">{user.email}</p>
           </div>
         </div>
         <div className="mb-6">

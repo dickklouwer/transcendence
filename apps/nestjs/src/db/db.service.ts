@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 // import * as schema from '@repo/db/src';
 import {
   users,
+  friends,
   messages,
   groupChats,
   createQueryClient,
   createDrizzleClient,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats, ExternalUser } from '@repo/db';
+import type { User, UserChats, ExternalUser, Friends } from '@repo/db';
 import { eq, or, not } from 'drizzle-orm';
 
 @Injectable()
@@ -151,6 +152,44 @@ export class DbService {
     } catch (error) {
       console.log('Error: ', error);
       return null;
+    }
+  }
+  async getFriendsFromDataBase(jwtToken: string): Promise<Friends[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const friendList: Friends[] = await this.db
+        .select()
+        .from(friends)
+        .where(
+          or(
+            eq(friends.user_id_send, user.intra_user_id),
+            eq(friends.user_id_receive, user.intra_user_id),
+          ),
+        );
+      return friendList;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+  async sendFriendRequest(jwtToken: string, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db.insert(friends).values({
+        user_id_send: user.intra_user_id,
+        user_id_receive: userId,
+        is_approved: false,
+      });
+      console.log('Friend Request Sent!');
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
     }
   }
 

@@ -114,7 +114,44 @@ export class AppController {
       res.status(404).send('No users found');
       return;
     }
-
     res.status(200).send(users);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('sendFriendRequest')
+  async sendFriendRequest(
+    @Headers('authorization') token: string,
+    @Body('user_intra_id') user_intra_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.sendFriendRequest(
+      token.split(' ')[1],
+      user_intra_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to send friend request');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getFriends')
+  async getFriends(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ) {
+    const friends = await this.dbservice.getFriendsFromDataBase(
+      token.split(' ')[1],
+    );
+
+    if (!friends) {
+      res.status(404).send('No friends found');
+      return;
+    }
+
+    res.status(200).send(friends);
   }
 }

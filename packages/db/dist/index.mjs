@@ -79,6 +79,7 @@ var messageStatus = mySchema.table("message_status", {
 });
 var userInsert = createInsertSchema(users);
 var userSelect = createSelectSchema(users);
+var friendsSelect = createSelectSchema(friends);
 var messagesInsert = createInsertSchema(messages);
 
 // src/index.ts
@@ -89,6 +90,7 @@ var createDrizzleClient = (client) => drizzle(client);
 export {
   createDrizzleClient,
   createQueryClient,
+  friends,
   groupChats,
   messages,
   users

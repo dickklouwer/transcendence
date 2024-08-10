@@ -31,6 +31,7 @@ var src_exports = {};
 __export(src_exports, {
   createDrizzleClient: () => createDrizzleClient,
   createQueryClient: () => createQueryClient,
+  friends: () => friends,
   groupChats: () => groupChats,
   messages: () => messages,
   users: () => users
@@ -111,6 +112,7 @@ var messageStatus = mySchema.table("message_status", {
 });
 var userInsert = (0, import_drizzle_zod.createInsertSchema)(users);
 var userSelect = (0, import_drizzle_zod.createSelectSchema)(users);
+var friendsSelect = (0, import_drizzle_zod.createSelectSchema)(friends);
 var messagesInsert = (0, import_drizzle_zod.createInsertSchema)(messages);
 
 // src/index.ts
@@ -122,6 +124,7 @@ var createDrizzleClient = (client) => (0, import_postgres_js.drizzle)(client);
 0 && (module.exports = {
   createDrizzleClient,
   createQueryClient,
+  friends,
   groupChats,
   messages,
   users
