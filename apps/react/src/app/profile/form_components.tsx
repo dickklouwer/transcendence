@@ -105,6 +105,7 @@ export const FriendsForm = () => {
     const [isSend, setIsSend] = useState(false);
 
     useEffect(() => {
+      const fetchData = async () => {
       try {
           fetchGet<ExternalUser[]>("/api/getExternalUsers")
           .then((data) => {
@@ -118,7 +119,13 @@ export const FriendsForm = () => {
 
       } catch (error) {
           console.error("Error Getting Friends:", error);
-      }
+      }}
+
+      const delayDebounceFn = setTimeout(() => {
+        fetchData();
+      }, 300); // Delay before fetching the data
+  
+      return () => clearTimeout(delayDebounceFn);      
     }, [isSend, searchName]);
 
     const filteredChatFields = externalUsers?.filter((userField) => {
