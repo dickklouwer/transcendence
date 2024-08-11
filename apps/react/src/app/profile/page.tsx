@@ -29,6 +29,12 @@ export default function Profile() {
     return <div>Loading...</div>;
 
   return (
+    <div>
+
+    <div className="flex flex-col justify-center items-center bg-slate-900 shadow-lg rounded-lg ml-11 p-6 w-[84rem]">
+      <h1 className="text-2xl">Profile & Friends</h1>
+      <p className="w-auto whitespace-nowrap">&#60;---------------------------------------------------------&#62;</p>
+    </div>
     <div className="flex flex-grow justify-center space-x-12 p-12 w-full">
       <div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl ">
         <div className="flex items-center space-x-4 w-[35rem]">
@@ -38,7 +44,7 @@ export default function Profile() {
             width={100}
             height={100}
             className="w-24 h-24 rounded-full"
-          />
+            />
           <div className="flex-grow min-w-0 mb-4">
             {nicknameContext.nickname === undefined ? (
               <h1 className="text-2xl">{user.user_name}</h1>
@@ -57,7 +63,7 @@ export default function Profile() {
               setNickname={nicknameContext.setNickname}
               tempNickname={tempNickname}
               setTempNickname={setTempNickname}
-            />
+              />
           </div>
         </div>
         <div className="mb-6">
@@ -83,7 +89,7 @@ export default function Profile() {
         </div>
         <div className="space-y-4">
           {user.is_two_factor_enabled ? (
-              <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
+            <button className="bg-green-500 text-white flex justify-center px-4 py-4 rounded" disabled>
                 2FA Enabled
               </button>
             ) : (
@@ -103,6 +109,7 @@ export default function Profile() {
       </div>
       <FriendsForm />
     </div>
-  </div>
+    </div>
+    </div>
   )
 }
