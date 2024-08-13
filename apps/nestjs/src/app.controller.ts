@@ -7,6 +7,7 @@ import {
   Post,
   Body,
   Res,
+  Delete,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -36,7 +37,6 @@ export class AppController {
     const user: User | null = await this.dbservice.getUserFromDataBase(
       token.split(' ')[1],
     );
-    console.log('User Fetched!:', user);
     if (!user) {
       res.status(404).send("User doesn't exist");
     }
@@ -138,12 +138,12 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getFriends')
+  @Get('getFriendsNotApproved')
   async getFriends(
     @Headers('authorization') token: string,
     @Res() res: Response,
   ) {
-    const friends = await this.dbservice.getFriendsFromDataBase(
+    const friends = await this.dbservice.getFriendsNotApprovedFromDataBase(
       token.split(' ')[1],
     );
 
@@ -153,5 +153,81 @@ export class AppController {
     }
 
     res.status(200).send(friends);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getApprovedFriends')
+  async getApprovedFriends(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ) {
+    const friends = await this.dbservice.getFriendsApprovedFromDataBase(
+      token.split(' ')[1],
+    );
+
+    if (!friends) {
+      res.status(404).send('No friends found');
+      return;
+    }
+
+    res.status(200).send(friends);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('incomingFriendRequests')
+  async getIncomingFriendRequests(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ) {
+    const requests = await this.dbservice.getIncomingFriendRequests(
+      token.split(' ')[1],
+    );
+
+    if (!requests) {
+      res.status(404).send('No requests found');
+      return;
+    }
+
+    res.status(200).send(requests);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('acceptFriendRequest')
+  async acceptFriendRequest(
+    @Headers('authorization') token: string,
+    @Body('friend_id') friend_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.acceptFriendRequest(
+      token.split(' ')[1],
+      friend_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to accept friend request');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('declineFriendRequest')
+  async declineFriendRequest(
+    @Headers('authorization') token: string,
+    @Query('friend_id') friend_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.declineFriendRequest(
+      token.split(' ')[1],
+      friend_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to decline friend request');
+      return;
+    }
+
+    res.status(200).send(response);
   }
 }

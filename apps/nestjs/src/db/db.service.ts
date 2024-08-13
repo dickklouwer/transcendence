@@ -10,7 +10,8 @@ import {
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type { User, UserChats, ExternalUser, Friends } from '@repo/db';
-import { eq, or, not } from 'drizzle-orm';
+import { eq, or, not, and } from 'drizzle-orm';
+import { IncomingMessage } from 'http';
 
 @Injectable()
 export class DbService {
@@ -77,7 +78,6 @@ export class DbService {
         .from(users)
         .where(eq(users.token, jwtToken));
 
-      console.log('User: ', user);
       return user[0];
     } catch (error) {
       console.log('Error: ', error);
@@ -107,7 +107,6 @@ export class DbService {
         .from(users)
         .where(eq(users.nick_name, nickname));
 
-      console.log('Nickname: ', user);
       if (user.length === 0) {
         return true;
       }
@@ -147,14 +146,15 @@ export class DbService {
         .from(users)
         .where(not(eq(users.token, jwtToken)));
 
-      console.log('User: ', user);
       return user;
     } catch (error) {
       console.log('Error: ', error);
       return null;
     }
   }
-  async getFriendsFromDataBase(jwtToken: string): Promise<Friends[] | null> {
+  async getFriendsNotApprovedFromDataBase(
+    jwtToken: string,
+  ): Promise<Friends[] | null> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
@@ -163,9 +163,12 @@ export class DbService {
         .select()
         .from(friends)
         .where(
-          or(
-            eq(friends.user_id_send, user.intra_user_id),
-            eq(friends.user_id_receive, user.intra_user_id),
+          and(
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+            eq(friends.is_approved, false),
           ),
         );
       return friendList;
@@ -174,6 +177,91 @@ export class DbService {
       return null;
     }
   }
+
+  async getFriendsApprovedFromDataBase(
+    jwtToken: string,
+  ): Promise<ExternalUser[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const friendList = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+          friend_id: friends.friend_id,
+        })
+        .from(friends)
+        .innerJoin(
+          users,
+          or(
+            eq(users.intra_user_id, friends.user_id_send),
+            eq(users.intra_user_id, friends.user_id_receive),
+          ),
+        )
+        .where(
+          and(
+            eq(friends.is_approved, true),
+            not(eq(users.intra_user_id, user.intra_user_id)),
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+          ),
+        );
+
+      console.log('Friend List: ', friendList);
+      return friendList;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getIncomingFriendRequests(
+    jwtToken: string,
+  ): Promise<ExternalUser[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const friendList: ExternalUser[] = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+        })
+        .from(friends)
+        .innerJoin(
+          users,
+          or(
+            eq(users.intra_user_id, friends.user_id_send),
+            eq(users.intra_user_id, friends.user_id_receive),
+          ),
+        )
+        .where(
+          and(
+            eq(friends.is_approved, false),
+            not(eq(users.intra_user_id, user.intra_user_id)),
+            eq(friends.user_id_receive, user.intra_user_id),
+          ),
+        );
+
+      console.log('Incoming Friend List ', friendList);
+      return friendList;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
   async sendFriendRequest(jwtToken: string, userId: number): Promise<boolean> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
@@ -186,6 +274,67 @@ export class DbService {
         is_approved: false,
       });
       console.log('Friend Request Sent!');
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async acceptFriendRequest(
+    jwtToken: string,
+    friend_id: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db
+        .update(friends)
+        .set({ is_approved: true })
+        .where(
+          and(
+            or(
+              eq(friends.user_id_send, friend_id),
+              eq(friends.user_id_receive, friend_id),
+            ),
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+          ),
+        );
+      console.log('Friend Request Accepted!');
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async declineFriendRequest(
+    jwtToken: string,
+    friend_id: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db
+        .delete(friends)
+        .where(
+          and(
+            or(
+              eq(friends.user_id_send, friend_id),
+              eq(friends.user_id_receive, friend_id),
+            ),
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+          ),
+        );
+      console.log('Friend Request Declined!');
       return true;
     } catch (error) {
       console.log('Error: ', error);

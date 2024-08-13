@@ -61,6 +61,25 @@ export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
   }
 }
 
+export async function fetchDelete<T> (url: string): Promise<T> {
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    if (response.status !== 200)
+      throw `Unauthorized ${response.status}`;
+    const data : T = await response.json();
+    return data;
+  } catch (error) {
+    throw `Fetch Error ${error}`;
+  }
+}
+
 export async function fetchChats(token : string | null): Promise<UserChats[]> {
   const messages = await fetch('api/chats', {
     headers: {

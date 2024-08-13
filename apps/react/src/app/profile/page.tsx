@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { FriendsForm, NicknameForm } from "./form_components";
+import { AddFriendsForm, NicknameForm, FriendsList } from "./form_components";
 import { useState, useEffect, useContext } from "react";
 import { fetchGet } from "../page";
 import Link from "next/link";
@@ -32,8 +32,9 @@ export default function Profile() {
     <div>
 
     <div className="flex flex-col justify-center items-center bg-slate-900 shadow-lg rounded-lg ml-11 p-6 w-[84rem]">
-      <h1 className="text-2xl">Profile & Friends</h1>
-      <p className="w-auto whitespace-nowrap">&#60;---------------------------------------------------------&#62;</p>
+      <h1 className="text-2xl">Friends</h1>
+      <p className="w-auto whitespace-nowrap pb-4 ">&#60;-------------------------------&#62;</p>
+      <FriendsList />
     </div>
     <div className="flex flex-grow justify-center space-x-12 p-12 w-full">
       <div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl ">
@@ -107,7 +108,7 @@ export default function Profile() {
         <h2 className="text-2xl">Add Friends</h2>
         <svg className="h-10 w-10" fill="#ffffff" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <rect x="122.435" y="161.391" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="356.174" y="161.391" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="189.217" y="94.609" width="133.565" height="33.391"></rect> </g> </g> <g> <g> <rect x="155.826" y="128" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="322.783" y="128" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <polygon points="322.783,306.087 322.783,339.478 289.391,339.478 289.391,372.87 356.174,372.87 356.174,306.087 "></polygon> </g> </g> <g> <g> <polygon points="189.217,339.478 189.217,306.087 155.826,306.087 155.826,372.87 222.609,372.87 222.609,339.478 "></polygon> </g> </g> <g> <g> <rect y="128" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="66.783" y="61.217" width="122.435" height="33.391"></rect> </g> </g> <g> <g> <rect x="33.391" y="94.609" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <polygon points="66.783,306.087 66.783,272.696 33.391,272.696 33.391,339.478 89.044,339.478 89.044,306.087 "></polygon> </g> </g> <g> <g> <rect x="478.609" y="128" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="445.217" y="94.609" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="322.783" y="61.217" width="122.435" height="33.391"></rect> </g> </g> <g> <g> <polygon points="445.217,272.696 445.217,306.087 411.826,306.087 411.826,339.478 478.609,339.478 478.609,272.696 "></polygon> </g> </g> <g> <g> <polygon points="478.609,339.478 478.609,372.87 356.174,372.87 356.174,417.391 155.826,417.391 155.826,372.87 33.391,372.87 33.391,339.478 0,339.478 0,406.261 122.435,406.261 122.435,450.783 389.565,450.783 389.565,406.261 512,406.261 512,339.478 "></polygon> </g> </g> </g></svg>
       </div>
-      <FriendsForm />
+      <AddFriendsForm />
     </div>
     </div>
     </div>
