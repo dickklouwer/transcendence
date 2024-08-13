@@ -11,7 +11,6 @@ import {
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type { User, UserChats, ExternalUser, Friends } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
-import { IncomingMessage } from 'http';
 
 @Injectable()
 export class DbService {

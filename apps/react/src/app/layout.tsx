@@ -36,16 +36,16 @@ function FriendsInbox() {
     fetchPost<{friend_id : number}, boolean>('api/acceptFriendRequest', { friend_id: friend_id })
     .then((res) => {
       console.log(res);
+      setReload(prev => !prev);
     })
-    setReload(prev => !prev);
   }
 
   const declineFriendRequest = (friend_id: number) => {
     fetchDelete(`api/declineFriendRequest/?friend_id=${friend_id}`)
     .then((res) => {
       console.log(res);
+      setReload(prev => !prev);
     })
-    setReload(prev => !prev);
   }
 
   return (

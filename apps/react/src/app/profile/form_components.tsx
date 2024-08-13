@@ -241,7 +241,8 @@ export const FriendsList = () => {
 
     return (
       <div className="container mx-auto">
-        <div className="flex flex-wrap gap-4 h-60 overflow-x-scroll justify-center items-center">
+        <div className="flex flex-wrap gap-4 max-h-60 overflow-x-scroll justify-center items-center">
+          {friendsList.length === 0 && <p className="text-center text-1xl whitespace-nowrap">No friends :(</p>}
                   {friendsList.map((user) => (
                       <div key={user.intra_user_id} className="">
                           <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded-md">
