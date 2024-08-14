@@ -31,6 +31,7 @@ var src_exports = {};
 __export(src_exports, {
   createDrizzleClient: () => createDrizzleClient,
   createQueryClient: () => createQueryClient,
+  games: () => games,
   groupChats: () => groupChats,
   messages: () => messages,
   users: () => users
@@ -123,6 +124,7 @@ var createDrizzleClient = (client) => (0, import_postgres_js.drizzle)(client);
 0 && (module.exports = {
   createDrizzleClient,
   createQueryClient,
+  games,
   groupChats,
   messages,
   users

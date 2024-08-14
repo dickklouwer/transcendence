@@ -8,7 +8,16 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { subscribe } from 'diagnostics_channel';
+import {
+	users,
+	messages,
+	groupChats,
+	createQueryClient,
+	createDrizzleClient,
+	games,
+} from '@repo/db';
+import type { User } from '@repo/db';
+import { eq, or } from 'drizzle-orm';
 
 const gameWidth = 400;
 const gameHeight = 400;
@@ -113,6 +122,7 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 
 		// Find the room containing the disconnected client
 		let roomIdToDelete: string | null = null;
+		let otherClient: Socket | null = null;
 		const roomId = this.clientRoomMap.get(client.id);
 
 		for (const [key, value] of this.clientRoomMap.entries()) {
@@ -123,31 +133,41 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		if (roomId) {
 			const room = this.rooms.get(roomId);
 			if (room) {
-				// room.players = room.players.filter(player => player.client?.id !== client.id);
-				if (room.players.length === 1) {
-					// If the room is empty, mark it for deletion
-					roomIdToDelete = roomId;
-					this.logger.log(`Room : ${roomId} deleted!`);
-				} else if (room.players.length === 2) {
-					// Notify the remaining player that they are waiting for another player
+				// writing score to DB
+				if (client.id === room.players[0].client.id)
+					this.insertGameScore(room.players[0].client.data.intra_id, room.players[1].client.data.intra_id, room.players[0].score, 5);
+				else
+					this.insertGameScore(room.players[0].client.data.intra_id, room.players[1].client.data.intra_id, 5, room.players[1].score);
+				this.logger.log(`writing to DB`);
+				room.players = room.players.filter(player => player.client?.id !== client.id);
+				roomIdToDelete = roomId;
+				// Notify the remaining player that they are waiting for another player
+				if (room.players.length > 0) {
+					otherClient = room.players[0].client;
 					this.logger.log(`Room : ${roomId} still has 1 player with id: ${room.players[0].client?.id}`);
 					room.players[0].client?.emit('awaitPlayer', 'Awaiting Player');
 				}
 			}
-
 			// Delete the empty room if needed
 			if (roomIdToDelete) {
-				this.rooms.delete(roomIdToDelete);
-				this.logger.log(`Room deleted: ${roomIdToDelete}`);
+				if (this.rooms.delete(roomIdToDelete))
+					this.logger.log(`Room deleted: ${roomIdToDelete} in rooms array`);
+				else
+					this.logger.log(`Room NOT deleted: ${roomIdToDelete} in rooms array`);
 			}
-
 			// Remove the client from the clients array and clientRoomMap
 			this.clients = this.clients.filter(c => c.id !== client.id);
-			this.clientRoomMap.delete(client.id);
+			if (this.clientRoomMap.delete(client.id))
+				this.logger.log(`client deleted: ${client.id} in clientRoomMap`);
+			else
+				this.logger.log(`client NOT deleted : ${client.id} in clientRoomMap`);
+			if (this.clientRoomMap.delete(otherClient.id))
+				this.logger.log(`client deleted: ${otherClient.id} in clientRoomMap`);
+			else
+				this.logger.log(`client NOT deleted: ${otherClient.id} in clientRoomMap`);
+			// optionally decrease the room counter
 		}
-		else {
-			this.clients = this.clients.filter(c => c.id !== client.id);
-		}
+		this.clients = this.clients.filter(c => c.id !== client.id);
 	}
 
 	@SubscribeMessage('registerUser')
@@ -169,15 +189,7 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			this.logger.log(`client 1: ${room.players[1].client.id}, username: ${player2}`);
 			console.log('left user: ', player1);
 			console.log('right user: ', player2);
-			this.server.to(room.roomID).emit('leftUser', player1);
-			this.server.to(room.roomID).emit('rightUser', player2);
-			// if (client.id === room.players[0].client.id) {
-			// }
-			// else if (client.id === room.players[1].client.id) {
-			// 	this.server.to(room.roomID).emit('leftUser', player1);
-			// 	this.server.to(room.roomID).emit('rightUser', player2);
-			// 	// this.server.to(room.roomID).emit('rightUser', payload.user_name);
-			// }
+			this.server.to(room.roomID).emit('names', [player1, player2]);
 		}
 		else {
 			client.emit('leftUser', payload.user_name);
@@ -301,6 +313,8 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 				this.server.to(room.roomID).emit('score', { left: room.players[0].score, right: room.players[1].score });
 			}
 			if (room.players[0].score == WinScore || room.players[1].score == WinScore) {
+				this.insertGameScore(room.players[0].client.data.intra_id, room.players[1].client.data.intra_id, room.players[0].score, room.players[1].score);
+				this.logger.log(`writing to DB: ${room.players[0].score} - ${room.players[1].score}`);
 				room.players[0].score = 0;
 				room.players[1].score = 0;
 				this.server.to(room.roomID).emit('score', { left: room.players[0].score, right: room.players[1].score });
@@ -313,5 +327,24 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		this.server.to(room.roomID).emit('ball', room.ball);
 		this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
 		this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+	}
+
+	db: ReturnType<typeof createDrizzleClient>;
+	constructor() {
+		if (!process.env.DATABASE_URL_LOCAL) {
+			throw Error('Env DATABASE_URL_LOCAL is undefined');
+		}
+
+		this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
+	}
+	async insertGameScore(player1: number, player2: number, score1: number, score2: number): Promise<void> {
+		try {
+			await this.db
+				.insert(games)
+				.values({ player1_id: player1, player2_id: player2, player1_score: score1, player2_score: score2 });
+			console.log('Game score inserted');
+		} catch (error) {
+			console.error('Error inserting game score:', error);
+		}
 	}
 }

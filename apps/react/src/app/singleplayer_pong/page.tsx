@@ -36,7 +36,6 @@ export default function PongGame() {
 		const context = canvas!.getContext('2d');
 		
 		const drawGame = (context) => {
-			console.log("TEST");
 			context.clearRect(0, 0, gameWidth, gameHeight);
 
 			// Draw ball
