@@ -1,7 +1,6 @@
 "use client";
 
 import Link from 'next/link';
-import PongGame from '../pong/page';
 
 export default function Menu() {
   

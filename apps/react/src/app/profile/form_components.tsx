@@ -3,8 +3,7 @@ import { useState, useEffect, ChangeEvent,SetStateAction, Dispatch } from "react
 import Image from "next/image";
 import { fetchGet, fetchPost } from "../page";
 import type { ExternalUser, Friends } from "@repo/db";
-import { data } from "autoprefixer";
-import { get } from "http";
+import { userSocket } from "../layout";
 
 export const NicknameForm = ({
     setNickname,
@@ -157,6 +156,7 @@ export const AddFriendsForm = () => {
             .then(() => {
                 console.log("Friend Request Sent");
                 setIsSend(prev => !prev);
+                userSocket.emit('FriendRequestNotification', user_intra_id);
             })
         } catch (error) {
             console.error("Error Sending Friend Request:", error);

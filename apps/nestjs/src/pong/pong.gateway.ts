@@ -25,6 +25,7 @@ interface Ball {
 
 @WebSocketGateway({
   cors: { origin: 'http://localhost:2424' },
+  namespace: 'pong',
   credentials: true,
   allowEIO3: true,
 })

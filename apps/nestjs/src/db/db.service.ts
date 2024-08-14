@@ -213,7 +213,6 @@ export class DbService {
           ),
         );
 
-      console.log('Friend List: ', friendList);
       return friendList;
     } catch (error) {
       console.log('Error: ', error);
@@ -253,7 +252,6 @@ export class DbService {
           ),
         );
 
-      console.log('Incoming Friend List ', friendList);
       return friendList;
     } catch (error) {
       console.log('Error: ', error);
