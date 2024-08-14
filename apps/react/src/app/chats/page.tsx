@@ -117,7 +117,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                 <button onClick={() => alert('Showing profile of ' + chatField.title)}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
-                <Link className="flex-grow" href={'/dc'}>
+                <Link className="flex-grow" href={'/messages'}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
@@ -199,13 +199,6 @@ export default function Chats() {
             </div>
             <Link className="text-blue-500 mt-4" href={'/menu'}>
                 Back to Menu
-            </Link>
-            <p>----- Temporary -----</p>
-            <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/dc'}>
-                DC
-            </Link>
-            <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/gc'}>
-                GC
             </Link>
         </div>
     );
