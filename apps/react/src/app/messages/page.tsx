@@ -13,20 +13,9 @@ interface TMessage {
     sent_at: string;
 }
 
-// Assuming the current user's ID
-const myId = 42;
-const socket = io(`http://${window.location.host}/chat`, { path: "/ws/socket.io" });
 
-/* TABLE messages
-  message_id: serial('message_id').primaryKey(),
-  sender_id: integer('sender_id')
-    .references(() => users.intra_user_id)
-    .notNull(),
-  receiver_id: integer('reciever_id'),
-  group_chat_id: integer('group_chat_id'),
-  message: text('message').notNull(),
-  sent_at: timestamp('sent_at').defaultNow(),
-*/
+const myId = 42; // Temporaty: Assuming the current user's ID
+const socket = io(`http://${window.location.host}/chat`, { path: "/ws/socket.io" });
 
 const databaseMessages = [
     {
@@ -78,8 +67,6 @@ const databaseMessages = [
     //     sent_at: '13:09'
     // },
 ];
-
-// const databaseMessages = [{}];
 
 function Message({ message }: { message:TMessage }) {
     const isMyMessage = message.sender_id === myId;
@@ -143,7 +130,8 @@ export default function DC() {
         setMessages([...messages, message]);
       });
 
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); /* Auto scroll to last message */
+        /* Auto scroll to last message */
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
   
     const sendMessage = () => {
