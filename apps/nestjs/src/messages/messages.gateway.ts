@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { subscribe } from 'diagnostics_channel';
+// import { subscribe } from 'diagnostics_channel';
 
 @WebSocketGateway({
   cors: { origin: 'http://localhost:2424' },
@@ -16,11 +16,11 @@ import { subscribe } from 'diagnostics_channel';
   credentials: true,
   allowEIO3: true,
 })
-export class ChatGateway
+export class MessagesGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer() server: Server;
-  private logger: Logger = new Logger('ChatGateway');
+  private logger: Logger = new Logger('MessagesGateway');
 
   @SubscribeMessage('msgToServer')
   handleMessage(client: Socket, payload: string): void {
