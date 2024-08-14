@@ -175,7 +175,7 @@ export const AddFriendsForm = () => {
                     maxLength={15} />
             </div>
             <p className="flex justify-center m-4 w-auto whitespace-nowrap">&#60;---------------------------------&#62;</p>
-            <div className=" overflow-scroll h-96">
+            <div className=" overflow-scroll h-[30.5rem]">
                 { filteredChatFields.map((user) => (
                     <div key={user.intra_user_id} className=" justify-center">
                       { getApprovedFriends.find((friend) => friend.intra_user_id === user.intra_user_id) || incomingFriendRequests.find((friend) => friend.intra_user_id === user.intra_user_id) ? null :
