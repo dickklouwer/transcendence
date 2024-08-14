@@ -1,5 +1,5 @@
-import type { User } from './schema';
-import { users, messages, groupChats, games } from './schema';
+import type { User, Friends } from './schema';
+import { users, messages, groupChats, friends, games } from './schema';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
@@ -16,5 +16,14 @@ type UserChats = {
     unreadMessages: number;
   };
 
-export type { User, UserChats }
-export { users, messages, groupChats, games};
+type ExternalUser = {
+    intra_user_id: number;
+    user_name: string;
+    nick_name: string;
+    email: string;
+    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    image: string;
+  };
+
+export type { User, UserChats, ExternalUser, Friends }
+export { users, friends, messages, groupChats, games};

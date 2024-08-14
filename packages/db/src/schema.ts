@@ -20,8 +20,7 @@ export const user_state = mySchema.enum('user_state', [
 ]);
 
 export const users = mySchema.table('users', {
-  user_id: serial('user_id').primaryKey(),
-  intra_user_id: integer('intra_user_id').notNull().unique(),
+  intra_user_id: integer('intra_user_id').primaryKey(),
   user_name: text('user_name').notNull().unique(),
   nick_name: text('nick_name'),
   token: text('token'),
@@ -35,8 +34,8 @@ export const users = mySchema.table('users', {
 
 export const friends = mySchema.table('friends', {
   friend_id: serial('friend_id').primaryKey(),
-  user_id_send: integer('user_id_send').notNull(),
-  user_id_receive: integer('user_id_receive').notNull(),
+  user_id_send: integer('user_id_send').notNull().references(() => users.intra_user_id),
+  user_id_receive: integer('user_id_receive').notNull().references(() => users.intra_user_id),
   is_approved: boolean('is_approved').notNull().default(false),
 });
 
@@ -95,6 +94,8 @@ export const messageStatus = mySchema.table('message_status', {
 
 export const userInsert = createInsertSchema(users);
 export const userSelect = createSelectSchema(users);
+export const friendsSelect = createSelectSchema(friends);
 export const messagesInsert = createInsertSchema(messages);
 
 export type User = z.infer<typeof userSelect>;
+export type Friends = z.infer<typeof friendsSelect>;
