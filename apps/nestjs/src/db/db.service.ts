@@ -162,6 +162,8 @@ export class DbService {
           unreadMessages: 0,
         };
 
+        //TODO: rewrite when group chat and private chat the same
+
         if (!isGroupChat) {
           const otherUserId =
             message.sender_id === user.intra_user_id
@@ -199,7 +201,7 @@ export class DbService {
           }
 
           field.messageId = message.message_id;
-          field.type = 'gm';
+          field.type = 'gm'; // not needed after merge private and group chat
           field.title = groupChat[0].group_name;
           field.image = groupChat[0].group_image || '';
           field.lastMessage = message.message;

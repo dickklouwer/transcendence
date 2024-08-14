@@ -1,5 +1,5 @@
 import type { User } from './schema';
-import { users, messages, groupChats } from './schema';
+import { users, messages, Chats } from './schema';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
@@ -17,4 +17,4 @@ type UserChats = {
   };
 
 export type { User, UserChats }
-export { users, messages, groupChats};
+export { users, messages, Chats as groupChats};

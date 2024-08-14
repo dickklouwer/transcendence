@@ -34,38 +34,38 @@ const databaseMessages = [
         message: 'Hi',
         sent_at: '13:05'
     },
-    // {
-    //     message_id: 3,
-    //     sender_id: 43,
-    //     receiver_id: 42,
-    //     group_chat_id: null,
-    //     message: 'How are you?',
-    //     sent_at: '13:06'
-    // },
-    // {
-    //     message_id: 4,
-    //     sender_id: 42,
-    //     receiver_id: 43,
-    //     group_chat_id: null,
-    //     message: 'I am fine :)\nThanks for asking!',
-    //     sent_at: '13:07'
-    // },
-    // {
-    //     message_id: 5,
-    //     sender_id: 42,
-    //     receiver_id: 43,
-    //     group_chat_id: null,
-    //     message: 'How are you?',
-    //     sent_at: '13:08'
-    // },
-    // {
-    //     message_id: 6,
-    //     sender_id: 43,
-    //     receiver_id: 42,
-    //     group_chat_id: null,
-    //     message: 'Good',
-    //     sent_at: '13:09'
-    // },
+    {
+        message_id: 3,
+        sender_id: 43,
+        receiver_id: 42,
+        group_chat_id: null,
+        message: 'How are you?',
+        sent_at: '13:06'
+    },
+    {
+        message_id: 4,
+        sender_id: 42,
+        receiver_id: 43,
+        group_chat_id: null,
+        message: 'I am fine :)\nThanks for asking!',
+        sent_at: '13:07'
+    },
+    {
+        message_id: 5,
+        sender_id: 42,
+        receiver_id: 43,
+        group_chat_id: null,
+        message: 'How are you?',
+        sent_at: '13:08'
+    },
+    {
+        message_id: 6,
+        sender_id: 43,
+        receiver_id: 42,
+        group_chat_id: null,
+        message: 'Good',
+        sent_at: '13:09'
+    },
 ];
 
 function Message({ message }: { message:TMessage }) {

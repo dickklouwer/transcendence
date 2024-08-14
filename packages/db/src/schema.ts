@@ -48,19 +48,20 @@ export const games = mySchema.table('games', {
   player2_score: integer('player2_score'),
 });
 
-export const groupChats = mySchema.table('group_chats', {
-  group_chat_id: serial('group_chat_id').primaryKey(),
-  group_name: text('group_name').notNull(),
-  group_is_public: boolean('group_is_public').default(false),
-  group_password: text('group_password'),
-  group_image: text('group_image'),
+export const chats = mySchema.table('chats', {
+  chat_id: serial('chat_id').primaryKey(),
+  is_direct: boolean('is_direct').default(false),
+  title: text('title').notNull(),
+  is_public: boolean('is_public').default(false),
+  password: text('password'),
+  image: text('image'),
   created_at: timestamp('created_at').defaultNow(),
 });
 
-export const groupChatsUsers = mySchema.table('group_chats_users', {
-  group_chat_user_id: serial('group_chat_user_id').primaryKey(),
-  group_chat_id: integer('group_chat_id').references(
-    () => groupChats.group_chat_id,
+export const chatsUsers = mySchema.table('chats_users', {
+  chat_user_id: serial('chat_user_id').primaryKey(),
+  chat_id: integer('chat_id').references(
+    () => chats.chat_id,
   ),
   intra_user_id: integer('intra_user_id').references(() => users.intra_user_id),
   is_owner: boolean('is_owner').notNull().default(false),
@@ -74,8 +75,8 @@ export const messages = mySchema.table('messages', {
   message_id: serial('message_id').primaryKey(),
   sender_id: integer('sender_id').references(() => users.intra_user_id),
   receiver_id: integer('receiver_id').references(() => users.intra_user_id),
-  group_chat_id: integer('group_chat_id').references(
-    () => groupChats.group_chat_id,
+  chat_id: integer('chat_id').references(
+    () => chats.chat_id,
   ),
   message: text('message').notNull(),
   sent_at: timestamp('sent_at').defaultNow().notNull(),
