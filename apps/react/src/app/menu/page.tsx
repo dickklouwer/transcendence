@@ -20,6 +20,9 @@ export default function Menu() {
       <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/multiplayer_pong'}>
         Multiplayer
       </Link>
+      <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/power-up_pong'}>
+        Play with Power Ups
+      </Link>
       <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/chats'}>
       Chat
       </Link>
