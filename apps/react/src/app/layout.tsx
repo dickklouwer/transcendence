@@ -17,7 +17,6 @@ export type NicknameFormProps = {
   setNickname: Dispatch<SetStateAction<string | undefined>>;
 }
 
-
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();
   const [reload, setReload] = useState<boolean>(false);
@@ -154,8 +153,8 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
       <div className='flex space-x-4'>
         <FriendsInbox />
         <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
-            <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
-            {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
+          <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
+          {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
         </Link>
       </div>
   )

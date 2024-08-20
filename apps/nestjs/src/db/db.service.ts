@@ -131,6 +131,24 @@ export class DbService {
     }
   }
 
+  async setUserState(
+    intra_user_id: number,
+    state: 'Online' | 'Offline' | 'In-Game' | 'Idle',
+  ): Promise<boolean> {
+    try {
+      await this.db
+        .update(users)
+        .set({ state: state })
+        .where(eq(users.intra_user_id, intra_user_id));
+
+      console.log('State Set! for', intra_user_id, 'to', state);
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async getAllExternalUsers(jwtToken: string): Promise<ExternalUser[] | null> {
     try {
       const user: ExternalUser[] = await this.db
@@ -209,6 +227,45 @@ export class DbService {
             or(
               eq(friends.user_id_send, user.intra_user_id),
               eq(friends.user_id_receive, user.intra_user_id),
+            ),
+          ),
+        );
+
+      return friendList;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getAnyApprovedFriends(
+    intra_user_id: number,
+  ): Promise<ExternalUser[] | null> {
+    try {
+      const friendList = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+        })
+        .from(friends)
+        .innerJoin(
+          users,
+          or(
+            eq(users.intra_user_id, friends.user_id_send),
+            eq(users.intra_user_id, friends.user_id_receive),
+          ),
+        )
+        .where(
+          and(
+            eq(friends.is_approved, true),
+            not(eq(users.intra_user_id, intra_user_id)),
+            or(
+              eq(friends.user_id_send, intra_user_id),
+              eq(friends.user_id_receive, intra_user_id),
             ),
           ),
         );

@@ -24,12 +24,28 @@ function createMockData() {
   });
 }
 
+export function DisplayUserStatus({ state, width, height }: { state: 'Online' | 'Offline' | 'In-Game', width: string, height: string }) {
+
+  return (
+    <div>
+              {state === 'Offline' && <span className="absolute right-11  bg-red-600 rounded-full"></span>}
+              
+              {state === 'Online' &&  <div className={`absolute bottom-[-5px] right-[-5px] bg-green-500 rounded-full border-2 border-white`}
+              style={{ width: `${width}px`, height: `${height}px` }}></div>}
+              
+    </div>
+  );
+}
+
 /**
  * This is the Profile page where the user can see their profile information
  * for example their username, email, image, achievements, wins and losses.
  * The user can also enable 2FA, create mock data setnickname.
  * You also can add friends and see your friends list.
  */
+
+
+
 export default function Profile() {
   const [user, setUser] = useState<User>();
   const [tempNickname, setTempNickname] = useState<string>("");
@@ -61,13 +77,16 @@ export default function Profile() {
     <div className="flex flex-grow justify-center space-x-12 p-12 w-full">
       <div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl ">
         <div className="flex items-center space-x-4 w-[35rem]">
-          <Image
-            src={user.image}
-            alt="Profile Image"
-            width={100}
-            height={100}
-            className="w-24 h-24 rounded-full"
-            />
+          <div className="relative">
+            <Image
+              src={user.image}
+              alt="Profile Image"
+              width={100}
+              height={100}
+              className="w-24 h-24 rounded-full object-cover"
+              />
+          <DisplayUserStatus state={'Online'} width={'7'} height={'7'} />
+          </div>
           <div className="flex-grow min-w-0 mb-4">
             {nicknameContext.nickname === undefined ? (
               <h1 className="text-2xl">{user.user_name}</h1>
