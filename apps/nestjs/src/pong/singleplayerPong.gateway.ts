@@ -153,8 +153,8 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 		}
 
 		// Emit updated state to clients
-		client.emit('ball', this.ball);
-		client.emit('rightPaddle', this.rightPaddle);
-		client.emit('leftPaddle', this.leftPaddle);
+		client.emit('ball', {x: this.ball.x, y: this.ball.y});
+		// client.emit('rightPaddle', this.rightPaddle);
+		// client.emit('leftPaddle', this.leftPaddle);
 	}
 }

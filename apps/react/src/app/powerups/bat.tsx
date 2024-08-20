@@ -1,4 +1,4 @@
-class Bat {
+"class Bat {
     positionX: number;
     positionY: number;
 
@@ -82,4 +82,4 @@ class Bat {
     }
 }
 
-export default Bat;
+export default Bat;"

@@ -53,12 +53,11 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	}
 
 	handleConnection(client: Socket) {
-		this.logger.log(`Client connected: ${client.id} to single player game`);
+		this.logger.log(`Client connected: ${client.id} to power up game`);
+		client.emit('startSetup', {x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle});
+		// client.emit('ball', {x: this.ball.x, y: this.ball.y});
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);
-		client.emit('ball', this.ball);
-		client.emit('rightPaddle', this.rightPaddle);
-		client.emit('leftPaddle', this.leftPaddle);
 	}
 
 	handleDisconnect(client: Socket) {
@@ -175,8 +174,10 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		// AI for left paddle
 		if (this.ball.y > (this.leftPaddle + paddleHeight)) {
 			this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 2);
+			client.emit('leftPaddle', this.leftPaddle);
 		} else if (this.ball.y < this.leftPaddle) {
 			this.leftPaddle = Math.max(0, this.leftPaddle - 2);
+			client.emit('leftPaddle', this.leftPaddle);
 		}
 
 		// Ball out of bounds
@@ -198,7 +199,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 
 		// Emit updated state to clients
-		client.emit('ball', this.ball);
+		client.emit('ball', {x: this.ball.x, y: this.ball.y});
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);
 	}

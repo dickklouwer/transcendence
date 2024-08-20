@@ -39,6 +39,16 @@ export default function PongGame() {
 		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
 		setGameManager(manager);
 
+		// upon reloading this does not work anymore
+		socket.on('startSetup', ({ x, y, leftPaddle, rightPaddle }: { x: number, y: number, leftPaddle: number, rightPaddle: number }) => {
+			manager.updateBallPosition(x, y);
+			manager.updatePaddlePosition('left', leftPaddle);
+			manager.updatePaddlePosition('right', rightPaddle);
+			manager.leftPaddle.draw();
+			manager.rightPaddle.draw();
+			manager.ball.draw();
+		});
+
 		socket.on('rightPaddle', (paddle: number) => {
 			manager.updatePaddlePosition('right', paddle);
 		});
@@ -47,16 +57,15 @@ export default function PongGame() {
 			manager.updatePaddlePosition('left', paddle);
 		});
 
-		socket.on('ball', (ball: Ball) => {
-			manager.updateBallPosition(ball);
-			manager.drawGame();
+		socket.on('ball', ({ x, y }: { x: number, y: number }) => {
+			manager.updateBallPosition(x, y);
 		});
 
 		socket.on('showPowerUp', ({ powerUpType, powerUpHeight }: { powerUpType: string, powerUpHeight: number }) => {
-			manager.updateGameState(powerUpType);
+			manager.updateSVGString(shieldSVGString);
 			manager.updatePowerUpHeight(powerUpHeight);
+			manager.updateGameState(powerUpType);
 			console.log("show power up");
-			manager.drawGame();
 		});		
 
 		socket.on('score', (score: Score) => {
@@ -81,7 +90,7 @@ export default function PongGame() {
 
 	const startGame = () => {
 		if (gameManager) {
-			gameManager.updateGameState("playing");
+			gameManager.startGame();
 			socket.emit('start');
 		}
 	};
