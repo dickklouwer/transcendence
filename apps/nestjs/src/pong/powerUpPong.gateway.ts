@@ -122,7 +122,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 			this.powerUpType = 'shield';
 			this.powerUpHeight = this.getRandomNumber(0, 270);
 			client.emit('showPowerUp', { powerUpType: this.powerUpType, powerUpHeight: this.powerUpHeight });
-			this.logger.log('PowerUp: ' + this.powerUpType);
+			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
 		}
 	}
 
@@ -153,7 +153,10 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				this.ball.vx = -this.ball.vx;
 				this.hits += 1;
 				this.hitCheck(client);
-				this.logger.log('Hits: ' + this.hits);
+				// this.logger.log('Hits: ' + this.hits);
+				// this.logger.log('ball.y: ' + this.ball.y);
+				// this.logger.log('bal.x : ' + this.ball.x);
+				// this.logger.log('rightPaddle: ' + this.rightPaddle);
 				this.changeBallDirection(this.rightPaddle);
 			}
 		}
