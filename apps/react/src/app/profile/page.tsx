@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { AddFriendsForm, NicknameForm, FriendsList } from "./form_components";
 import { useState, useEffect, useContext } from "react";
-import { fetchGet } from "../page";
+import { fetchGet } from "../fetch_functions";
 import Link from "next/link";
 import { NicknameContext, NicknameFormProps } from "../layout";
 import { User } from "@repo/db"
@@ -24,8 +24,14 @@ function createMockData() {
   });
 }
 
+/**
+ * This is the Profile page where the user can see their profile information
+ * for example their username, email, image, achievements, wins and losses.
+ * The user can also enable 2FA, create mock data setnickname.
+ * You also can add friends and see your friends list.
+ */
 export default function Profile() {
-  const [user, setUser] = useState<User>(); // This Any needs to be replaced with the correct type that we will get from the backend
+  const [user, setUser] = useState<User>();
   const [tempNickname, setTempNickname] = useState<string>("");
   const nicknameContext: NicknameFormProps | undefined = useContext(NicknameContext);
 

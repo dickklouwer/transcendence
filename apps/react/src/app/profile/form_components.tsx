@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect, ChangeEvent,SetStateAction, Dispatch } from "react";
 import Image from "next/image";
-import { fetchGet, fetchPost } from "../page";
+import { fetchGet, fetchPost } from "../fetch_functions";
 import type { ExternalUser, Friends } from "@repo/db";
 import { userSocket } from "../layout";
 
+/* -- SetNicknameForm Component --> */
 export const NicknameForm = ({
     setNickname,
     tempNickname,
@@ -99,6 +100,7 @@ export const NicknameForm = ({
     );
   };
 
+/* -- AddFriendsForm Component --> */
 export const AddFriendsForm = () => {
     const [searchName, setSearchName] = useState<string>("");
     const [externalUsers, setExternalUsers] = useState<ExternalUser[]>([]);
@@ -235,9 +237,6 @@ export const FriendsList = () => {
             console.error("Error Getting Friends:", error);
         } 
        }, []);
-
-       console.log(friendsList);
-
 
     return (
       <div className="container mx-auto">

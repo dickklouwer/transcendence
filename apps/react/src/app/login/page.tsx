@@ -1,15 +1,12 @@
 "use client";
 
-
 // import { signIn } from 'next-auth/react';
 import { signIn } from 'next-auth/react';
 import { ChangeEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 
-export default function Login({children}:{children: React.ReactNode}) {
-
-
+export default function Login() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen">
@@ -24,16 +21,18 @@ export default function Login({children}:{children: React.ReactNode}) {
 
 export function SignIn42() {
 
-
     return (
         <div className="flex flex-col items-center">
             <h3> Login with your 42 account </h3>
             <button className="bg-blue-500 text-white font-bold py-2 px-4 mt-4 rounded"  onClick={() => signIn('FortyTwoProvider')}>Sign in with 42</button>
         </div>
     )
-
 }
 
+/**
+ * The SignInDevUser function allows a user to sign in as a Dev User.
+ * This works by sending a POST request to the server with the username.
+ */
 export function SignInDevUser() {
     const [tempUsername, setTempUsername] = useState<string>("");
     const Router = useRouter();

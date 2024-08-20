@@ -2,7 +2,7 @@
 
 import { createContext, Dispatch, SetStateAction, useEffect, useState, useContext } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchDelete, fetchGet, fetchPost } from './page';
+import { fetchDelete, fetchGet, fetchPost } from './fetch_functions';
 import Link from 'next/link';
 import Image from 'next/image';
 import './globals.css';
@@ -33,6 +33,7 @@ function FriendsInbox() {
     userSocket.on('sendFriendRequest', handleFriendRequest);
 
     // Cleanup the previous event listener on unmount or re-render
+    // This is to prevent multiple event listeners from being created
     return () => {
       userSocket.off('sendFriendRequest', handleFriendRequest);
     };
@@ -104,6 +105,8 @@ function FriendsInbox() {
   );
 }
 
+
+/* -- LoadProfile Component --> */
 function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<string | undefined>> })
 {
   const [user , setUser] = useState<User>();
@@ -119,6 +122,11 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
   if (nicknameProps === undefined)
     throw new Error('useNickname must be used within a NicknameProvider');
   
+
+  /**
+   * Fetch the user profile and set the user state
+   * If the user has a nickname set in the database, set the nickname state to the nickname
+   */
   useEffect(() => {
     if (token)
       {
@@ -128,7 +136,7 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
       fetchGet<User>('api/profile')
     .then((res) => {
       setUser(res);
-      if (res.nick_name !== null)
+      if (res.nick_name !== nicknameProps.nickname && res.nick_name !== null)
         setNickname(res.nick_name);
       userSocket.emit('registerUserId', res.intra_user_id);
     })
