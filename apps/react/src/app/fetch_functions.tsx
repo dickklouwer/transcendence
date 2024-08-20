@@ -15,97 +15,96 @@ export async function fetchProfile(token : string | null): Promise<User> {
     if (user.statusCode !== 401)
       return user;
     throw `Unauthorized ${user.statusCode}`;
-  }
+}
   
-  /**
-   * Fetch Get function to send a get request to the Backend
-   * @param url
-   * @returns 
-   */
-  export async function fetchGet<T> (url: string): Promise<T> {
+/**
+ * Fetch Get function to send a get request to the Backend
+ * @param url
+ * @returns 
+ */
+export async function fetchGet<T> (url: string): Promise<T> {
     try {
-      const response = await fetch(url, {
+        const response = await fetch(url, {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-      });
-    
-      if (response.status !== 200)
+        });
+
+        if (response.status !== 200)
         throw `Unauthorized ${response.status}`;
-      const data : T = await response.json();
-      return data;
+        const data : T = await response.json();
+        return data;
     } catch (error) {
-      throw `Fetch Error ${error}`;
+        throw `Fetch Error ${error}`;
     }
-  }
-  
-  
-  /**
-   *  Fetch Post function to send a post request to the Backend
-   * @param url
-   * @param body
-   * @returns 
-   */
-  export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
-    
+}
+
+
+/**
+ *  Fetch Post function to send a post request to the Backend
+ * @param url
+ * @param body
+ * @returns 
+ */
+export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
     try {
-      const response = await fetch(url, {
+        const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify(body),
-      })
-  
-      if(response.status !== 200)
+        })
+
+        if(response.status !== 200)
         throw `Unauthorized ${response.status}`;
-  
-      const data = await response.json();
-      return data;
+
+        const data = await response.json();
+        return data;
     } catch (error) {
-      throw 'Fetch Error: ' + error;
+        throw 'Fetch Error: ' + error;
     }
-  }
-  
-  /**
-   * Fetch Put function to send a put request to the Backend
-   * @param url
-   * @param body
-   * @returns 
-   */
-  export async function fetchDelete<T> (url: string): Promise<T> {
+}
+
+/**
+ * Fetch Put function to send a put request to the Backend
+ * @param url
+ * @param body
+ * @returns 
+ */
+export async function fetchDelete<T> (url: string): Promise<T> {
     try {
-      const response = await fetch(url, {
+        const response = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-      });
-  
-      if (response.status !== 200)
+        });
+
+        if (response.status !== 200)
         throw `Unauthorized ${response.status}`;
-      const data : T = await response.json();
-      return data;
+        const data : T = await response.json();
+        return data;
     } catch (error) {
-      throw `Fetch Error ${error}`;
+        throw `Fetch Error ${error}`;
     }
-  }
-  
-  export async function fetchChats(token : string | null): Promise<UserChats[]> {
+}
+
+export async function fetchChats(token : string | null): Promise<UserChats[]> {
     const messages = await fetch('api/chats', {
-      headers: {
+        headers: {
         Authorization: `Bearer ${token}`,
-      },
+        },
     })
-  
+
     .catch((error) => {
-      throw `Unauthorized ${error}`;
+        throw `Unauthorized ${error}`;
     });
     const chats = await messages.json();
     if (chats.statusCode !== 401)
-      return chats;
+        return chats;
     throw `Unauthorized ${chats.statusCode}`;
-  }
+}
