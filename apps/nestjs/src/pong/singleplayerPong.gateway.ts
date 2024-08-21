@@ -38,7 +38,7 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 	afterInit(server: Server) {
 		this.logger.log('WebSocket SingleplayerPongGateway initialized');
 	}
-
+	
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id} to single player game`);
 		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
@@ -49,26 +49,26 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 		clearInterval(this.gameInterval);
 		this.resetGame(client);
 	}
-
-	@SubscribeMessage('movement')
-	handleMovement(client: Socket, payload: string): void {
-		if (payload === 'ArrowUp') {
-			this.logger.log('ArrowUp');
-			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-			client.emit('rightPaddle', this.rightPaddle);
-		}
-		if (payload === 'ArrowDown') {
-			this.logger.log('ArrowDown');
-			this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
-			client.emit('rightPaddle', this.rightPaddle);
-		}
-	}
-
+	
 	@SubscribeMessage('start')
 	handleStart(client: Socket): void {
 		if (!this.gameInterval) {
 			this.logger.log('Starting game loop');
 			this.startGameLoop(client);
+		}
+	}
+	
+	@SubscribeMessage('movement')
+	handleMovement(client: Socket, payload: string): void {
+		if (payload === 'ArrowUp') {
+			this.logger.log('ArrowUp');
+			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
+			// client.emit('rightPaddle', this.rightPaddle);
+		}
+		if (payload === 'ArrowDown') {
+			this.logger.log('ArrowDown');
+			this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
+			// client.emit('rightPaddle', this.rightPaddle);
 		}
 	}
 
@@ -92,32 +92,31 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 	};
 
 	startGameLoop(client: Socket) {
-		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
+		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 15);
 	}
 
 	changeBallDirection = (paddlePosition: number) => {
 		const diff = this.ball.y - (paddlePosition + paddleHeight / 2);
 		this.ball.vy = diff / 20;
-		console.log('ball vy', this.ball.vy);
 	};
 	
 	handleGameUpdate(client: Socket) {
 		// Update ball position
 		this.ball.x += this.ball.vx;
 		this.ball.y += this.ball.vy;
-
+		
 		// Ball collision with walls
 		if (this.ball.y <= borderWidth || this.ball.y >= gameHeight - borderWidth) {
 			this.ball.vy = -this.ball.vy;
 		}
-
+		
 		const ballPastLeftPaddle = this.ball.x <= paddleWidth + ballSize + 4;
 		const ballPastRightPaddle = this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4;
-
+		
 		// Check if the ball is out of bounds on the left or right
 		if (ballPastLeftPaddle || ballPastRightPaddle) {
 			const paddleY = ballPastLeftPaddle ? this.leftPaddle : this.rightPaddle;
-
+			
 			// If the ball is within the paddle's vertical range, it hits the paddle
 			if (this.ball.y >= paddleY && this.ball.y <= paddleY + paddleHeight) {
 				this.ball.vx = -this.ball.vx;
@@ -170,10 +169,10 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 			// AI for left paddle
 			if (this.ball.y > (this.leftPaddle + paddleHeight)) {
 				this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 2);
-				client.emit('leftPaddle', this.leftPaddle);
+				// client.emit('leftPaddle', this.leftPaddle);
 			} else if (this.ball.y < this.leftPaddle) {
 				this.leftPaddle = Math.max(0, this.leftPaddle - 2);
-				client.emit('leftPaddle', this.leftPaddle);
+				// client.emit('leftPaddle', this.leftPaddle);
 			}
 
 			// // Ball out of bounds
@@ -195,8 +194,9 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 			// }
 
 			// Emit updated state to clients
-			client.emit('ball', { x: this.ball.x, y: this.ball.y });
+			client.emit('gameUpdate', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
+			// client.emit('ball', { x: this.ball.x, y: this.ball.y });
 			// client.emit('rightPaddle', this.rightPaddle);
-			client.emit('leftPaddle', this.leftPaddle);
+			// client.emit('leftPaddle', this.leftPaddle);
 		}
 	}

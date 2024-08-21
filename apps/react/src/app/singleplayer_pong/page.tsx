@@ -8,11 +8,6 @@ import io from 'socket.io-client';
 
 const socket = io(`http://localhost:4433/singleplayer`, { path: "/ws/socket.io" });
 
-interface Score {
-	left: number;
-	right: number;
-}
-
 const paddleWidth = 10;
 const paddleHeight = 100;
 const gameWidth = 400;
@@ -56,6 +51,12 @@ export default function PongGame() {
 			manager.leftPaddle.draw();
 			manager.rightPaddle.draw();
 			manager.ball.draw();
+		});
+
+		socket.on('gameUpdate', ({ x, y, leftPaddle, rightPaddle }: { x: number, y: number, leftPaddle: number, rightPaddle: number }) => {
+			manager.updateBallPosition(x, y);
+			manager.updatePaddlePosition('left', leftPaddle);
+			manager.updatePaddlePosition('right', rightPaddle);
 		});
 
 		socket.on('rightPaddle', (paddle: number) => {

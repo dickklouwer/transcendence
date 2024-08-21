@@ -100,10 +100,11 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 			secondClient.join(roomId);
 
 			// Emit begin state to the room
-			this.server.to(roomId).emit('ball', room.ball);
-			this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
-			this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
-			this.server.to(roomId).emit('playersReady');
+			this.server.to(roomId).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
+			// this.server.to(roomId).emit('ball', room.ball);
+			// this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
+			// this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
+			// this.server.to(roomId).emit('playersReady');
 			setTimeout(() => {
 				this.startGameLoop(room);
 			}, 3000);
@@ -230,12 +231,12 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		if (payload === 'ArrowUp') {
 			this.logger.log('ArrowUp');
 			room.players[1].paddle = Math.max(0, room.players[1].paddle - 5);
-			this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+			// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
 		}
 		if (payload === 'ArrowDown') {
 			this.logger.log('ArrowDown');
 			room.players[1].paddle = Math.min(gameHeight - paddleHeight, room.players[1].paddle + 5);
-			this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+			// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
 		}
 	}
 
@@ -322,9 +323,12 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		}
 
 		// Emit updated state to clients
-		this.server.to(room.roomID).emit('ball', room.ball);
-		this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
-		this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+		this.server.to(room.roomID).emit('gameUpdate', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
+		this.logger.log(`Ball: ${room.ball.x}, ${room.ball.y}`);	
+		// this.server.to(roomId).emit('ball', room.ball);
+		// this.server.to(room.roomID).emit('ball', room.ball);
+		// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+		// this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
 	}
 
 	db: ReturnType<typeof createDrizzleClient>;
