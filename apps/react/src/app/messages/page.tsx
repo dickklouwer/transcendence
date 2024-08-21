@@ -15,7 +15,11 @@ interface TMessage {
 
 
 const myId = 42; // Temporaty: Assuming the current user's ID
-const socket = io(`http://${window.location.host}/chat`, { path: "/ws/socket.io" });
+const socket = io(`http://localhost:4433/messages`, { path: "/ws/socket.io" });
+
+socket.on('connect_error', (err) => {
+    console.error('Connection error:', err);
+});
 
 const databaseMessages = [
     {
@@ -125,7 +129,7 @@ export default function DC() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
   
     useEffect(() => {
-      socket.on('msgToClient', (message) => {
+      socket.on('serverToClient', (message) => {
         alert('Received message: ' + message);
         setMessages([...messages, message]);
       });
@@ -135,8 +139,10 @@ export default function DC() {
     }, [messages]);
   
     const sendMessage = () => {
-      socket.emit('msgToServer', newMessage);
-      setNewMessage('');
+        console.log('Sending message: ' + newMessage);
+        socket.emit('clientToServer', newMessage);
+        // alert('Sending message: ' + newMessage);.
+        setNewMessage('');
     };
 
     const handleSendMessage = () => {

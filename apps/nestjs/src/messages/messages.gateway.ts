@@ -8,11 +8,11 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-// import { subscribe } from 'diagnostics_channel';
+import { subscribe } from 'diagnostics_channel';
 
 @WebSocketGateway({
   cors: { origin: 'http://localhost:2424' },
-  namespace: 'chat',
+  namespace: 'messages',
   credentials: true,
   allowEIO3: true,
 })
@@ -22,14 +22,14 @@ export class MessagesGateway
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MessagesGateway');
 
-  @SubscribeMessage('msgToServer')
+  @SubscribeMessage('clientToServer')
   handleMessage(client: Socket, payload: string): void {
     this.logger.log(`Client ${client.id} sent: ${payload}`);
-    this.server.emit('msgToClient', payload);
+    this.server.emit('serverToClient', payload);
   }
 
   afterInit() {
-    this.logger.log('Websocket server initialized');
+    this.logger.log('Websocket MESSAGES server initialized');
   }
 
   handleDisconnect(client: Socket) {
@@ -38,5 +38,6 @@ export class MessagesGateway
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log('TEST');
   }
 }
