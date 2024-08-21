@@ -25,10 +25,25 @@ const gameHeight = 400;
 const ballSize = 10;
 const borderWidth = 5;
 
+const ScoreBoard = ({ score }: { score: [number, number] }): JSX.Element => {
+    return (
+        <div
+            style={{
+                display: "flex",
+                fontSize: "24px",
+                justifyContent: "center"
+            }}
+        >
+            <span>{score[0]}</span> - <span>{score[1]}</span>
+        </div>
+    );
+};
+
 
 export default function PongGame() {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const [gameManager, setGameManager] = useState<GameManager | null>(null);
+	const [score, setScore] = useState<[number, number]>([0, 0]);
 
 	useEffect(() => {
 		if (canvasRef.current === null) return;
@@ -80,6 +95,7 @@ export default function PongGame() {
 		});
 
 		socket.on('score', ({left, right}: {left: number, right: number}) => {
+			setScore([left, right]);
 			manager.updateScore(left, right);
 		});
 
@@ -139,10 +155,11 @@ export default function PongGame() {
 					</div>
 				)}
 			</div>
-			<div className="flex flex-col items-center justify-center mb-6">
+			{/* <div className="flex flex-col items-center justify-center mb-6">
 				<h1>Score</h1>
 				{gameManager && <h1 style={{ marginTop: '-5px' }}> {gameManager.score.left} - {gameManager.score.right} </h1>}
-			</div>
+			</div> */}
+			<ScoreBoard score={score} />
 			<div className="flex items-center justify-center">
 				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Computer</div>
 				<canvas

@@ -179,7 +179,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 					this.ball.vx = this.ball.vx * 2;
 				// this.logger.log('Hits: ' + this.hits);
 				// this.logger.log('ball.y: ' + this.ball.y);
-				// this.logger.log('bal.x : ' + this.ball.x);
+				this.logger.log('bal.x : ' + this.ball.x);
 				// this.logger.log('rightPaddle: ' + this.rightPaddle);
 			}
 		}
