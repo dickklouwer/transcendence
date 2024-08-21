@@ -129,10 +129,10 @@ export default function DC() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
   
     useEffect(() => {
-      socket.on('serverToClient', (message) => {
+        socket.on('serverToClient', (message) => {
         alert('Received message: ' + message);
         setMessages([...messages, message]);
-      });
+        });
 
         /* Auto scroll to last message */
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -141,7 +141,6 @@ export default function DC() {
     const sendMessage = () => {
         console.log('Sending message: ' + newMessage);
         socket.emit('clientToServer', newMessage);
-        // alert('Sending message: ' + newMessage);.
         setNewMessage('');
     };
 
@@ -185,6 +184,7 @@ export default function DC() {
                 <textarea
                     className="bg-gray-900 focus:bg-white focus:outline-none rounded-lg p-2 w-full text-black"
                     placeholder="Type a message..."
+                    id='newMessage'
                     rows={2}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
