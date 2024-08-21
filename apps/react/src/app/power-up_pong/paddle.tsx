@@ -38,6 +38,10 @@ class Paddle {
 	setPosition(positionY: number) {
 	  this.positionY = positionY;
 	}
+
+	updateHeight(height: number) {
+		this.height = height;
+	}
   
 	// wallCollisionPaddleUp() {
 	//   return this.positionY - this.height / 2 <= 0;
