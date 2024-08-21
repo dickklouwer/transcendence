@@ -8,11 +8,6 @@ import io from 'socket.io-client';
 
 const socket = io(`http://localhost:4433/power-up`, { path: "/ws/socket.io" });
 
-interface Ball {
-	x: number;
-	y: number;
-}
-
 interface Score {
 	left: number;
 	right: number;
@@ -44,6 +39,7 @@ export default function PongGame() {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const [gameManager, setGameManager] = useState<GameManager | null>(null);
 	const [score, setScore] = useState<[number, number]>([0, 0]);
+	const [Gamestate, SetGameState] = useState<string>("Playing");
 
 	useEffect(() => {
 		if (canvasRef.current === null) return;
@@ -96,7 +92,6 @@ export default function PongGame() {
 
 		socket.on('score', ({left, right}: {left: number, right: number}) => {
 			setScore([left, right]);
-			manager.updateScore(left, right);
 		});
 
 		socket.on('reset', () => {
@@ -104,7 +99,7 @@ export default function PongGame() {
 		});
 
 		socket.on('gameover', () => {
-			manager.updateGameState("GameOver");
+			SetGameState("GameOver");
 			socket.emit('stop');
 		});
 
@@ -120,6 +115,7 @@ export default function PongGame() {
 	}, []);
 
 	const startGame = () => {
+		SetGameState("Playing");
 		if (gameManager) {
 			gameManager.startGame();
 			socket.emit('start');
@@ -133,7 +129,7 @@ export default function PongGame() {
 	return (
 		<div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
 			<div className="flex items-center justify-center mb-6">
-				{gameManager && gameManager.gameState === "GameOver" && (
+				{Gamestate === "GameOver" && (
 					<div style={{
 						position: 'absolute',
 						top: 0,

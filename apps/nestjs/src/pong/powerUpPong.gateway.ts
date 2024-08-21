@@ -72,7 +72,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
 		clearInterval(this.gameInterval);
-		this.resetGame();
+		this.resetGame(client);
 	}
 
 	@SubscribeMessage('movement')
@@ -106,7 +106,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 	}
 
-	resetGame = () => {
+	resetGame = (client: Socket) => {
 		this.ball.vx = 2;
 		this.ball.vy = 0;
 		this.ball.x = 200;
@@ -123,6 +123,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.powerUpType = this.getRandomNumber(1, 3);
 		this.hitNumber = this.getRandomNumber(1, 5);
 		this.powerUpHeight = this.getRandomNumber(0, 270);
+		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
 	};
 
 	startGameLoop(client: Socket) {
@@ -262,7 +263,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				client.emit('gameover', 'Game Over');
 			}
 			client.emit('reset');
-			this.resetGame();
+			this.resetGame(client);
 		}
 
 		// Emit updated state to clients

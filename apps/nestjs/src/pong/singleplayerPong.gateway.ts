@@ -41,17 +41,13 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id} to single player game`);
-		// client.emit('rightPaddle', this.rightPaddle);
-		// client.emit('leftPaddle', this.leftPaddle);
-		client.emit('ball', this.ball);
-		client.emit('rightPaddle', this.rightPaddle);
-		client.emit('leftPaddle', this.leftPaddle);
+		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
 	}
 
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
 		clearInterval(this.gameInterval);
-		this.resetGame();
+		this.resetGame(client);
 	}
 
 	@SubscribeMessage('movement')
@@ -85,12 +81,14 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 		}
 	}
 
-	resetGame = () => {
+	resetGame = (client: Socket) => {
 		this.ball.vx = 2;
 		this.ball.vy = 0;
 		this.ball.x = 200;
 		this.ball.y = 200;
 		this.rightPaddle = 150;
+		this.leftPaddle = 150;
+		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
 	};
 
 	startGameLoop(client: Socket) {
@@ -100,8 +98,9 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 	changeBallDirection = (paddlePosition: number) => {
 		const diff = this.ball.y - (paddlePosition + paddleHeight / 2);
 		this.ball.vy = diff / 20;
+		console.log('ball vy', this.ball.vy);
 	};
-
+	
 	handleGameUpdate(client: Socket) {
 		// Update ball position
 		this.ball.x += this.ball.vx;
@@ -112,49 +111,92 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 			this.ball.vy = -this.ball.vy;
 		}
 
-		// Ball collision with left paddle
-		if (this.ball.x <= paddleWidth + ballSize + 4) {
-			if (this.ball.y >= this.leftPaddle && this.ball.y <= this.leftPaddle + paddleHeight) {
+		const ballPastLeftPaddle = this.ball.x <= paddleWidth + ballSize + 4;
+		const ballPastRightPaddle = this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4;
+
+		// Check if the ball is out of bounds on the left or right
+		if (ballPastLeftPaddle || ballPastRightPaddle) {
+			const paddleY = ballPastLeftPaddle ? this.leftPaddle : this.rightPaddle;
+
+			// If the ball is within the paddle's vertical range, it hits the paddle
+			if (this.ball.y >= paddleY && this.ball.y <= paddleY + paddleHeight) {
 				this.ball.vx = -this.ball.vx;
-				this.changeBallDirection(this.leftPaddle);
-			}
-		}
-		// Ball collision with right paddle
-		else if (this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
-			if (this.ball.y >= this.rightPaddle && this.ball.y <= this.rightPaddle + paddleHeight) {
-				this.ball.vx = -this.ball.vx;
-				this.changeBallDirection(this.rightPaddle);
-			}
-		}
+				this.changeBallDirection(paddleY);
+			} else {
+				// If the ball is past the paddle and not within its vertical range, it's out of bounds
+				if (ballPastLeftPaddle) {
+					this.score.right += 1;
+				} else {
+					this.score.left += 1;
+				}
 
-		// AI for left paddle
-		if (this.ball.y > (this.leftPaddle + paddleHeight)) {
-			this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 2);
-		} else if (this.ball.y < this.leftPaddle) {
-			this.leftPaddle = Math.max(0, this.leftPaddle - 2);
-		}
-
-		// Ball out of bounds
-		if (this.ball.x <= 0 || this.ball.x >= gameWidth) {
-			if (this.ball.x <= 0) {
-				this.score.right += 1;
 				client.emit('score', { left: this.score.left, right: this.score.right });
+
+				// If the score reaches WinScore, reset the game
+				if (this.score.left === WinScore || this.score.right === WinScore) {
+					this.score = { left: 0, right: 0 };
+					client.emit('score', { left: 0, right: 0 });
+					client.emit('gameover', 'Game Over');
+					this.resetGame(client);
+				} else {
+					this.resetGame(client);  // Reset the game for the next round
+				}
 			}
-			else if (this.ball.x >= gameWidth) {
-				this.score.left += 1;
-				client.emit('score', { left: this.score.left, right: this.score.right });
-			}
-			if (this.score.left == WinScore || this.score.right == WinScore) {
-				this.score = { left: 0, right: 0 };
-				client.emit('score', { left: 0, right: 0 });
-				client.emit('gameover', 'Game Over');
-			}
-			this.resetGame();
 		}
 
-		// Emit updated state to clients
-		client.emit('ball', {x: this.ball.x, y: this.ball.y});
-		// client.emit('rightPaddle', this.rightPaddle);
-		// client.emit('leftPaddle', this.leftPaddle);
+			// Ball collision with left paddle
+			// if (this.ball.x <= paddleWidth + ballSize + 4) {
+			// 	if (this.ball.y >= this.leftPaddle && this.ball.y <= this.leftPaddle + paddleHeight) {
+			// 		this.ball.vx = -this.ball.vx;
+			// 		this.changeBallDirection(this.leftPaddle);
+			// 	}
+			// 	else {
+			// 		this.score.right += 1;
+			// 		client.emit('score', { left: this.score.left, right: this.score.right });
+			// 	}
+			// }
+			// // Ball collision with right paddle
+			// else if (this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
+			// 	if (this.ball.y >= this.rightPaddle && this.ball.y <= this.rightPaddle + paddleHeight) {
+			// 		this.ball.vx = -this.ball.vx;
+			// 		this.changeBallDirection(this.rightPaddle);
+			// 	}
+			// 	else {
+			// 		this.score.left += 1;
+			// 		client.emit('score', { left: this.score.left, right: this.score.right });
+			// 	}
+			// }
+
+			// AI for left paddle
+			if (this.ball.y > (this.leftPaddle + paddleHeight)) {
+				this.leftPaddle = Math.min(gameHeight - paddleHeight, this.leftPaddle + 2);
+				client.emit('leftPaddle', this.leftPaddle);
+			} else if (this.ball.y < this.leftPaddle) {
+				this.leftPaddle = Math.max(0, this.leftPaddle - 2);
+				client.emit('leftPaddle', this.leftPaddle);
+			}
+
+			// // Ball out of bounds
+			// if (this.ball.x <= 0 || this.ball.x >= gameWidth) {
+			// 	if (this.ball.x <= 0) {
+			// 		this.score.right += 1;
+			// 		client.emit('score', { left: this.score.left, right: this.score.right });
+			// 	}
+			// 	else if (this.ball.x >= gameWidth) {
+			// 		this.score.left += 1;
+			// 		client.emit('score', { left: this.score.left, right: this.score.right });
+			// 	}
+			// 	if (this.score.left == WinScore || this.score.right == WinScore) {
+			// 		this.score = { left: 0, right: 0 };
+			// 		client.emit('score', { left: 0, right: 0 });
+			// 		client.emit('gameover', 'Game Over');
+			// 	}
+			// 	this.resetGame();
+			// }
+
+			// Emit updated state to clients
+			client.emit('ball', { x: this.ball.x, y: this.ball.y });
+			// client.emit('rightPaddle', this.rightPaddle);
+			client.emit('leftPaddle', this.leftPaddle);
+		}
 	}
-}
