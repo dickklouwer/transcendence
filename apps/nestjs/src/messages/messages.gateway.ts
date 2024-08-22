@@ -8,7 +8,14 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { subscribe } from 'diagnostics_channel';
+
+interface ChatMessage {
+  message_id: number;
+  sender_id: number;
+  group_chat_id: number | null;
+  message: string;
+  sent_at: string;
+}
 
 @WebSocketGateway({
   cors: { origin: 'http://localhost:2424' },
@@ -23,9 +30,21 @@ export class MessagesGateway
   private logger: Logger = new Logger('MessagesGateway');
 
   @SubscribeMessage('clientToServer')
-  handleMessage(client: Socket, payload: string): void {
-    this.logger.log(`Client ${client.id} sent: ${payload}`);
-    this.server.emit('serverToClient', payload);
+  handleMessage(client: Socket, payload: ChatMessage): void {
+    this.logger.log(`Client ${client.id} sent: ${JSON.stringify(payload)}`);
+
+    if (false) {
+      // to specific users
+      const room = payload.group_chat_id
+        ? `group_${payload.group_chat_id}`
+        : `private_${payload.sender_id}_${client.id}`;
+
+      client.join(room);
+      this.server.to(room).emit('serverToClient', payload);
+    } else {
+      // to all users
+      this.server.emit('serverToClient', payload);
+    }
   }
 
   afterInit() {
@@ -38,6 +57,5 @@ export class MessagesGateway
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
-    this.logger.log('TEST');
   }
 }
