@@ -57,7 +57,7 @@ export const chats = mySchema.table('chats', {
 	created_at: timestamp('created_at').defaultNow(),
 });
 
-export const chatsUsers = mySchema.table('chats_users', {
+export const chatsUsers = mySchema.table('chatsUsers', {
 	chat_user_id: serial('chat_user_id').primaryKey(),		// Unique ID for this 
 	chat_id: integer('chat_id').references(
 		() => chats.chat_id,
@@ -81,7 +81,7 @@ export const messages = mySchema.table('messages', {
 	sent_at: timestamp('sent_at').defaultNow().notNull(),
 });
 
-export const messageStatus = mySchema.table('message_status', {
+export const messageStatus = mySchema.table('messageStatus', {
 	message_status_id: serial('message_status_id').primaryKey(),
 	message_id: integer('message_id')
 		.references(() => messages.message_id)

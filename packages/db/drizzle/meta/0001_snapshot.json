@@ -1,6 +1,6 @@
 {
-  "id": "18dfd02b-b562-48db-837d-6237cfe7d838",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "ecc3cce3-2f92-4532-98a0-1446600b022d",
+  "prevId": "18dfd02b-b562-48db-837d-6237cfe7d838",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -59,8 +59,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "pong.chats_users": {
-      "name": "chats_users",
+    "pong.chatsUsers": {
+      "name": "chatsUsers",
       "schema": "pong",
       "columns": {
         "chat_user_id": {
@@ -118,9 +118,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "chats_users_chat_id_chats_chat_id_fk": {
-          "name": "chats_users_chat_id_chats_chat_id_fk",
-          "tableFrom": "chats_users",
+        "chatsUsers_chat_id_chats_chat_id_fk": {
+          "name": "chatsUsers_chat_id_chats_chat_id_fk",
+          "tableFrom": "chatsUsers",
           "tableTo": "chats",
           "schemaTo": "pong",
           "columnsFrom": [
@@ -132,9 +132,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "chats_users_intra_user_id_users_intra_user_id_fk": {
-          "name": "chats_users_intra_user_id_users_intra_user_id_fk",
-          "tableFrom": "chats_users",
+        "chatsUsers_intra_user_id_users_intra_user_id_fk": {
+          "name": "chatsUsers_intra_user_id_users_intra_user_id_fk",
+          "tableFrom": "chatsUsers",
           "tableTo": "users",
           "schemaTo": "pong",
           "columnsFrom": [
@@ -283,8 +283,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "pong.message_status": {
-      "name": "message_status",
+    "pong.messageStatus": {
+      "name": "messageStatus",
       "schema": "pong",
       "columns": {
         "message_status_id": {
@@ -320,9 +320,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "message_status_message_id_messages_message_id_fk": {
-          "name": "message_status_message_id_messages_message_id_fk",
-          "tableFrom": "message_status",
+        "messageStatus_message_id_messages_message_id_fk": {
+          "name": "messageStatus_message_id_messages_message_id_fk",
+          "tableFrom": "messageStatus",
           "tableTo": "messages",
           "schemaTo": "pong",
           "columnsFrom": [
@@ -334,9 +334,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "message_status_receiver_id_users_intra_user_id_fk": {
-          "name": "message_status_receiver_id_users_intra_user_id_fk",
-          "tableFrom": "message_status",
+        "messageStatus_receiver_id_users_intra_user_id_fk": {
+          "name": "messageStatus_receiver_id_users_intra_user_id_fk",
+          "tableFrom": "messageStatus",
           "tableTo": "users",
           "schemaTo": "pong",
           "columnsFrom": [
