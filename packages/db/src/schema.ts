@@ -58,7 +58,7 @@ export const chats = mySchema.table('chats', {
 });
 
 export const chatsUsers = mySchema.table('chats_users', {
-	chat_user_id: serial('chat_user_id').primaryKey(),
+	chat_user_id: serial('chat_user_id').primaryKey(),		// Unique ID for this 
 	chat_id: integer('chat_id').references(
 		() => chats.chat_id,
 	),
@@ -73,7 +73,7 @@ export const chatsUsers = mySchema.table('chats_users', {
 export const messages = mySchema.table('messages', {
 	message_id: serial('message_id').primaryKey(),
 	sender_id: integer('sender_id').references(() => users.intra_user_id),
-	receiver_id: integer('receiver_id').references(() => users.intra_user_id),
+	receiver_id: integer('receiver_id').references(() => users.intra_user_id), // TODO: Remove: is not required using chatid instead
 	chat_id: integer('chat_id').references(
 		() => chats.chat_id,
 	),
@@ -98,7 +98,9 @@ export const userSelect = createSelectSchema(users);
 export const friendsSelect = createSelectSchema(friends);
 export const messagesInsert = createInsertSchema(messages);
 export const chatSelect = createSelectSchema(chats);
+export const chatsUsersSelect = createSelectSchema(chatsUsers);
 
+export type ChatsUsers = z.infer<typeof chatsUsersSelect>;
 export type Chats = z.infer<typeof chatSelect>;
 export type User = z.infer<typeof userSelect>;
 export type Friends = z.infer<typeof friendsSelect>;
