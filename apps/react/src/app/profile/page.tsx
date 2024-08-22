@@ -24,15 +24,15 @@ function createMockData() {
   });
 }
 
-export function DisplayUserStatus({ state, width, height }: { state: 'Online' | 'Offline' | 'In-Game', width: string, height: string }) {
+export function DisplayUserStatus({ state, width, height }: { state: 'Online' | 'Offline' | 'In-Game', width: number, height: number }) {
 
   return (
     <div>
-              {state === 'Offline' && <span className="absolute right-11  bg-red-600 rounded-full"></span>}
-              
-              {state === 'Online' &&  <div className={`absolute bottom-[-5px] right-[-5px] bg-green-500 rounded-full border-2 border-white`}
-              style={{ width: `${width}px`, height: `${height}px` }}></div>}
-              
+      {state === 'Offline' && (<div className={`absolute bottom-[-1px] right-[-1px] bg-gray-500 rounded-full border-2 border-white`}
+      style={{ width: `${width}px`, height: `${height}px` }}></div>)}
+      
+      {state === 'Online' &&  (<div className={`absolute bottom-[-1px] right-[-1px] bg-green-500 rounded-full border-2 border-white`}
+      style={{ width: `${width}px`, height: `${height}px` }}></div>)} 
     </div>
   );
 }
@@ -83,9 +83,9 @@ export default function Profile() {
               alt="Profile Image"
               width={100}
               height={100}
-              className="w-24 h-24 rounded-full object-cover"
+              className="min-w-24 min-h-24 max-w-24 max-h-24 rounded-full object-cover"
               />
-          <DisplayUserStatus state={'Online'} width={'7'} height={'7'} />
+          <DisplayUserStatus state={'Online'} width={20} height={20} />
           </div>
           <div className="flex-grow min-w-0 mb-4">
             {nicknameContext.nickname === undefined ? (

@@ -6,11 +6,12 @@ import { fetchDelete, fetchGet, fetchPost } from './fetch_functions';
 import Link from 'next/link';
 import Image from 'next/image';
 import './globals.css';
-import io  from 'socket.io-client';
+import io from 'socket.io-client';
 import { User, ExternalUser } from '@repo/db';
 
 export const NicknameContext = createContext<NicknameFormProps | undefined>(undefined);
-export const userSocket = io(`http://localhost:4433/user`, { path: "/ws/socket.io/user" });
+
+export const userSocket = io('http://localhost:4433/user', { path: "/ws/socket.io/user" });
 
 export type NicknameFormProps = {
   nickname: string | undefined; 
@@ -30,7 +31,7 @@ function FriendsInbox() {
     })
 
     userSocket.on('sendFriendRequest', handleFriendRequest);
-
+    
     // Cleanup the previous event listener on unmount or re-render
     // This is to prevent multiple event listeners from being created
     return () => {
@@ -44,13 +45,13 @@ function FriendsInbox() {
     console.log('FriendRequestNotification received');
     setReload(prev => !prev);
   };
-
+  
   const toggleFriendsInbox = () => {
     const dropdownNotification = document.getElementById('dropdownNotification');
     dropdownNotification?.classList.toggle('hidden');
     setReload(prev => !prev);
   }
-
+  
   const acceptFriendRequest = (friend_id: number) => {
     fetchPost<{friend_id : number}, boolean>('api/acceptFriendRequest', { friend_id: friend_id })
     .then((res) => {
@@ -58,7 +59,7 @@ function FriendsInbox() {
       setReload(prev => !prev);
     })
   }
-
+  
   const declineFriendRequest = (friend_id: number) => {
     fetchDelete(`api/declineFriendRequest/?friend_id=${friend_id}`)
     .then((res) => {
@@ -66,7 +67,7 @@ function FriendsInbox() {
       setReload(prev => !prev);
     })
   }
-
+  
   return (
     <div className='relative inline-block'>
       { /* -- Notification Button --> */}
@@ -121,23 +122,24 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
   if (nicknameProps === undefined)
     throw new Error('useNickname must be used within a NicknameProvider');
   
-
+  
   /**
    * Fetch the user profile and set the user state
    * If the user has a nickname set in the database, set the nickname state to the nickname
-   */
-  useEffect(() => {
-    if (token)
-      {
-        localStorage.setItem('token', token);
-        Router.push('/', { scroll: false });
-      }
-      fetchGet<User>('api/profile')
+  */
+ useEffect(() => {
+   if (token)
+    {
+      localStorage.setItem('token', token);
+      Router.push('/', { scroll: false });
+    }
+    fetchGet<User>('api/profile')
     .then((res) => {
       setUser(res);
       if (res.nick_name !== nicknameProps.nickname && res.nick_name !== null)
         setNickname(res.nick_name);
       userSocket.emit('registerUserId', res.intra_user_id);
+      
     })
     .catch((error) => {
       console.log('Error: ', error);
@@ -148,12 +150,12 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
   if (!user)
     return ;
   
-
-    return (
+  
+  return (
       <div className='flex space-x-4'>
         <FriendsInbox />
         <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
-          <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
+          <Image className="rounded-full h-8 w-8 object-cover" src={user.image} alt="Profile Picture" width={100} height={100} />
           {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
         </Link>
       </div>

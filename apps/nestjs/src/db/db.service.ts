@@ -133,7 +133,7 @@ export class DbService {
 
   async setUserState(
     intra_user_id: number,
-    state: 'Online' | 'Offline' | 'In-Game' | 'Idle',
+    state: 'Online' | 'Offline' | 'In-Game',
   ): Promise<boolean> {
     try {
       await this.db

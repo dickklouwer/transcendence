@@ -21,7 +21,7 @@ type ExternalUser = {
     user_name: string;
     nick_name: string;
     email: string;
-    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    state: 'Online' | 'Offline' | 'In-Game';
     image: string;
   };
 

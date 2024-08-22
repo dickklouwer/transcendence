@@ -9,7 +9,6 @@ import {
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { DbService } from '../db/db.service';
-import { set } from 'zod';
 
 @WebSocketGateway({
   cors: { origin: 'http://localhost:2424' },
@@ -76,7 +75,7 @@ export class UserGateway
     state,
   }: {
     intra_user_id: number;
-    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    state: 'Online' | 'Offline' | 'In-Game';
   }) {
     await this.dbService.setUserState(intra_user_id, state);
 
@@ -85,7 +84,7 @@ export class UserGateway
     friends.forEach((friend) => {
       const friend_client = this.clients.get(friend.intra_user_id);
       if (friend_client) {
-        friend_client.emit('statusChange', { intra_user_id, state });
+        friend_client.emit('statusChange');
       }
     });
 

@@ -12,8 +12,7 @@ var mySchema = pgSchema("pong");
 var user_state = mySchema.enum("user_state", [
   "Online",
   "Offline",
-  "In-Game",
-  "Idle"
+  "In-Game"
 ]);
 var users = mySchema.table("users", {
   intra_user_id: integer("intra_user_id").primaryKey(),

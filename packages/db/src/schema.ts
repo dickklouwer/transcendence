@@ -16,7 +16,6 @@ export const user_state = mySchema.enum('user_state', [
   'Online',
   'Offline',
   'In-Game',
-  'Idle',
 ]);
 
 export const users = mySchema.table('users', {

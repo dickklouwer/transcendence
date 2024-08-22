@@ -140,14 +140,14 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             tableName: "users";
             dataType: "string";
             columnType: "PgEnumColumn";
-            data: "Online" | "Offline" | "In-Game" | "Idle";
+            data: "Online" | "Offline" | "In-Game";
             driverParam: string;
             notNull: true;
             hasDefault: true;
             isPrimaryKey: false;
             isAutoincrement: false;
             hasRuntimeDefault: false;
-            enumValues: ["Online", "Offline", "In-Game", "Idle"];
+            enumValues: ["Online", "Offline", "In-Game"];
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
@@ -543,7 +543,7 @@ declare const userSelect: z.ZodObject<{
     password: z.ZodNullable<z.ZodString>;
     two_factor_secret: z.ZodNullable<z.ZodString>;
     is_two_factor_enabled: z.ZodNullable<z.ZodBoolean>;
-    state: z.ZodEnum<["Online", "Offline", "In-Game", "Idle"]>;
+    state: z.ZodEnum<["Online", "Offline", "In-Game"]>;
     image: z.ZodString;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     intra_user_id: number;
@@ -554,7 +554,7 @@ declare const userSelect: z.ZodObject<{
     password: string | null;
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
-    state: "Online" | "Offline" | "In-Game" | "Idle";
+    state: "Online" | "Offline" | "In-Game";
     image: string;
 }, {
     intra_user_id: number;
@@ -565,7 +565,7 @@ declare const userSelect: z.ZodObject<{
     password: string | null;
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
-    state: "Online" | "Offline" | "In-Game" | "Idle";
+    state: "Online" | "Offline" | "In-Game";
     image: string;
 }>;
 declare const friendsSelect: z.ZodObject<{
@@ -603,7 +603,7 @@ type ExternalUser = {
     user_name: string;
     nick_name: string;
     email: string;
-    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    state: 'Online' | 'Offline' | 'In-Game';
     image: string;
 };
 

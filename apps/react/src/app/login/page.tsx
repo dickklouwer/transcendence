@@ -4,9 +4,13 @@
 import { signIn } from 'next-auth/react';
 import { ChangeEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { userSocket } from '../layout';
 
 
 export default function Login() {
+
+    if (userSocket.connected)
+        userSocket.disconnect();
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen">
@@ -19,12 +23,19 @@ export default function Login() {
     );
 }
 
+const signInFortyTwo = async () => {
+    await signIn('FortyTwoProvider')
+    .then(() => {
+        userSocket.connect();
+    });
+}
+
 export function SignIn42() {
 
     return (
         <div className="flex flex-col items-center">
             <h3> Login with your 42 account </h3>
-            <button className="bg-blue-500 text-white font-bold py-2 px-4 mt-4 rounded"  onClick={() => signIn('FortyTwoProvider')}>Sign in with 42</button>
+            <button className="bg-blue-500 text-white font-bold py-2 px-4 mt-4 rounded"  onClick={signInFortyTwo}>Sign in with 42</button>
         </div>
     )
 }
