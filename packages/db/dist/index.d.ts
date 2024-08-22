@@ -447,6 +447,141 @@ declare const chats: drizzle_orm_pg_core.PgTableWithColumns<{
     };
     dialect: "pg";
 }>;
+declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
+    name: "chats_users";
+    schema: "pong";
+    columns: {
+        chat_user_id: drizzle_orm_pg_core.PgColumn<{
+            name: "chat_user_id";
+            tableName: "chats_users";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        chat_id: drizzle_orm_pg_core.PgColumn<{
+            name: "chat_id";
+            tableName: "chats_users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        intra_user_id: drizzle_orm_pg_core.PgColumn<{
+            name: "intra_user_id";
+            tableName: "chats_users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        is_owner: drizzle_orm_pg_core.PgColumn<{
+            name: "is_owner";
+            tableName: "chats_users";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        is_admin: drizzle_orm_pg_core.PgColumn<{
+            name: "is_admin";
+            tableName: "chats_users";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        is_banned: drizzle_orm_pg_core.PgColumn<{
+            name: "is_banned";
+            tableName: "chats_users";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        mute_untill: drizzle_orm_pg_core.PgColumn<{
+            name: "mute_untill";
+            tableName: "chats_users";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        joined_at: drizzle_orm_pg_core.PgColumn<{
+            name: "joined_at";
+            tableName: "chats_users";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
     name: "messages";
     schema: "pong";
@@ -469,22 +604,6 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         sender_id: drizzle_orm_pg_core.PgColumn<{
             name: "sender_id";
-            tableName: "messages";
-            dataType: "number";
-            columnType: "PgInteger";
-            data: number;
-            driverParam: string | number;
-            notNull: false;
-            hasDefault: false;
-            isPrimaryKey: false;
-            isAutoincrement: false;
-            hasRuntimeDefault: false;
-            enumValues: undefined;
-            baseColumn: never;
-            generated: undefined;
-        }, {}, {}>;
-        receiver_id: drizzle_orm_pg_core.PgColumn<{
-            name: "receiver_id";
             tableName: "messages";
             dataType: "number";
             columnType: "PgInteger";
@@ -600,14 +719,42 @@ declare const friendsSelect: z.ZodObject<{
     user_id_receive: number;
     is_approved: boolean;
 }>;
+declare const chatsUsersSelect: z.ZodObject<{
+    chat_user_id: z.ZodNumber;
+    chat_id: z.ZodNullable<z.ZodNumber>;
+    intra_user_id: z.ZodNullable<z.ZodNumber>;
+    is_owner: z.ZodBoolean;
+    is_admin: z.ZodBoolean;
+    is_banned: z.ZodBoolean;
+    mute_untill: z.ZodNullable<z.ZodDate>;
+    joined_at: z.ZodNullable<z.ZodDate>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    intra_user_id: number | null;
+    chat_id: number | null;
+    chat_user_id: number;
+    is_owner: boolean;
+    is_admin: boolean;
+    is_banned: boolean;
+    mute_untill: Date | null;
+    joined_at: Date | null;
+}, {
+    intra_user_id: number | null;
+    chat_id: number | null;
+    chat_user_id: number;
+    is_owner: boolean;
+    is_admin: boolean;
+    is_banned: boolean;
+    mute_untill: Date | null;
+    joined_at: Date | null;
+}>;
 type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
+type ChatsUsers = z.infer<typeof chatsUsersSelect>;
 
 declare const createQueryClient: (input: string) => postgres.Sql<{}>;
 declare const createDrizzleClient: (client: ReturnType<typeof createQueryClient>) => drizzle_orm_postgres_js.PostgresJsDatabase<Record<string, never>>;
 type UserChats = {
-    messageId: number;
-    type: string;
+    chatid: number;
     title: string;
     image: string;
     lastMessage: string;
@@ -623,4 +770,4 @@ type ExternalUser = {
     image: string;
 };
 
-export { type ExternalUser, type Friends, type User, type UserChats, chats, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type ChatsUsers, type ExternalUser, type Friends, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };

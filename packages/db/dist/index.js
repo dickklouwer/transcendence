@@ -30,6 +30,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var src_exports = {};
 __export(src_exports, {
   chats: () => chats,
+  chatsUsers: () => chatsUsers,
   createDrizzleClient: () => createDrizzleClient,
   createQueryClient: () => createQueryClient,
   friends: () => friends,
@@ -78,6 +79,7 @@ var chats = mySchema.table("chats", {
   chat_id: (0, import_pg_core.serial)("chat_id").primaryKey(),
   is_direct: (0, import_pg_core.boolean)("is_direct").default(false),
   title: (0, import_pg_core.text)("title").notNull(),
+  // NOTE: Should this be able to be NULL? when a direct message we don't need a 
   is_public: (0, import_pg_core.boolean)("is_public").default(false),
   password: (0, import_pg_core.text)("password"),
   image: (0, import_pg_core.text)("image"),
@@ -98,7 +100,6 @@ var chatsUsers = mySchema.table("chats_users", {
 var messages = mySchema.table("messages", {
   message_id: (0, import_pg_core.serial)("message_id").primaryKey(),
   sender_id: (0, import_pg_core.integer)("sender_id").references(() => users.intra_user_id),
-  receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id),
   chat_id: (0, import_pg_core.integer)("chat_id").references(
     () => chats.chat_id
   ),
@@ -117,6 +118,7 @@ var userSelect = (0, import_drizzle_zod.createSelectSchema)(users);
 var friendsSelect = (0, import_drizzle_zod.createSelectSchema)(friends);
 var messagesInsert = (0, import_drizzle_zod.createInsertSchema)(messages);
 var chatSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
+var chatsUsersSelect = (0, import_drizzle_zod.createSelectSchema)(chatsUsers);
 
 // src/index.ts
 var import_postgres_js = require("drizzle-orm/postgres-js");
@@ -126,6 +128,7 @@ var createDrizzleClient = (client) => (0, import_postgres_js.drizzle)(client);
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   chats,
+  chatsUsers,
   createDrizzleClient,
   createQueryClient,
   friends,

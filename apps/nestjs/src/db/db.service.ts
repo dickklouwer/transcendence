@@ -7,9 +7,10 @@ import {
 	chatsUsers,
 	createQueryClient,
 	createDrizzleClient,
+	chats,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats, ExternalUser, Friends } from '@repo/db';
+import type { User, UserChats, ExternalUser, Friends, ChatsUsers } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
 @Injectable()
@@ -339,7 +340,7 @@ export class DbService {
 		}
 	}
 
-	//Suggest:	async getChatOverview(jwtToken: string): Promise<UserChats[] | null> {
+	//Suggest:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
 	async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
 		const result: UserChats[] = [];
 
@@ -351,71 +352,26 @@ export class DbService {
 				.select()
 				.from(chatsUsers)
 				.where(
-					eq(, user.intra_user_id),
+					eq(chatsUsers.intra_user_id, user.intra_user_id),
 				);
 			if (!dbChatID) throw Error('failed to fetch dbChatID');
 
 			for (let i = 0; i < dbChatID.length; i++) {
 
+				//NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
+				const chatinfo: Chats = this.db.select().from(chats).where(eq(chats.chat_id, dbChatID[i].chat_id));
+
+				//NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
 				const field: UserChats = {
-					messageId: 0,
-					type: '',
-					title: '',
-					image: '',
+					chatid: dbChatID[i].chat_id,
+					title: chatinfo.title,
+					image: chatinfo.image,
 					lastMessage: '',
 					time: new Date(),
 					unreadMessages: 0,
 				};
 
-				//TODO: rewrite when group chat and private chat the same
-
-				/*
-				if (!isGroupChat) {
-					const otherUserId =
-						message.sender_id === user.intra_user_id
-							? message.receiver_id
-							: message.sender_id;
-					if (!otherUserId) throw Error('otherUserId is Invalid');
-					const otherUser: User =
-						await this.getAnyUserFromDataBase(otherUserId);
-					if (!otherUser) {
-						continue;
-					}
-
-					field.messageId = message.message_id;
-					field.type = 'dm';
-					field.title = otherUser.nick_name
-						? otherUser.nick_name
-						: otherUser.user_name;
-					field.image = otherUser.image;
-					field.lastMessage = message.message;
-					field.time = message.sent_at;
-					field.unreadMessages = 0;
-				}
-				if (isGroupChat) {
-					const groupChat = await this.db
-						.select()
-						.from(chats)
-						.where(
-							eq(
-								chats.chat_id,
-								message.chat_id === null ? -1 : message.chat_id,
-							),
-						);
-					if (!groupChat) {
-						continue;
-					}
-
-					field.messageId = message.message_id;
-					field.type = 'gm'; //TODO: not needed after merge private and group chat
-					field.title = groupChat[0].group_name;
-					field.image = groupChat[0].group_image || '';
-					field.lastMessage = message.message;
-					field.time = message.sent_at;
-					field.unreadMessages = 0;
-				}
 				result.push(field);
-			*/
 			}
 			console.log('result: ', result);
 			return result;

@@ -44,6 +44,7 @@ var chats = mySchema.table("chats", {
   chat_id: serial("chat_id").primaryKey(),
   is_direct: boolean("is_direct").default(false),
   title: text("title").notNull(),
+  // NOTE: Should this be able to be NULL? when a direct message we don't need a 
   is_public: boolean("is_public").default(false),
   password: text("password"),
   image: text("image"),
@@ -64,7 +65,6 @@ var chatsUsers = mySchema.table("chats_users", {
 var messages = mySchema.table("messages", {
   message_id: serial("message_id").primaryKey(),
   sender_id: integer("sender_id").references(() => users.intra_user_id),
-  receiver_id: integer("receiver_id").references(() => users.intra_user_id),
   chat_id: integer("chat_id").references(
     () => chats.chat_id
   ),
@@ -83,6 +83,7 @@ var userSelect = createSelectSchema(users);
 var friendsSelect = createSelectSchema(friends);
 var messagesInsert = createInsertSchema(messages);
 var chatSelect = createSelectSchema(chats);
+var chatsUsersSelect = createSelectSchema(chatsUsers);
 
 // src/index.ts
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -91,6 +92,7 @@ var createQueryClient = (input) => postgres(input);
 var createDrizzleClient = (client) => drizzle(client);
 export {
   chats,
+  chatsUsers,
   createDrizzleClient,
   createQueryClient,
   friends,
