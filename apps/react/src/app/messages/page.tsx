@@ -136,6 +136,10 @@ export default function DC() {
 
         /* Auto scroll to last message */
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+        return () => {
+            socket.off('serverToClient');
+        };
     }, [messages]);
   
     const sendMessage = () => {
