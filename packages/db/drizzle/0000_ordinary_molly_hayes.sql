@@ -6,10 +6,31 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "pong"."chats" (
+	"chat_id" serial PRIMARY KEY NOT NULL,
+	"is_direct" boolean DEFAULT false,
+	"title" text NOT NULL,
+	"is_public" boolean DEFAULT false,
+	"password" text,
+	"image" text,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "pong"."chats_users" (
+	"chat_user_id" serial PRIMARY KEY NOT NULL,
+	"chat_id" integer,
+	"intra_user_id" integer,
+	"is_owner" boolean DEFAULT false NOT NULL,
+	"is_admin" boolean DEFAULT false NOT NULL,
+	"is_banned" boolean DEFAULT false NOT NULL,
+	"mute_untill" timestamp,
+	"joined_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."friends" (
 	"friend_id" serial PRIMARY KEY NOT NULL,
 	"user_id_send" integer NOT NULL,
-	"user_id_receive" integer,
+	"user_id_receive" integer NOT NULL,
 	"is_approved" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
@@ -19,26 +40,6 @@ CREATE TABLE IF NOT EXISTS "pong"."games" (
 	"player2_id" integer,
 	"player1_score" integer,
 	"player2_score" integer
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "pong"."group_chats" (
-	"group_chat_id" serial PRIMARY KEY NOT NULL,
-	"group_name" text NOT NULL,
-	"group_is_public" boolean DEFAULT false,
-	"group_password" text,
-	"group_image" text,
-	"created_at" timestamp DEFAULT now()
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "pong"."group_chats_users" (
-	"group_chat_user_id" serial PRIMARY KEY NOT NULL,
-	"group_chat_id" integer,
-	"intra_user_id" integer,
-	"is_owner" boolean DEFAULT false NOT NULL,
-	"is_admin" boolean DEFAULT false NOT NULL,
-	"is_banned" boolean DEFAULT false NOT NULL,
-	"mute_untill" timestamp,
-	"joined_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "pong"."message_status" (
@@ -53,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "pong"."messages" (
 	"message_id" serial PRIMARY KEY NOT NULL,
 	"sender_id" integer,
 	"receiver_id" integer,
-	"group_chat_id" integer,
+	"chat_id" integer,
 	"message" text NOT NULL,
 	"sent_at" timestamp DEFAULT now() NOT NULL
 );
@@ -72,6 +73,18 @@ CREATE TABLE IF NOT EXISTS "pong"."users" (
 	CONSTRAINT "users_user_name_unique" UNIQUE("user_name"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pong"."chats_users" ADD CONSTRAINT "chats_users_chat_id_chats_chat_id_fk" FOREIGN KEY ("chat_id") REFERENCES "pong"."chats"("chat_id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "pong"."chats_users" ADD CONSTRAINT "chats_users_intra_user_id_users_intra_user_id_fk" FOREIGN KEY ("intra_user_id") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "pong"."friends" ADD CONSTRAINT "friends_user_id_send_users_intra_user_id_fk" FOREIGN KEY ("user_id_send") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
@@ -93,18 +106,6 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "pong"."games" ADD CONSTRAINT "games_player2_id_users_intra_user_id_fk" FOREIGN KEY ("player2_id") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "pong"."group_chats_users" ADD CONSTRAINT "group_chats_users_group_chat_id_group_chats_group_chat_id_fk" FOREIGN KEY ("group_chat_id") REFERENCES "pong"."group_chats"("group_chat_id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "pong"."group_chats_users" ADD CONSTRAINT "group_chats_users_intra_user_id_users_intra_user_id_fk" FOREIGN KEY ("intra_user_id") REFERENCES "pong"."users"("intra_user_id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -134,7 +135,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "pong"."messages" ADD CONSTRAINT "messages_group_chat_id_group_chats_group_chat_id_fk" FOREIGN KEY ("group_chat_id") REFERENCES "pong"."group_chats"("group_chat_id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "pong"."messages" ADD CONSTRAINT "messages_chat_id_chats_chat_id_fk" FOREIGN KEY ("chat_id") REFERENCES "pong"."chats"("chat_id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
