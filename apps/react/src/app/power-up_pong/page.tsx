@@ -59,6 +59,12 @@ export default function PongGame() {
 			manager.ball.draw();
 		});
 
+		socket.on('gameUpdate', ({ x, y, leftPaddle, rightPaddle }: { x: number, y: number, leftPaddle: number, rightPaddle: number }) => {
+			manager.updateBallPosition(x, y);
+			manager.updatePaddlePosition('left', leftPaddle);
+			manager.updatePaddlePosition('right', rightPaddle);
+		});
+
 		socket.on('rightPaddle', (paddle: number) => {
 			manager.updatePaddlePosition('right', paddle);
 		});

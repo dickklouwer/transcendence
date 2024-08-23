@@ -64,9 +64,6 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id} to power up game`);
 		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
-		// client.emit('ball', {x: this.ball.x, y: this.ball.y});
-		// client.emit('rightPaddle', this.rightPaddle);
-		// client.emit('leftPaddle', this.leftPaddle);
 	}
 
 	handleDisconnect(client: Socket) {
@@ -75,25 +72,25 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.resetGame(client);
 	}
 
-	@SubscribeMessage('movement')
-	handleMovement(client: Socket, payload: string): void {
-		if (payload === 'ArrowUp') {
-			// this.logger.log('ArrowUp');
-			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-			client.emit('rightPaddle', this.rightPaddle);
-		}
-		if (payload === 'ArrowDown') {
-			// this.logger.log('ArrowDown');
-			this.rightPaddle = Math.min(gameHeight - this.rightPaddleSize, this.rightPaddle + 5);
-			client.emit('rightPaddle', this.rightPaddle);
-		}
-	}
-
 	@SubscribeMessage('start')
 	handleStart(client: Socket): void {
 		if (!this.gameInterval) {
 			this.logger.log('Starting game loop');
 			this.startGameLoop(client);
+		}
+	}
+
+	@SubscribeMessage('movement')
+	handleMovement(client: Socket, payload: string): void {
+		if (payload === 'ArrowUp') {
+			// this.logger.log('ArrowUp');
+			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
+			// client.emit('rightPaddle', this.rightPaddle);
+		}
+		if (payload === 'ArrowDown') {
+			// this.logger.log('ArrowDown');
+			this.rightPaddle = Math.min(gameHeight - this.rightPaddleSize, this.rightPaddle + 5);
+			// client.emit('rightPaddle', this.rightPaddle);
 		}
 	}
 
@@ -120,16 +117,20 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.rightPaddleSize = 100;
 		this.LeftPaddleSize = 100;
 		this.speedUpHits = 0;
-		this.powerUpType = this.getRandomNumber(1, 3);
+		// this.powerUpType = this.getRandomNumber(1, 3);
+		this.powerUpType = 3;
 		this.hitNumber = this.getRandomNumber(1, 5);
-		this.powerUpHeight = this.getRandomNumber(0, 270);
+		// this.powerUpHeight = this.getRandomNumber(0, 270);
+		this.powerUpHeight = 185;
 		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
 	};
 
 	startGameLoop(client: Socket) {
-		this.powerUpType = this.getRandomNumber(1, 3);
+		// this.powerUpType = this.getRandomNumber(1, 3);
+		this.powerUpType = 3;
 		this.hitNumber = this.getRandomNumber(1, 5);
-		this.powerUpHeight = this.getRandomNumber(0, 270);
+		// this.powerUpHeight = this.getRandomNumber(0, 270);
+		this.powerUpHeight = 185;
 		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
 	}
 
@@ -139,7 +140,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	};
 
 	hitCheck = (client: Socket) => {
-		if (this.hits === this.hitNumber) {
+		if (this.hits % this.hitNumber === 0) {
 			this.ShowPowerUp = true;
 			client.emit('showPowerUp', { powerUpType: this.powerUpType, powerUpHeight: this.powerUpHeight });
 			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
@@ -159,29 +160,34 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		// Ball collision with left paddle
 		if (this.ball.x <= paddleWidth + ballSize + 4) {
 			if (this.ball.y >= this.leftPaddle && this.ball.y <= this.leftPaddle + this.LeftPaddleSize) {
-				this.ball.vx = -this.ball.vx;
+				if (this.ball.vx < 0)
+					this.ball.vx = -this.ball.vx;
 				this.changeBallDirection(this.leftPaddle, this.LeftPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
-				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits)
+				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits) {
 					this.ball.vx = this.ball.vx * 2;
-				this.logger.log('Hits: ' + this.hits);
-				this.logger.log('Hitnumber: ' + this.hitNumber);
+					this.logger.log('Speeding up!!!!');
+				}
+				// this.logger.log('Hits: ' + this.hits);
+				// this.logger.log('Hitnumber: ' + this.hitNumber);
 			}
 		}
 		// Ball collision with right paddle
 		else if (this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
 			if (this.ball.y >= this.rightPaddle && this.ball.y <= this.rightPaddle + this.rightPaddleSize) {
-				this.ball.vx = -this.ball.vx;
+				if (this.ball.vx > 0)
+					this.ball.vx = -this.ball.vx;
 				this.changeBallDirection(this.rightPaddle, this.rightPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
-				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits)
+				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits) {
 					this.ball.vx = this.ball.vx * 2;
+					this.logger.log('Speeding up!!!!');
+				}
 				// this.logger.log('Hits: ' + this.hits);
 				// this.logger.log('ball.y: ' + this.ball.y);
-				this.logger.log('bal.x : ' + this.ball.x);
-				// this.logger.log('rightPaddle: ' + this.rightPaddle);
+				// this.logger.log('bal.x : ' + this.ball.x);
 			}
 		}
 
@@ -202,12 +208,11 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 					}
 					if (this.powerUpType === PowerUpType.largePaddle) {
 						this.logger.log('Large paddle hit');
-						if (this.ball.vx < 0){
+						if (this.ball.vx < 0) {
 							this.rightPaddleSize = 150;
 							client.emit('enlargePaddle', 2);
 						}
-						else
-						{
+						else {
 							this.LeftPaddleSize = 150;
 							client.emit('enlargePaddle', 1);
 						}
@@ -216,19 +221,21 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 						this.speedUpHits = this.hits + 2;
 						this.logger.log('Speed up hit set at ' + this.speedUpHits);
 					}
-					this.powerUpType = this.getRandomNumber(1, 3);
+					// this.powerUpType = this.getRandomNumber(1, 3);
+					this.powerUpType = 3;
 					this.hitNumber = this.getRandomNumber(1, 5);
-					this.powerUpHeight = this.getRandomNumber(0, 270);
+					// this.powerUpHeight = this.getRandomNumber(0, 270);
+					this.powerUpHeight = 185;
 				}
 		}
 
 		// AI for left paddle
 		if (this.ball.y > (this.leftPaddle + this.LeftPaddleSize)) {
 			this.leftPaddle = Math.min(gameHeight - this.LeftPaddleSize, this.leftPaddle + 2);
-			client.emit('leftPaddle', this.leftPaddle);
+			// client.emit('leftPaddle', this.leftPaddle);
 		} else if (this.ball.y < this.leftPaddle) {
 			this.leftPaddle = Math.max(0, this.leftPaddle - 2);
-			client.emit('leftPaddle', this.leftPaddle);
+			// client.emit('leftPaddle', this.leftPaddle);
 		}
 
 		// Ball out of bounds
@@ -267,7 +274,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 
 		// Emit updated state to clients
-		client.emit('ball', { x: this.ball.x, y: this.ball.y });
+		client.emit('gameUpdate', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
+		// client.emit('ball', { x: this.ball.x, y: this.ball.y });
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);
 	}

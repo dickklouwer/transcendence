@@ -61,12 +61,12 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 	@SubscribeMessage('movement')
 	handleMovement(client: Socket, payload: string): void {
 		if (payload === 'ArrowUp') {
-			this.logger.log('ArrowUp');
+			// this.logger.log('ArrowUp');
 			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
 			// client.emit('rightPaddle', this.rightPaddle);
 		}
 		if (payload === 'ArrowDown') {
-			this.logger.log('ArrowDown');
+			// this.logger.log('ArrowDown');
 			this.rightPaddle = Math.min(gameHeight - paddleHeight, this.rightPaddle + 5);
 			// client.emit('rightPaddle', this.rightPaddle);
 		}

@@ -4,9 +4,7 @@
 import { GameManager } from './gameManager';
 
 import React, { useEffect, useState, useRef } from 'react';
-import io from 'socket.io-client';
-
-const socket = io(`http://localhost:4433/singleplayer`, { path: "/ws/socket.io" });
+import io, {Socket} from 'socket.io-client';
 
 const paddleWidth = 10;
 const paddleHeight = 100;
@@ -35,17 +33,30 @@ export default function PongGame() {
 	const [gameManager, setGameManager] = useState<GameManager | null>(null);
 	const [score, setScore] = useState<[number, number]>([0, 0]);
 	const [gameState, setGameState] = useState<string>("playing");
+	const [socket, setSocket] = useState<Socket | null>(null);
 
 	useEffect(() => {
+		if (socket) return;
+		setSocket(io(`http://localhost:4433/singleplayer`, { path: "/ws/socket.io" }));
+	}, [])
+	
+	
+	useEffect(() => {
+		console.log('AAAAA');
 		if (canvasRef.current === null) return;
+		console.log('BBBBB');
+		
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
-
+		console.log('CCCCC');
+	
+		if (!socket) return;
 		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
 		setGameManager(manager);
 
 		// upon reloading this does not work anymore
 		socket.on('startSetup', ({ x, y, leftPaddle, rightPaddle }: { x: number, y: number, leftPaddle: number, rightPaddle: number }) => {
+			console.log('startSetup', { x, y, leftPaddle, rightPaddle });
 			manager.updateBallPosition(x, y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
@@ -89,8 +100,9 @@ export default function PongGame() {
 
 		return () => {
 			manager.removeListeners();
+			socket.disconnect();
 		};
-	}, []);
+	}, [canvasRef, socket]);
 
 	const startGame = () => {
 		setGameState("playing");
