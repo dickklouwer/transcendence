@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchProfile, fetchGet, fetchChats } from '@/app/page';
+import { fetchProfile, fetchGet, fetchChats } from '@/app/fetch_functions';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";

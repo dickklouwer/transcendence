@@ -5,7 +5,6 @@ import {
   Body,
   Post,
   Query,
-  Request,
   Res,
   Headers,
 } from '@nestjs/common';
@@ -122,7 +121,7 @@ export class AuthController {
     console.log(isValid, user, body.token, '2FA CODE <');
     if (isValid) {
       await this.authService.setTwoFactorAuthenticationEnabled(
-        user.user_id,
+        user.intra_user_id,
         true,
       );
       res.send({ message: '2FA verification successful' });

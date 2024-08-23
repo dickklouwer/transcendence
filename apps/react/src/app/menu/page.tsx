@@ -1,12 +1,13 @@
 "use client";
 
 import Link from 'next/link';
-import PongGame from '../multiplayer_pong/page';
+import { userSocket } from '../layout';
 
 export default function Menu() {
   
     function Logout() {
       localStorage.removeItem('token');
+      userSocket.disconnect();
       window.location.replace('/login');
     }
   

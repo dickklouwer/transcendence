@@ -29,7 +29,7 @@ const Enable2FA = () => {
       setQrCode(response.data.qrCode);
       setSecret(response.data.secret);
     } catch (error) {
-      console.error('Error enabling 2FA', error.response ? error.response.data : error.message);
+      console.error('Error enabling 2FA', error);
     }
   };
 
@@ -54,7 +54,7 @@ const Enable2FA = () => {
       }, 2000);
     } catch (error) {
       setMessage('Invalid 2FA token');
-      console.error('Error verifying 2FA', error.response ? error.response.data : error.message);
+      console.error('Error verifying 2FA', error);
     }
   };
 
@@ -74,7 +74,7 @@ const Enable2FA = () => {
           <div className="mt-6">
             <p className="text-center mb-4 text-black">Scan this QR code with your 2FA app</p>
             <div className="flex justify-center">
-              <img src={qrCode} alt="2FA QR Code" className="border p-2" />
+              <img src={qrCode} alt="2FA QR Code" className="border p-2" /> {/* Please change this to an Image tag!! img is not allowed in react for some reason */}
             </div>
             <input
               type="text"

@@ -6,6 +6,7 @@ import { DbModule } from './db/db.module';
 import { DbService } from './db/db.service';
 import { PongModule } from './pong/pong.module';
 import { ConfigModule } from '@nestjs/config';
+import { UserGateway } from './friends/user.gateway';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { ConfigModule } from '@nestjs/config';
     PongModule,
   ],
   controllers: [AppController],
-  providers: [AppService, DbService],
+  providers: [AppService, DbService, UserGateway],
 })
 export class AppModule {}

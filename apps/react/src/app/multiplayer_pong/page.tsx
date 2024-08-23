@@ -4,9 +4,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import { User } from '@repo/db';
-import { fetchGet } from '../page';
 import { GameManager } from './gameManager';
 import Countdown from './countdown';
+import { fetchGet } from '../fetch_functions';
 
 const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
 
