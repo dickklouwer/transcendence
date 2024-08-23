@@ -9,7 +9,7 @@ import {
   createDrizzleClient,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats, ExternalUser, Friends } from '@repo/db';
+import type { User, UserChats } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
 @Injectable()
@@ -23,10 +23,7 @@ export class DbService {
     this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
 
-  async setUserTwoFactorEnabled(
-    userId: number,
-    enabled: boolean,
-  ): Promise<void> {
+  async setUserTwoFactorEnabled(userId: number, enabled: boolean) {
     try {
       await this.db
         .update(users)
@@ -38,10 +35,7 @@ export class DbService {
     }
   }
 
-  async updateUserTwoFactorSecret(
-    userId: number,
-    secret: string,
-  ): Promise<void> {
+  async updateUserTwoFactorSecret(userId: number, secret: string) {
     try {
       await this.db
         .update(users)
@@ -70,7 +64,7 @@ export class DbService {
     return false;
   }
 
-  async getUserFromDataBase(jwtToken: string): Promise<User | null> {
+  async getUserFromDataBase(jwtToken: string) {
     try {
       const user = await this.db
         .select()
@@ -84,7 +78,7 @@ export class DbService {
     }
   }
 
-  async getAnyUserFromDataBase(intra_user_id: number): Promise<User | null> {
+  async getAnyUserFromDataBase(intra_user_id: number) {
     try {
       const user = await this.db
         .select()
@@ -101,7 +95,7 @@ export class DbService {
 
   async CheckNicknameIsUnque(nickname: string): Promise<boolean> {
     try {
-      const user: User[] = await this.db
+      const user = await this.db
         .select()
         .from(users)
         .where(eq(users.nick_name, nickname));
@@ -149,9 +143,9 @@ export class DbService {
     }
   }
 
-  async getAllExternalUsers(jwtToken: string): Promise<ExternalUser[] | null> {
+  async getAllExternalUsers(jwtToken: string) {
     try {
-      const user: ExternalUser[] = await this.db
+      const user = await this.db
         .select({
           intra_user_id: users.intra_user_id,
           user_name: users.user_name,
@@ -169,14 +163,12 @@ export class DbService {
       return null;
     }
   }
-  async getFriendsNotApprovedFromDataBase(
-    jwtToken: string,
-  ): Promise<Friends[] | null> {
+  async getFriendsNotApprovedFromDataBase(jwtToken: string) {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const friendList: Friends[] = await this.db
+      const friendList = await this.db
         .select()
         .from(friends)
         .where(
@@ -195,9 +187,7 @@ export class DbService {
     }
   }
 
-  async getFriendsApprovedFromDataBase(
-    jwtToken: string,
-  ): Promise<ExternalUser[] | null> {
+  async getFriendsApprovedFromDataBase(jwtToken: string) {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
@@ -238,9 +228,7 @@ export class DbService {
     }
   }
 
-  async getAnyApprovedFriends(
-    intra_user_id: number,
-  ): Promise<ExternalUser[] | null> {
+  async getAnyApprovedFriends(intra_user_id: number) {
     try {
       const friendList = await this.db
         .select({
@@ -277,14 +265,12 @@ export class DbService {
     }
   }
 
-  async getIncomingFriendRequests(
-    jwtToken: string,
-  ): Promise<ExternalUser[] | null> {
+  async getIncomingFriendRequests(jwtToken: string) {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const friendList: ExternalUser[] = await this.db
+      const friendList = await this.db
         .select({
           intra_user_id: users.intra_user_id,
           user_name: users.user_name,

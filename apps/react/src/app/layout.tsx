@@ -138,6 +138,8 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
       setUser(res);
       if (res.nick_name !== nicknameProps.nickname && res.nick_name !== null)
         setNickname(res.nick_name);
+      if(userSocket.disconnected)
+        userSocket.connect();
       userSocket.emit('registerUserId', res.intra_user_id);
       
     })
