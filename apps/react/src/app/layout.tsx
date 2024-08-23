@@ -23,6 +23,7 @@ function FriendsInbox() {
   const [reload, setReload] = useState<boolean>(false);
   const [numberOfRequests, setNumberOfRequests] = useState<number>(0);
 
+
   useEffect(() => {
     fetchGet<ExternalUser[]>('api/incomingFriendRequests')
     .then((res) => {

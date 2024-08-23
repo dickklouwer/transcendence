@@ -162,6 +162,7 @@ export const AddFriendsForm = () => {
                 setIsSend(prev => !prev);
                 userSocket.emit('FriendRequestNotification', user_intra_id);
             })
+
         } catch (error) {
             console.error("Error Sending Friend Request:", error);
         }
