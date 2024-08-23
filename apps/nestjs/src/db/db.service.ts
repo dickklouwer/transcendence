@@ -10,7 +10,7 @@ import {
 	chats,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats, ExternalUser, Friends, ChatsUsers } from '@repo/db';
+import type { User, UserChats, Chats, ExternalUser, Friends, ChatsUsers } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
 @Injectable()
@@ -348,7 +348,7 @@ export class DbService {
 			console.log('In function getChatsFromDataBase');
 			const user = await this.getUserFromDataBase(jwtToken);
 			if (!user) throw Error('Failed to fetch User!');
-			const dbChatID = await this.db
+			const dbChatID: ChatsUsers[] = await this.db
 				.select()
 				.from(chatsUsers)
 				.where(
@@ -358,17 +358,26 @@ export class DbService {
 
 			for (let i = 0; i < dbChatID.length; i++) {
 
-				//NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
-				const chatinfo: Chats = this.db.select().from(chats).where(eq(chats.chat_id, dbChatID[i].chat_id));
+				const chatinfo = await this.db
+					.select()
+					.from(chats)
+					.where(eq(chats.chat_id, dbChatID[i].chat_id))
+					.limit(1);
+				const msg = await this.db
+					.select()
+					.from(messages)
+					.where(eq(messages.chat_id, dbChatID[i].chat_id))
+					.orderBy(messages.sent_at)
+					.limit(1);
 
-				//NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
+				//NOTE: @bprovos Should we do new request into DB, as done above, to get this info, is it smart??
 				const field: UserChats = {
 					chatid: dbChatID[i].chat_id,
-					title: chatinfo.title,
-					image: chatinfo.image,
-					lastMessage: '',
-					time: new Date(),
-					unreadMessages: 0,
+					title: chatinfo[0].title,
+					image: chatinfo[0].image,
+					lastMessage: msg[0].message,
+					time: msg[0].sent_at,
+					unreadMessages: 0,			//TODO: Fill in unreadmessages
 				};
 
 				result.push(field);
@@ -417,6 +426,7 @@ export class DbService {
 			console.log('Error: ', error);
 		}
 		// Create Messages
+		/*
 		try {
 			await this.db.insert(messages).values({
 				sender_id: 1,
@@ -437,6 +447,7 @@ export class DbService {
 		} catch (error) {
 			console.log('Error: ', error);
 		}
+		*/
 		return true;
 	}
 }

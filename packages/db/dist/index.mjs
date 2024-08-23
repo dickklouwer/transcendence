@@ -44,15 +44,15 @@ var chats = mySchema.table("chats", {
   chat_id: serial("chat_id").primaryKey(),
   is_direct: boolean("is_direct").default(false),
   title: text("title").notNull(),
-  // NOTE: Should this be able to be NULL? when a direct message we don't need a 
+  // NOTE:  @bprovos Should this be able to be NULL? when a non group message message we don't need a 
   is_public: boolean("is_public").default(false),
   password: text("password"),
   image: text("image"),
   created_at: timestamp("created_at").defaultNow()
 });
-var chatsUsers = mySchema.table("chats_users", {
+var chatsUsers = mySchema.table("chatsUsers", {
   chat_user_id: serial("chat_user_id").primaryKey(),
-  chat_id: integer("chat_id").references(
+  chat_id: integer("chat_id").notNull().references(
     () => chats.chat_id
   ),
   intra_user_id: integer("intra_user_id").references(() => users.intra_user_id),
@@ -71,7 +71,7 @@ var messages = mySchema.table("messages", {
   message: text("message").notNull(),
   sent_at: timestamp("sent_at").defaultNow().notNull()
 });
-var messageStatus = mySchema.table("message_status", {
+var messageStatus = mySchema.table("messageStatus", {
   message_status_id: serial("message_status_id").primaryKey(),
   message_id: integer("message_id").references(() => messages.message_id).notNull(),
   receiver_id: integer("receiver_id").references(() => users.intra_user_id).notNull(),
@@ -82,7 +82,7 @@ var userInsert = createInsertSchema(users);
 var userSelect = createSelectSchema(users);
 var friendsSelect = createSelectSchema(friends);
 var messagesInsert = createInsertSchema(messages);
-var chatSelect = createSelectSchema(chats);
+var chatsSelect = createSelectSchema(chats);
 var chatsUsersSelect = createSelectSchema(chatsUsers);
 
 // src/index.ts

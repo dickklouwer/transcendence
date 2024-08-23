@@ -79,15 +79,15 @@ var chats = mySchema.table("chats", {
   chat_id: (0, import_pg_core.serial)("chat_id").primaryKey(),
   is_direct: (0, import_pg_core.boolean)("is_direct").default(false),
   title: (0, import_pg_core.text)("title").notNull(),
-  // NOTE: Should this be able to be NULL? when a direct message we don't need a 
+  // NOTE:  @bprovos Should this be able to be NULL? when a non group message message we don't need a 
   is_public: (0, import_pg_core.boolean)("is_public").default(false),
   password: (0, import_pg_core.text)("password"),
   image: (0, import_pg_core.text)("image"),
   created_at: (0, import_pg_core.timestamp)("created_at").defaultNow()
 });
-var chatsUsers = mySchema.table("chats_users", {
+var chatsUsers = mySchema.table("chatsUsers", {
   chat_user_id: (0, import_pg_core.serial)("chat_user_id").primaryKey(),
-  chat_id: (0, import_pg_core.integer)("chat_id").references(
+  chat_id: (0, import_pg_core.integer)("chat_id").notNull().references(
     () => chats.chat_id
   ),
   intra_user_id: (0, import_pg_core.integer)("intra_user_id").references(() => users.intra_user_id),
@@ -106,7 +106,7 @@ var messages = mySchema.table("messages", {
   message: (0, import_pg_core.text)("message").notNull(),
   sent_at: (0, import_pg_core.timestamp)("sent_at").defaultNow().notNull()
 });
-var messageStatus = mySchema.table("message_status", {
+var messageStatus = mySchema.table("messageStatus", {
   message_status_id: (0, import_pg_core.serial)("message_status_id").primaryKey(),
   message_id: (0, import_pg_core.integer)("message_id").references(() => messages.message_id).notNull(),
   receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id).notNull(),
@@ -117,7 +117,7 @@ var userInsert = (0, import_drizzle_zod.createInsertSchema)(users);
 var userSelect = (0, import_drizzle_zod.createSelectSchema)(users);
 var friendsSelect = (0, import_drizzle_zod.createSelectSchema)(friends);
 var messagesInsert = (0, import_drizzle_zod.createInsertSchema)(messages);
-var chatSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
+var chatsSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
 var chatsUsersSelect = (0, import_drizzle_zod.createSelectSchema)(chatsUsers);
 
 // src/index.ts

@@ -1,34 +1,34 @@
 {
-  "name": "@repo/db",
-  "license": "MIT",
-  "version": "1.0.0",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "generate": "drizzle-kit generate",
-    "migrate": "drizzle-kit migrate",
-    "update": "drizzle-kit generate && drizzle-kit migrate",
-    "studio": "drizzle-kit studio",
-    "dev": "tsup src/index.ts --format cjs,esm --dts",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "clean": "rm -rf dist"
-  },
-  "devDependencies": {
-    "drizzle-kit": "^0.23.0"
-  },
-  "peerDependencies": {
-    "typescript": "latest"
-  },
-  "author": "Trancendence",
-  "dependencies": {
-    "drizzle-orm": "^0.32.1",
-    "drizzle-zod": "^0.5.1",
-    "postgres": "^3.4.4",
-    "tsup": "^8.2.2",
-    "zod": "^3.23.8"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "@repo/db",
+	"license": "MIT",
+	"version": "1.0.0",
+	"main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"generate": "drizzle-kit generate",
+		"migrate": "drizzle-kit migrate",
+		"update": "drizzle-kit generate && drizzle-kit migrate",
+		"studio": "drizzle-kit studio",
+		"dev": "tsup src/index.ts --format cjs,esm --dts",
+		"build": "tsup src/index.ts --format cjs,esm --dts",
+		"clean": "rm -rf dist"
+	},
+	"devDependencies": {
+		"drizzle-kit": "^0.23.0"
+	},
+	"peerDependencies": {
+		"typescript": "latest"
+	},
+	"author": "Trancendence",
+	"dependencies": {
+		"drizzle-orm": "^0.32.1",
+		"drizzle-zod": "^0.5.1",
+		"postgres": "^3.4.4",
+		"tsup": "^8.2.2",
+		"zod": "^3.23.8"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }

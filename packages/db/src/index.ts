@@ -1,4 +1,4 @@
-import type { User, Friends, ChatsUsers } from './schema';
+import type { User, Friends, Chats, ChatsUsers } from './schema';
 import { users, friends, chats, chatsUsers, games, messages } from './schema';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
@@ -24,5 +24,5 @@ type ExternalUser = {
 	image: string;
 };
 
-export type { User, Friends, ChatsUsers, UserChats, ExternalUser }
+export type { User, Friends, ChatsUsers, Chats, UserChats, ExternalUser }
 export { users, friends, chatsUsers, chats, games, messages };

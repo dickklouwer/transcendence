@@ -50,7 +50,7 @@ export const games = mySchema.table('games', {
 export const chats = mySchema.table('chats', {
 	chat_id: serial('chat_id').primaryKey(),
 	is_direct: boolean('is_direct').default(false),
-	title: text('title').notNull(),					// NOTE: Should this be able to be NULL? when a direct message we don't need a 
+	title: text('title').notNull(),					// NOTE:  @bprovos Should this be able to be NULL? when a non group message message we don't need a 
 	is_public: boolean('is_public').default(false),
 	password: text('password'),
 	image: text('image'),
@@ -58,8 +58,8 @@ export const chats = mySchema.table('chats', {
 });
 
 export const chatsUsers = mySchema.table('chatsUsers', {
-	chat_user_id: serial('chat_user_id').primaryKey(),		// Unique ID for this 
-	chat_id: integer('chat_id').references(
+	chat_user_id: serial('chat_user_id').primaryKey(),	//TODO: See if DB is workable without chat_user_id. rightnow it's only function is to have a primarykey (idk what that means).
+	chat_id: integer('chat_id').notNull().references(
 		() => chats.chat_id,
 	),
 	intra_user_id: integer('intra_user_id').references(() => users.intra_user_id),
@@ -96,10 +96,10 @@ export const userInsert = createInsertSchema(users);
 export const userSelect = createSelectSchema(users);
 export const friendsSelect = createSelectSchema(friends);
 export const messagesInsert = createInsertSchema(messages);
-export const chatSelect = createSelectSchema(chats);
+export const chatsSelect = createSelectSchema(chats);
 export const chatsUsersSelect = createSelectSchema(chatsUsers);
 
 export type User = z.infer<typeof userSelect>;
 export type Friends = z.infer<typeof friendsSelect>;
-export type Chats = z.infer<typeof chatSelect>;
+export type Chats = z.infer<typeof chatsSelect>;
 export type ChatsUsers = z.infer<typeof chatsUsersSelect>;

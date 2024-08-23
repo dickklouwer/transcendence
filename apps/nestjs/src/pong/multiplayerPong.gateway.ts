@@ -11,7 +11,6 @@ import { Server, Socket } from 'socket.io';
 import {
 	users,
 	messages,
-	groupChats,
 	createQueryClient,
 	createDrizzleClient,
 	games,
