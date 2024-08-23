@@ -117,23 +117,22 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.rightPaddleSize = 100;
 		this.LeftPaddleSize = 100;
 		this.speedUpHits = 0;
-		// this.powerUpType = this.getRandomNumber(1, 3);
-		this.powerUpType = 3;
-		this.hitNumber = this.getRandomNumber(1, 5);
-		// this.powerUpHeight = this.getRandomNumber(0, 270);
-		this.powerUpHeight = 185;
+		this.powerUpType = this.getRandomNumber(1, 3);
+		this.hitNumber = this.getRandomNumber(2, 6);
+		this.powerUpHeight = this.getRandomNumber(0, 270);
 		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
 	};
-
+	
 	startGameLoop(client: Socket) {
-		// this.powerUpType = this.getRandomNumber(1, 3);
-		this.powerUpType = 3;
-		this.hitNumber = this.getRandomNumber(1, 5);
-		// this.powerUpHeight = this.getRandomNumber(0, 270);
+		this.powerUpType = this.getRandomNumber(1, 3);
+		this.hitNumber = this.getRandomNumber(2, 6);
+		this.powerUpHeight = this.getRandomNumber(0, 270);
+		this.hitNumber = 2;
 		this.powerUpHeight = 185;
+		this.powerUpType = 1;
 		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
 	}
-
+	
 	changeBallDirection = (paddlePosition: number, paddleSize: number) => {
 		const diff = this.ball.y - (paddlePosition + paddleSize / 2);
 		this.ball.vy = diff / 20;
@@ -146,12 +145,12 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
 		}
 	}
-
+	
 	handleGameUpdate(client: Socket) {
 		// Update ball position
 		this.ball.x += this.ball.vx;
 		this.ball.y += this.ball.vy;
-
+		
 		// Ball collision with walls
 		if (this.ball.y <= borderWidth || this.ball.y >= gameHeight - borderWidth) {
 			this.ball.vy = -this.ball.vy;
@@ -165,6 +164,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				this.changeBallDirection(this.leftPaddle, this.LeftPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
+				this.logger.log('Hits: ' + this.hits);
 				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits) {
 					this.ball.vx = this.ball.vx * 2;
 					this.logger.log('Speeding up!!!!');
@@ -181,16 +181,16 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				this.changeBallDirection(this.rightPaddle, this.rightPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
-				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits) {
+				this.logger.log('Hits: ' + this.hits);
+				if (this.hits === this.speedUpHits) {
 					this.ball.vx = this.ball.vx * 2;
 					this.logger.log('Speeding up!!!!');
 				}
-				// this.logger.log('Hits: ' + this.hits);
 				// this.logger.log('ball.y: ' + this.ball.y);
 				// this.logger.log('bal.x : ' + this.ball.x);
 			}
 		}
-
+		
 
 		if (this.ShowPowerUp) {
 			if (this.ball.x >= 185 && this.ball.x <= 215)
@@ -204,9 +204,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 						if (this.ball.vx < 0)
 							this.extraLifeRight = true;
 						else
-							this.extraLifeLeft = true;
-					}
-					if (this.powerUpType === PowerUpType.largePaddle) {
+						this.extraLifeLeft = true;
+				}
+				if (this.powerUpType === PowerUpType.largePaddle) {
 						this.logger.log('Large paddle hit');
 						if (this.ball.vx < 0) {
 							this.rightPaddleSize = 150;
@@ -221,11 +221,10 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 						this.speedUpHits = this.hits + 2;
 						this.logger.log('Speed up hit set at ' + this.speedUpHits);
 					}
-					// this.powerUpType = this.getRandomNumber(1, 3);
-					this.powerUpType = 3;
-					this.hitNumber = this.getRandomNumber(1, 5);
-					// this.powerUpHeight = this.getRandomNumber(0, 270);
-					this.powerUpHeight = 185;
+					this.powerUpType = this.getRandomNumber(1, 3);
+					this.hitNumber = this.getRandomNumber(2, 5);
+					this.powerUpHeight = this.getRandomNumber(0, 270);
+					this.powerUpType = 1;
 				}
 		}
 

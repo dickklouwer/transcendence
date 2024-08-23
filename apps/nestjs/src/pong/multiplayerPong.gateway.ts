@@ -386,7 +386,6 @@ export class MultiplayerPongGateway
 
 		// Emit updated state to clients
 		this.server.to(room.roomID).emit('gameUpdate', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
-		this.logger.log(`Ball: ${room.ball.x}, ${room.ball.y}`);	
 		// this.server.to(roomId).emit('ball', room.ball);
 		// this.server.to(room.roomID).emit('ball', room.ball);
 		// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
