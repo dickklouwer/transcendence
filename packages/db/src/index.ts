@@ -12,7 +12,6 @@ type UserChats = {
 	image: string;
 	lastMessage: string;
 	time: Date;
-	unreadMessages: number;
 };
 
 type ExternalUser = {

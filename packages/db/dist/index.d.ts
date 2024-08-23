@@ -785,7 +785,6 @@ type UserChats = {
     image: string;
     lastMessage: string;
     time: Date;
-    unreadMessages: number;
 };
 type ExternalUser = {
     intra_user_id: number;

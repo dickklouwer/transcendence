@@ -52,6 +52,7 @@ var chats = mySchema.table("chats", {
 });
 var chatsUsers = mySchema.table("chatsUsers", {
   chat_user_id: serial("chat_user_id").primaryKey(),
+  //TODO: See if DB is workable without chat_user_id. rightnow it's only function is to have a primarykey (idk what that means).
   chat_id: integer("chat_id").notNull().references(
     () => chats.chat_id
   ),

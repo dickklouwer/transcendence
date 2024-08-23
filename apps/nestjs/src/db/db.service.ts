@@ -340,48 +340,31 @@ export class DbService {
 		}
 	}
 
-	//Suggest:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
+	//NOTE: Suggested namechange:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
 	async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
-		const result: UserChats[] = [];
 
 		try {
 			console.log('In function getChatsFromDataBase');
 			const user = await this.getUserFromDataBase(jwtToken);
 			if (!user) throw Error('Failed to fetch User!');
-			const dbChatID: ChatsUsers[] = await this.db
-				.select()
-				.from(chatsUsers)
+			const result: UserChats[] = await this.db
+				.select({
+					chatid: messages.chat_id,
+					title: chats.title,
+					image: chats.image,
+					lastMessage: messages.message,
+					time: messages.sent_at,
+				})
+				.from(messages)
+				.innerJoin(
+					chats, eq(messages.chat_id, chats.chat_id)
+				)
 				.where(
-					eq(chatsUsers.intra_user_id, user.intra_user_id),
+					eq(messages.sender_id, user.intra_user_id),
 				);
-			if (!dbChatID) throw Error('failed to fetch dbChatID');
 
-			for (let i = 0; i < dbChatID.length; i++) {
+			if (!chatsUsers) throw Error('failed to fetch dbChatID');
 
-				const chatinfo = await this.db
-					.select()
-					.from(chats)
-					.where(eq(chats.chat_id, dbChatID[i].chat_id))
-					.limit(1);
-				const msg = await this.db
-					.select()
-					.from(messages)
-					.where(eq(messages.chat_id, dbChatID[i].chat_id))
-					.orderBy(messages.sent_at)
-					.limit(1);
-
-				//NOTE: @bprovos Should we do new request into DB, as done above, to get this info, is it smart??
-				const field: UserChats = {
-					chatid: dbChatID[i].chat_id,
-					title: chatinfo[0].title,
-					image: chatinfo[0].image,
-					lastMessage: msg[0].message,
-					time: msg[0].sent_at,
-					unreadMessages: 0,			//TODO: Fill in unreadmessages
-				};
-
-				result.push(field);
-			}
 			console.log('result: ', result);
 			return result;
 		} catch (error) {
