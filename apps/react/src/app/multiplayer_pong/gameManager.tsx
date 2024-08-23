@@ -8,17 +8,18 @@ import { Socket } from "socket.io-client";
 
 
 export class GameManager {
-    context: CanvasRenderingContext2D;
-    socket: Socket;
-    gameWidth: number;
-    gameHeight: number;
-    paddleWidth: number;
-    paddleHeight: number;
-    ballSize: number;
-
-    rightPaddle: Paddle;
-    leftPaddle: Paddle;
-    ball: Ball;
+    private context: CanvasRenderingContext2D;
+    private socket: Socket;
+    private gameWidth: number;
+    private gameHeight: number;
+    private paddleWidth: number;
+    private paddleHeight: number;
+    private ballSize: number;
+    
+    private rightPaddle: Paddle;
+    private leftPaddle: Paddle;
+    private ball: Ball;
+    private animationFrameId: number | null = null; // Store the request ID
 
     constructor(context: CanvasRenderingContext2D, socket: Socket, gameWidth: number, gameHeight: number, paddleWidth: number, paddleHeight: number, ballSize: number) {
         this.context = context;
@@ -49,12 +50,13 @@ export class GameManager {
 
     startGame() {
         const drawLoop = () => {
+            // console.log('drawLoop ball:', this.ball.positionX, this.ball.positionY);
             this.context.clearRect(0, 0, this.gameWidth, this.gameHeight);
             this.leftPaddle.draw();
             this.rightPaddle.draw();
             this.ball.draw();
 
-            requestAnimationFrame(drawLoop);
+            this.animationFrameId = requestAnimationFrame(drawLoop);
         };
         drawLoop();
     }
@@ -65,6 +67,13 @@ export class GameManager {
         this.rightPaddle.setPosition(150);
         this.startGame();
     };
+
+    stopGame() {
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
 
     handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {

@@ -43,6 +43,10 @@ export default function PongGame() {
 	const [userNames, setUserNames] = useState<UserNames>({ left: '', right: '' });
 	const [Gamestate, SetGameState] = useState("AwaitingPlayer");
 
+	const gamestateRef = useRef(Gamestate);
+	gamestateRef.current = Gamestate; // Always keep the ref updated
+
+
 	useEffect(() => {
 		fetchGet<User>('api/profile')
 			.then((res) => {
@@ -62,6 +66,7 @@ export default function PongGame() {
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
 
+		
 		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
 		setGameManager(manager);
 
@@ -74,8 +79,9 @@ export default function PongGame() {
 			manager.ball.draw();
 			SetGameState("Countdown");
 			setTimeout(() => {
-				SetGameState("Playing");
 				startGame();
+				SetGameState("Playing");
+				manager.startGame();
 			}, 3000);
 		});
 
@@ -88,7 +94,7 @@ export default function PongGame() {
 		socket.on('rightPaddle', (paddle: number) => manager.updatePaddlePosition('right', paddle));
 		socket.on('leftPaddle', (paddle: number) => manager.updatePaddlePosition('left', paddle));
 		socket.on('ball', (ball: { x: number, y: number }) => manager.updateBallPosition(ball.x, ball.y));
-
+		
 		socket.on('score', ({ left, right }: { left: number, right: number }) => {
 			setScore([left, right]);
 		});
@@ -100,18 +106,19 @@ export default function PongGame() {
 		});
 
 		socket.on('awaitPlayer', () => {
+			manager.stopGame();
 			SetGameState("AwaitingPlayer");
 			socket.emit('stop');
 		});
-
+		
 		socket.on('names', (user: string[]) => setUserNames({ left: user[0], right: user[1] }));
 		// socket.on('playersReady', () => {
-		// 	SetGameState("Countdown");
+			// 	SetGameState("Countdown");
 		// 	setTimeout(() => SetGameState("Playing"), 3000);
 		// });
-
+		
 		manager.attachListeners();
-
+		
 		return () => {
 			manager.removeListeners();
 			socket.off('rightPaddle');
@@ -123,15 +130,17 @@ export default function PongGame() {
 			socket.off('playersReady');
 		};
 	}, []);
-
+	
 	const startGame = () => {
+		console.log('Starting game');
+		console.log('Gamestate:', gamestateRef.current);
 		if (gameManager) {
 			gameManager.startGame();
 			console.log('Game started');
 			socket.emit('start');
 		}
 	};
-
+	
 	const GameStateComponent = () => (
 		<>
 			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>

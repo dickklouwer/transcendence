@@ -289,14 +289,16 @@ export class MultiplayerPongGateway implements OnGatewayInit, OnGatewayConnectio
 		// Ball collision with left paddle
 		if (room.ball.x <= paddleWidth + ballSize + 4) {
 			if (room.ball.y >= room.players[0].paddle && room.ball.y <= room.players[0].paddle + paddleHeight) {
-				room.ball.vx = -room.ball.vx;
+				if (room.ball.vx < 0)
+					room.ball.vx = -room.ball.vx;
 				this.changeBallDirection(room.players[0].paddle, room);
 			}
 		}
 		// Ball collision with right paddle
 		else if (room.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
 			if (room.ball.y >= room.players[1].paddle && room.ball.y <= room.players[1].paddle + paddleHeight) {
-				room.ball.vx = -room.ball.vx;
+				if (room.ball.vx > 0)
+					room.ball.vx = -room.ball.vx;
 				this.changeBallDirection(room.players[1].paddle, room);
 			}
 		}
