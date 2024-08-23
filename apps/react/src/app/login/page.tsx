@@ -58,9 +58,10 @@ export function SignInDevUser() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username: username }),
-            });
+            });     
             if (response.ok)
                 {
+                    userSocket.connect();
                     Router.push(response.url);
                 }
             }
@@ -78,18 +79,18 @@ export function SignInDevUser() {
             <p> Login as a Dev User </p>
          <div className="flex space-x-4 py-2">
                 <input
-                type="text"
-                value={tempUsername}
-                onChange={handleChange}
-                placeholder="Enter your Username"
-                onKeyUp={(e) => {e.code == "Enter" && devSignIn(tempUsername)}}
-                className={'w-full text-black py-2 px-4 border rounded '}
-                maxLength={15}
+                    type="text"
+                    value={tempUsername}
+                    onChange={handleChange}
+                    placeholder="Enter your Username"
+                    onKeyUp={(e) => {e.code == "Enter" && devSignIn(tempUsername)}}
+                    className={'w-full text-black py-2 px-4 border rounded '}
+                    maxLength={15}
                 />
                 <button
-                className={` bg-green-500 hover:bg-green-700 disabled:bg-red-500 disabled:hover:bg-red-700 text-white px-2 py-2 rounded  transition-all duration-150`}
-                onClick={() => devSignIn(tempUsername)}
-                disabled={tempUsername.trim() === ""}
+                    className={` bg-green-500 hover:bg-green-700 disabled:bg-red-500 disabled:hover:bg-red-700 text-white px-2 py-2 rounded  transition-all duration-150`}
+                    onClick={() => devSignIn(tempUsername)}
+                    disabled={tempUsername.trim() === ""}
                 >
                 Login
                 </button>
