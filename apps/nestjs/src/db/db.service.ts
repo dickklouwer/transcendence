@@ -11,7 +11,7 @@ import {
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type { User, UserChats, Chats, ExternalUser, Friends, ChatsUsers } from '@repo/db';
-import { eq, or, not, and } from 'drizzle-orm';
+import { eq, or, not, and, desc } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
@@ -353,15 +353,12 @@ export class DbService {
 					title: chats.title,
 					image: chats.image,
 					lastMessage: messages.message,
-					time: messages.sent_at,
+					time: messages.sent_at
 				})
 				.from(messages)
-				.innerJoin(
-					chats, eq(messages.chat_id, chats.chat_id)
-				)
-				.where(
-					eq(messages.sender_id, user.intra_user_id),
-				);
+				.innerJoin(chats, eq(messages.chat_id, chats.chat_id))
+				.where(eq(messages.sender_id, user.intra_user_id))
+				.orderBy(desc(messages.sent_at));
 
 			if (!chatsUsers) throw Error('failed to fetch dbChatID');
 
