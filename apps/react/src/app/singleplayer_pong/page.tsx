@@ -34,6 +34,7 @@ export default function PongGame() {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const [gameManager, setGameManager] = useState<GameManager | null>(null);
 	const [score, setScore] = useState<[number, number]>([0, 0]);
+	const [gameState, setGameState] = useState<string>("playing");
 
 	useEffect(() => {
 		if (canvasRef.current === null) return;
@@ -80,13 +81,9 @@ export default function PongGame() {
 		});
 
 		socket.on('gameover', () => {
-			manager.updateGameState("GameOver");
+			setGameState("GameOver");
 			socket.emit('stop');
 		});
-
-		// socket.on('playersReady', () => {
-		// 	manager.updateGameState("playing");
-		// });
 
 		manager.attachListeners();
 
@@ -96,6 +93,7 @@ export default function PongGame() {
 	}, []);
 
 	const startGame = () => {
+		setGameState("playing");
 		if (gameManager) {
 			gameManager.startGame();
 			socket.emit('start');
@@ -109,7 +107,7 @@ export default function PongGame() {
 	return (
 		<div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
 			<div className="flex items-center justify-center mb-6">
-				{gameManager && gameManager.gameState === "GameOver" && (
+				{gameState === "GameOver" && (
 					<div style={{
 						position: 'absolute',
 						top: 0,
@@ -131,10 +129,6 @@ export default function PongGame() {
 					</div>
 				)}
 			</div>
-			{/* <div className="flex flex-col items-center justify-center mb-6">
-				<h1>Score</h1>
-				{gameManager && <h1 style={{ marginTop: '-5px' }}> {gameManager.score.left} - {gameManager.score.right} </h1>}
-			</div> */}
 			<ScoreBoard score={score} />
 			<div className="flex items-center justify-center">
 				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Computer</div>
