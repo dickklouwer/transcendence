@@ -4,7 +4,7 @@
 import { signIn } from 'next-auth/react';
 import { ChangeEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { userSocket } from '../layout';
+import { userSocket } from '../profile_headers';
 
 
 export default function Login() {

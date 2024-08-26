@@ -3,9 +3,8 @@ import { useState, useEffect, ChangeEvent,SetStateAction, Dispatch } from "react
 import Image from "next/image";
 import { fetchGet, fetchPost } from "../fetch_functions";
 import type { ExternalUser, Friends } from "@repo/db";
-import { userSocket } from "../layout";
+import { userSocket } from "../profile_headers";
 import { DisplayUserStatus } from "./page";
-import { read } from "fs";
 
 /* -- SetNicknameForm Component --> */
 export const NicknameForm = ({

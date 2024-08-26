@@ -245,4 +245,20 @@ export class AppController {
 
     res.status(200).send(response);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getYourGames')
+  async getYourGames(
+    @Headers('authorization') token: string,
+    @Res() res: Response,
+  ) {
+    const games = await this.dbservice.getYourGames(token.split(' ')[1]);
+
+    if (!games) {
+      res.status(404).send('No games found');
+      return;
+    }
+
+    res.status(200).send(games);
+  }
 }

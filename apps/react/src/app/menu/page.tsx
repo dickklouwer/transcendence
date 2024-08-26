@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { userSocket } from '../layout';
+import { userSocket } from '../profile_headers';
 
 export default function Menu() {
   

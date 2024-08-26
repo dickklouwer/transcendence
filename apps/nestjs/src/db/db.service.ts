@@ -5,6 +5,7 @@ import {
   friends,
   messages,
   groupChats,
+  games,
   createQueryClient,
   createDrizzleClient,
 } from '@repo/db';
@@ -379,6 +380,48 @@ export class DbService {
     } catch (error) {
       console.log('Error: ', error);
       return false;
+    }
+  }
+
+  async getYourGames(jwtToken: string) {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const res = await this.db
+        .select(
+          {
+            player1_id: games.player1_id,
+            player2_id: games.player2_id,
+            player1_score: games.player1_score,
+            player2_score: games.player2_score,
+            user_name: users.user_name,
+            nick_name: users.nick_name,
+            image: users.image,
+          },
+        )
+        .from(games)
+        .innerJoin(users,
+          and(
+            or(
+              eq(games.player1_id, user.intra_user_id),
+              eq(games.player2_id, user.intra_user_id),
+            ),
+            or(
+              eq(users.intra_user_id, games.player1_id),
+              eq(users.intra_user_id, games.player2_id),
+            ),
+          ))
+          .where(
+              not(eq(users.intra_user_id, user.intra_user_id))
+          );
+
+      console.log('Games: ', res);
+
+      return res;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
     }
   }
 
