@@ -52,26 +52,33 @@ function MatchList(){
 
 
     return (
-        <div className="bg-slate-800 rounded-b-md rounded-lg shadow-lg shadow-blue-500">
+        <div className="bg-slate-800 p-2 rounded-b-md rounded-lg shadow-lg shadow-blue-500">
             <div className='px-2 pt-3'>
                 <h1 className="flex justify-center items-center ">Match History</h1>
                 <p className="w-auto whitespace-nowrap pb-4 ">&#60;----------------------------------&#62;</p>
             </div>
             <div className="">
+                {matchHistory?.length === 0 && <p className="text-white text-center">No Matches Played</p>}
                 {matchHistory?.map((opponent, idx) => (
                     <div className="bg-black p-2 m-1 rounded-lg " key={idx}>
-
                         <div className="flex items-center space-x-2">
                             <Image className='rounded-full w-14 h-14' src={user.image} alt="Profile Picture" width={100} height={100} />
                             {user.nick_name === null ? 
                             <p className="text-white"> {user.user_name}</p>:
                             <p className="text-white"> {user.nick_name}</p>}
                         </div>
+                        {opponent.player1_id === user.intra_user_id && opponent.player1_score > opponent.player2_score || opponent.player2_id === user.intra_user_id && opponent.player2_score > opponent.player1_score ?
+                        <div className="flex text-red-500 justify-center items-center">
+                            <p>~~~~~~~~~~</p>
+                            <p className=" text-2xl ">~ {opponent.player1_score} - {opponent.player2_score} ~</p>
+                            <p>~~~~~~~~~~</p>
+                        </div> :
                         <div className="flex text-green-500 justify-center items-center">
                             <p>~~~~~~~~~~</p>
                             <p className=" text-2xl ">~ {opponent.player1_score} - {opponent.player2_score} ~</p>
                             <p>~~~~~~~~~~</p>
                         </div>
+                        }
                         <div className="flex items-center justify-end space-x-2">
                             {opponent.nick_name === null ? 
                             <p className="text-white"> {opponent.user_name}</p>:
