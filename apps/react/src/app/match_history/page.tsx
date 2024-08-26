@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { fetchGet } from "../fetch_functions";
-import { User } from "@repo/db";
+import { ExternalUser, User } from "@repo/db";
 import Image from "next/image";
-import { match } from "assert";
 
 export default function MatchHistoryPage() {
     return (
@@ -16,9 +15,18 @@ export default function MatchHistoryPage() {
 }
 
 function LadderList(){
+    const [ladder, setLadder] = useState<ExternalUser[]>();
+
+    useEffect(() => {
+        fetchGet<ExternalUser[]>('api/getExternalUsers')
+    });
+
     return (
         <div className="bg-slate-700 p-4 rounded-lg shadow-lg shadow-red-500">
             <h1> Leaderboard </h1>
+            <p> &#60;-------------&#62;</p>
+            WIP Ladder waiting for Vbrouwer to implement total wins & losses
+
         </div>
     );
 }
