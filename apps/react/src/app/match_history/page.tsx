@@ -15,7 +15,7 @@ export default function MatchHistoryPage() {
 }
 
 function LadderList(){
-    const [ladder, setLadder] = useState<ExternalUser[]>();
+    // const [ladder, setLadder] = useState<ExternalUser[]>();
 
     useEffect(() => {
         fetchGet<ExternalUser[]>('api/getExternalUsers')

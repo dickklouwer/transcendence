@@ -389,19 +389,18 @@ export class DbService {
       if (!user) throw Error('Failed to fetch User!');
 
       const res = await this.db
-        .select(
-          {
-            player1_id: games.player1_id,
-            player2_id: games.player2_id,
-            player1_score: games.player1_score,
-            player2_score: games.player2_score,
-            user_name: users.user_name,
-            nick_name: users.nick_name,
-            image: users.image,
-          },
-        )
+        .select({
+          player1_id: games.player1_id,
+          player2_id: games.player2_id,
+          player1_score: games.player1_score,
+          player2_score: games.player2_score,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          image: users.image,
+        })
         .from(games)
-        .innerJoin(users,
+        .innerJoin(
+          users,
           and(
             or(
               eq(games.player1_id, user.intra_user_id),
@@ -411,10 +410,9 @@ export class DbService {
               eq(users.intra_user_id, games.player1_id),
               eq(users.intra_user_id, games.player2_id),
             ),
-          ))
-          .where(
-              not(eq(users.intra_user_id, user.intra_user_id))
-          );
+          ),
+        )
+        .where(not(eq(users.intra_user_id, user.intra_user_id)));
 
       console.log('Games: ', res);
 
