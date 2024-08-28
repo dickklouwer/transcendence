@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-import {UserChats} from '../../../../nestjs/src/auth/auth.service';
+import {UserChats} from '@repo/db';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -32,7 +32,9 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                 <button onClick={() => alert('Showing profile of ' + chatField.title)}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
-                <Link className="flex-grow" href={'/messages'}>
+                <Link className="flex-grow" href={`/messages`
+                // <Link className="flex-grow" href={`/messages/id=${chatField.chatid}`
+                }>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>

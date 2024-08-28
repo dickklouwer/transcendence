@@ -719,6 +719,25 @@ declare const friendsSelect: z.ZodObject<{
     user_id_receive: number;
     is_approved: boolean;
 }>;
+declare const messagesInsert: z.ZodObject<{
+    chat_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    message_id: z.ZodOptional<z.ZodNumber>;
+    sender_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    message: z.ZodString;
+    sent_at: z.ZodOptional<z.ZodDate>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    message: string;
+    chat_id?: number | null | undefined;
+    message_id?: number | undefined;
+    sender_id?: number | null | undefined;
+    sent_at?: Date | undefined;
+}, {
+    message: string;
+    chat_id?: number | null | undefined;
+    message_id?: number | undefined;
+    sender_id?: number | null | undefined;
+    sent_at?: Date | undefined;
+}>;
 declare const chatSelect: z.ZodObject<{
     chat_id: z.ZodNumber;
     is_direct: z.ZodNullable<z.ZodBoolean>;
@@ -776,6 +795,7 @@ type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
 type Chats = z.infer<typeof chatSelect>;
 type ChatsUsers = z.infer<typeof chatsUsersSelect>;
+type Messages = z.infer<typeof messagesInsert>;
 
 declare const createQueryClient: (input: string) => postgres.Sql<{}>;
 declare const createDrizzleClient: (client: ReturnType<typeof createQueryClient>) => drizzle_orm_postgres_js.PostgresJsDatabase<Record<string, never>>;
@@ -796,4 +816,4 @@ type ExternalUser = {
     image: string;
 };
 
-export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };

@@ -3,90 +3,56 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
+import {Messages} from '@repo/db';
 
-interface TMessage {
-    message_id: number;
-    sender_id: number;
-    receiver_id: number | null;
-    group_chat_id: number | null;
-    message: string;
-    sent_at: string;
-}
-
-
-const myId = 42; // Temporaty: Assuming the current user's ID
+const myId = 77718; // Temporaty: Assuming the current user's ID
 const socket = io(`http://localhost:4433/messages`, { path: "/ws/socket.io" });
 
-socket.on('connect_error', (err) => {
-    console.error('Connection error:', err);
-});
-
-const databaseMessages = [
+const databaseMessages: Messages[] = [
     {
         message_id: 1,
-        sender_id: 43,
-        receiver_id: 42,
-        group_chat_id: null,
-        message: 'Hello',
-        sent_at: '13:04'
+        sender_id: 278,
+        chat_id: 1,
+        message: 'Hello there!',
+        sent_at: new Date('2024-08-28 13:43:17.825774')
     },
     {
         message_id: 2,
-        sender_id: 42,
-        receiver_id: 43,
-        group_chat_id: null,
+        sender_id: myId,
+        chat_id: 1,
         message: 'Hi',
-        sent_at: '13:05'
+        sent_at: new Date('2024-08-28 13:44:17.825774')
     },
     {
         message_id: 3,
-        sender_id: 43,
-        receiver_id: 42,
-        group_chat_id: null,
+        sender_id: 278,
+        chat_id: 1,
         message: 'How are you?',
-        sent_at: '13:06'
-    },
-    {
-        message_id: 4,
-        sender_id: 42,
-        receiver_id: 43,
-        group_chat_id: null,
-        message: 'I am fine :)\nThanks for asking!',
-        sent_at: '13:07'
-    },
-    {
-        message_id: 5,
-        sender_id: 42,
-        receiver_id: 43,
-        group_chat_id: null,
-        message: 'How are you?',
-        sent_at: '13:08'
-    },
-    {
-        message_id: 6,
-        sender_id: 43,
-        receiver_id: 42,
-        group_chat_id: null,
-        message: 'Good',
-        sent_at: '13:09'
+        sent_at: new Date('2024-08-28 13:45:17.825774')
     },
 ];
 
-function Message({ message }: { message:TMessage }) {
+function Message({ message }: { message:Messages }) {
     const isMyMessage = message.sender_id === myId;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
     const renderMessageWithLineBreaks = (text:string) => {
-        return text.split('\n').map((line, index) => (
-            <div key={index}>{line}</div>
-        ));
+        return (<div>{text}</div>);
+        // return text.split('\n').map((line, index) => (
+        //     <div key={index}>{line}</div>
+        // ));
     };
+
+    // function that convert the sent_at to a more readable format with 24 hour time, yesterday and older dates
+    function renderDate(date: Date | undefined) {
+        return date ? date.toLocaleTimeString().slice(0,4) : '';
+    }
 
     return (
         <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                 <div>{renderMessageWithLineBreaks(message.message)}</div>
-                <div className="text-xs text-gray-600">{message.sent_at}</div>
+                <div className="text-xs text-gray-600">{renderDate(message.sent_at)}</div>
             </div>
         </div>
     );
@@ -154,8 +120,7 @@ export default function DC() {
         const message = {
             message_id: databaseMessages[databaseMessages.length - 1].message_id + 1,
             sender_id: myId,
-            receiver_id: 43,
-            group_chat_id: null,
+            chat_id: 1,
             message: newMessage,
             sent_at: new Date().toLocaleTimeString()
         };

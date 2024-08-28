@@ -103,3 +103,4 @@ export type User = z.infer<typeof userSelect>;
 export type Friends = z.infer<typeof friendsSelect>;
 export type Chats = z.infer<typeof chatSelect>;
 export type ChatsUsers = z.infer<typeof chatsUsersSelect>;
+export type Messages = z.infer<typeof messagesInsert>;
