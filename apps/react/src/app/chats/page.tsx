@@ -60,22 +60,12 @@ export default function Chats() {
 				console.log('Retrieved Profile Data: ');
 				setUser(data);
 			})
-		// Sort the chatFields by time, with the newest messages at the top
-		setUserChats(userChats => {
-			if (userChats) {
-				return userChats.sort((a, b) => {
-					return b.time.getTime() - a.time.getTime();
-				});
-			}
-			return userChats;
-		});
 
-		fetchChats(localStorage.getItem('token'))
+		fetchGet<UserChats[]>('/api/chats')
 			.then((data) => {
-				console.log('Received Chats Data: ');
+				console.log(data);
 				setUserChats(data);
 			})
-
 	}, []);
 
 	console.log('Get user data');

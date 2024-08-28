@@ -11,7 +11,7 @@ import {
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type { User, UserChats, Chats, ExternalUser, Friends, ChatsUsers } from '@repo/db';
-import { eq, or, not, and, desc } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
@@ -341,25 +341,34 @@ export class DbService {
 	}
 
 	//NOTE: Suggested namechange:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
-	async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
+	async getChatsFromDataBase(jwtToken: string) {
 
 		try {
 			console.log('In function getChatsFromDataBase');
 			const user = await this.getUserFromDataBase(jwtToken);
 			if (!user) throw Error('Failed to fetch User!');
-			const result: UserChats[] = await this.db
-				.select({
-					chatid: messages.chat_id,
-					title: chats.title,
-					image: chats.image,
-					lastMessage: messages.message,
-					time: messages.sent_at
-				})
-				.from(messages)
-				.innerJoin(chats, eq(messages.chat_id, chats.chat_id))
-				.where(eq(messages.sender_id, user.intra_user_id))
-				.orderBy(desc(messages.sent_at));
 
+			const result = await this.db
+				.select({
+					chatid: chatsUsers.chat_id,
+					//					title: chats.title,
+					//					image: chats.image,
+					lastMessage: messages.message,
+					time: messages.sent_at,
+				})
+				.from(chatsUsers)
+				/*
+				.innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
+				.innerJoin(messages, eq(chats.chat_id, messages.chat_id))
+				.where(and(
+					eq(chatsUsers.intra_user_id, user.intra_user_id),
+				))
+				.orderBy(desc(messages.sent_at))
+				*/
+				.innerJoin(messages, eq(messages.chat_id, chatsUsers.chat_id)) // Join messages based on chat_id
+				.where(eq(chatsUsers.intra_user_id, user.intra_user_id)) // Filter by user ID in the chatsUsers table
+				.orderBy(desc(messages.sent_at)) // Order by sent_at in descending order
+				.groupBy(chatsUsers.chat_id, messages.message, messages.chat_id, messages.sent_at) // Group by chat_id to get one message per chat
 			if (!chatsUsers) throw Error('failed to fetch dbChatID');
 
 			console.log('result: ', result);
