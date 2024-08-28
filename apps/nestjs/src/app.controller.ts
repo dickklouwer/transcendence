@@ -11,8 +11,7 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { UserChats } from './auth/auth.service';
-import type { User, ExternalUser } from '@repo/db';
+import type { User, ExternalUser, UserChats } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 

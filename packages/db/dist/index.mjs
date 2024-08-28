@@ -50,8 +50,9 @@ var chats = mySchema.table("chats", {
   image: text("image"),
   created_at: timestamp("created_at").defaultNow()
 });
-var chatsUsers = mySchema.table("chats_users", {
+var chatsUsers = mySchema.table("chatsUsers", {
   chat_user_id: serial("chat_user_id").primaryKey(),
+  // Unique ID for this 
   chat_id: integer("chat_id").references(
     () => chats.chat_id
   ),
@@ -71,7 +72,7 @@ var messages = mySchema.table("messages", {
   message: text("message").notNull(),
   sent_at: timestamp("sent_at").defaultNow().notNull()
 });
-var messageStatus = mySchema.table("message_status", {
+var messageStatus = mySchema.table("messageStatus", {
   message_status_id: serial("message_status_id").primaryKey(),
   message_id: integer("message_id").references(() => messages.message_id).notNull(),
   receiver_id: integer("receiver_id").references(() => users.intra_user_id).notNull(),

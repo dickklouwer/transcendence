@@ -85,8 +85,9 @@ var chats = mySchema.table("chats", {
   image: (0, import_pg_core.text)("image"),
   created_at: (0, import_pg_core.timestamp)("created_at").defaultNow()
 });
-var chatsUsers = mySchema.table("chats_users", {
+var chatsUsers = mySchema.table("chatsUsers", {
   chat_user_id: (0, import_pg_core.serial)("chat_user_id").primaryKey(),
+  // Unique ID for this 
   chat_id: (0, import_pg_core.integer)("chat_id").references(
     () => chats.chat_id
   ),
@@ -106,7 +107,7 @@ var messages = mySchema.table("messages", {
   message: (0, import_pg_core.text)("message").notNull(),
   sent_at: (0, import_pg_core.timestamp)("sent_at").defaultNow().notNull()
 });
-var messageStatus = mySchema.table("message_status", {
+var messageStatus = mySchema.table("messageStatus", {
   message_status_id: (0, import_pg_core.serial)("message_status_id").primaryKey(),
   message_id: (0, import_pg_core.integer)("message_id").references(() => messages.message_id).notNull(),
   receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id).notNull(),

@@ -448,12 +448,12 @@ declare const chats: drizzle_orm_pg_core.PgTableWithColumns<{
     dialect: "pg";
 }>;
 declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
-    name: "chats_users";
+    name: "chatsUsers";
     schema: "pong";
     columns: {
         chat_user_id: drizzle_orm_pg_core.PgColumn<{
             name: "chat_user_id";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "number";
             columnType: "PgSerial";
             data: number;
@@ -469,7 +469,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         chat_id: drizzle_orm_pg_core.PgColumn<{
             name: "chat_id";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "number";
             columnType: "PgInteger";
             data: number;
@@ -485,7 +485,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         intra_user_id: drizzle_orm_pg_core.PgColumn<{
             name: "intra_user_id";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "number";
             columnType: "PgInteger";
             data: number;
@@ -501,7 +501,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         is_owner: drizzle_orm_pg_core.PgColumn<{
             name: "is_owner";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "boolean";
             columnType: "PgBoolean";
             data: boolean;
@@ -517,7 +517,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         is_admin: drizzle_orm_pg_core.PgColumn<{
             name: "is_admin";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "boolean";
             columnType: "PgBoolean";
             data: boolean;
@@ -533,7 +533,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         is_banned: drizzle_orm_pg_core.PgColumn<{
             name: "is_banned";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "boolean";
             columnType: "PgBoolean";
             data: boolean;
@@ -549,7 +549,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         mute_untill: drizzle_orm_pg_core.PgColumn<{
             name: "mute_untill";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "date";
             columnType: "PgTimestamp";
             data: Date;
@@ -565,7 +565,7 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
         }, {}, {}>;
         joined_at: drizzle_orm_pg_core.PgColumn<{
             name: "joined_at";
-            tableName: "chats_users";
+            tableName: "chatsUsers";
             dataType: "date";
             columnType: "PgTimestamp";
             data: Date;
@@ -719,6 +719,31 @@ declare const friendsSelect: z.ZodObject<{
     user_id_receive: number;
     is_approved: boolean;
 }>;
+declare const chatSelect: z.ZodObject<{
+    chat_id: z.ZodNumber;
+    is_direct: z.ZodNullable<z.ZodBoolean>;
+    title: z.ZodString;
+    is_public: z.ZodNullable<z.ZodBoolean>;
+    password: z.ZodNullable<z.ZodString>;
+    image: z.ZodNullable<z.ZodString>;
+    created_at: z.ZodNullable<z.ZodDate>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    password: string | null;
+    image: string | null;
+    chat_id: number;
+    is_direct: boolean | null;
+    title: string;
+    is_public: boolean | null;
+    created_at: Date | null;
+}, {
+    password: string | null;
+    image: string | null;
+    chat_id: number;
+    is_direct: boolean | null;
+    title: string;
+    is_public: boolean | null;
+    created_at: Date | null;
+}>;
 declare const chatsUsersSelect: z.ZodObject<{
     chat_user_id: z.ZodNumber;
     chat_id: z.ZodNullable<z.ZodNumber>;
@@ -749,6 +774,7 @@ declare const chatsUsersSelect: z.ZodObject<{
 }>;
 type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
+type Chats = z.infer<typeof chatSelect>;
 type ChatsUsers = z.infer<typeof chatsUsersSelect>;
 
 declare const createQueryClient: (input: string) => postgres.Sql<{}>;
@@ -770,4 +796,4 @@ type ExternalUser = {
     image: string;
 };
 
-export { type ChatsUsers, type ExternalUser, type Friends, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
