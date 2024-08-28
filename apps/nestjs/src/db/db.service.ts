@@ -341,38 +341,40 @@ export class DbService {
 	}
 
 	//NOTE: Suggested namechange:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
-	async getChatsFromDataBase(jwtToken: string) {
+	async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
 
 		try {
 			console.log('In function getChatsFromDataBase');
 			const user = await this.getUserFromDataBase(jwtToken);
 			if (!user) throw Error('Failed to fetch User!');
 
-			const result = await this.db
+			const Allmsg = await this.db
 				.select({
 					chatid: chatsUsers.chat_id,
-					//					title: chats.title,
-					//					image: chats.image,
+					title: chats.title,
+					image: chats.image,
 					lastMessage: messages.message,
 					time: messages.sent_at,
 				})
 				.from(chatsUsers)
-				/*
 				.innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
 				.innerJoin(messages, eq(chats.chat_id, messages.chat_id))
-				.where(and(
-					eq(chatsUsers.intra_user_id, user.intra_user_id),
-				))
+				.where(eq(chatsUsers.intra_user_id, user.intra_user_id))
 				.orderBy(desc(messages.sent_at))
-				*/
-				.innerJoin(messages, eq(messages.chat_id, chatsUsers.chat_id)) // Join messages based on chat_id
-				.where(eq(chatsUsers.intra_user_id, user.intra_user_id)) // Filter by user ID in the chatsUsers table
-				.orderBy(desc(messages.sent_at)) // Order by sent_at in descending order
-				.groupBy(chatsUsers.chat_id, messages.message, messages.chat_id, messages.sent_at) // Group by chat_id to get one message per chat
 			if (!chatsUsers) throw Error('failed to fetch dbChatID');
 
-			console.log('result: ', result);
-			return result;
+			const firstMsg = [];
+			const chatID_Set = new Set();
+
+			for (const msg of Allmsg) {
+				if (chatID_Set.has(msg.chatid))
+					continue;
+				firstMsg.push(msg);
+				chatID_Set.add(msg.chatid);
+			}
+			console.log('result: ', Allmsg);
+			return firstMsg;
+
 		} catch (error) {
 			console.log('userMessages:', error);
 			return null;
