@@ -72,7 +72,7 @@ export default function Profile() {
 
   return (
     <div>
-    <div className="flex flex-col justify-center items-center bg-slate-900 shadow-lg shadow-blue-500 rounded-lg ml-11 p-6 w-[84rem]">
+    <div className="flex flex-col justify-center items-center bg-slate-900 shadow-lg shadow-blue-500 rounded-lg ml-12 p-6 w-[83rem]">
       <h1 className="text-2xl">Friends</h1>
       <p className="w-auto whitespace-nowrap pb-4 ">&#60;-------------------------------&#62;</p>
       <FriendsList />

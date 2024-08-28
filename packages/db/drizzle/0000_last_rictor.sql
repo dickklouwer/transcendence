@@ -1,7 +1,7 @@
 CREATE SCHEMA "pong";
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "pong"."user_state" AS ENUM('Online', 'Offline', 'In-Game', 'Idle');
+ CREATE TYPE "pong"."user_state" AS ENUM('Online', 'Offline', 'In-Game');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -9,7 +9,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS "pong"."friends" (
 	"friend_id" serial PRIMARY KEY NOT NULL,
 	"user_id_send" integer NOT NULL,
-	"user_id_receive" integer,
+	"user_id_receive" integer NOT NULL,
 	"is_approved" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS "pong"."users" (
 	"is_two_factor_enabled" boolean DEFAULT false,
 	"state" "pong"."user_state" DEFAULT 'Online' NOT NULL,
 	"image_url" text NOT NULL,
+	"wins" integer DEFAULT 0 NOT NULL,
+	"losses" integer DEFAULT 0 NOT NULL,
 	CONSTRAINT "users_user_name_unique" UNIQUE("user_name"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
