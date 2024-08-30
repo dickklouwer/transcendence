@@ -4,6 +4,7 @@ import { createContext, Dispatch, SetStateAction, useEffect, useState, useContex
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchDelete, fetchGet, fetchPost } from './fetch_functions';
 import Link from 'next/link';
+import router from 'next/router';
 import Image from 'next/image';
 import './globals.css';
 import io  from 'socket.io-client';
@@ -105,6 +106,21 @@ function FriendsInbox() {
   );
 }
 
+function MessageInbox() {
+  const [numberOfMessages, setNumberOfMessages] = useState<number>(1);
+  return (
+    /* return inbox icon */
+    <div className='relative inline-block'>
+      <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
+        <svg className="w-8 h-8 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+          <path fill-rule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clip-rule="evenodd"/>
+          <path fill-rule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clip-rule="evenodd"/>
+        </svg>
+        {numberOfMessages > 0 && <span className="absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{numberOfMessages}</span>}
+      </Link>
+    </div>
+  );
+}
 
 /* -- LoadProfile Component --> */
 function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<string | undefined>> })
@@ -152,6 +168,7 @@ function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<str
 
     return (
       <div className='flex space-x-4'>
+        <MessageInbox />
         <FriendsInbox />
         <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
             <Image className="rounded-full h-8 w-8" src={user.image} alt="Profile Picture" width={100} height={100} />
