@@ -8,13 +8,11 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { Messages } from '@repo/db';
 
-type ChatMessage = {
-  message_id: number;
-  sender_id: number;
-  group_chat_id: number | null;
-  message: string;
-  sent_at: string;
+type userData = {
+  socket: Socket;
+  chat_ids: number[];
 };
 
 @WebSocketGateway({
@@ -28,23 +26,17 @@ export class MessagesGateway
 {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MessagesGateway');
+  private usersData: userData[] = [];
 
-  @SubscribeMessage('clientToServer')
-  handleMessage(client: Socket, payload: string): void {
-    this.logger.log(`Client ${client.id} sent: ${payload}`);
-
-    // if (false) {
-    //   // to specific users
-    //   const room = payload.group_chat_id
-    //     ? `group_${payload.group_chat_id}`
-    //     : `private_${payload.sender_id}_${client.id}`;
-
-    //   client.join(room);
-    //   this.server.to(room).emit('serverToClient', payload);
-    // } else {
-    //   // to all users
-    this.server.emit('serverToClient', payload);
-    // }
+  handleConnection(client: Socket) {
+    this.logger.log(`Client connected: ${client.id}`);
+    // get the intra_user_id from the client
+    const intra_user_id = client.handshake.query.intra_user_id;
+    this.logger.log(
+      `Client connected: ${client.id}, intra_user_id: ${intra_user_id}`,
+    );
+    const chat_ids = [1, 2, 3]; // todo: get chat_ids from the database
+    this.usersData.push({ socket: client, chat_ids: chat_ids });
   }
 
   afterInit() {
@@ -55,7 +47,14 @@ export class MessagesGateway
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+  @SubscribeMessage('clientToServer')
+  handleMessage(client: Socket, payload: Messages): void {
+    this.logger.log(`Client ${client.id} sent: ${payload}`);
+
+    this.usersData.forEach((user) => {
+      if (user.chat_ids.includes(payload.chat_id)) {
+        user.socket.emit('serverToClient', payload);
+      }
+    });
   }
 }

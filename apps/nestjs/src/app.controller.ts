@@ -102,6 +102,22 @@ export class AppController {
     return userChats;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('messages')
+  async getMessages(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ) {
+    const messages = await this.dbservice.getMessagesFromDataBase(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    if (!messages) throw Error('Failed to fetch messages');
+
+    return messages;
+  }
+
   @Post('createMockData')
   async mockData(): Promise<boolean> {
     const hardcoddedIntraId = 77718;

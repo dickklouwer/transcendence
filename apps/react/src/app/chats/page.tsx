@@ -32,8 +32,8 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                 <button onClick={() => alert('Showing profile of ' + chatField.title)}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
+                {/* Use nextjs dynamic app routing */}
                 <Link className="flex-grow" href={`/messages`
-                // <Link className="flex-grow" href={`/messages/id=${chatField.chatid}`
                 }>
                     <div className="flex justify-between w-full">
                         <div>

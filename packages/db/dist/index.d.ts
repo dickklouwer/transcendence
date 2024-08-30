@@ -609,7 +609,7 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgInteger";
             data: number;
             driverParam: string | number;
-            notNull: false;
+            notNull: true;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
@@ -625,7 +625,7 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgInteger";
             data: number;
             driverParam: string | number;
-            notNull: false;
+            notNull: true;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
@@ -720,23 +720,23 @@ declare const friendsSelect: z.ZodObject<{
     is_approved: boolean;
 }>;
 declare const messagesInsert: z.ZodObject<{
-    chat_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
-    message_id: z.ZodOptional<z.ZodNumber>;
-    sender_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+    message_id: z.ZodNumber;
+    sender_id: z.ZodNumber;
+    chat_id: z.ZodNumber;
     message: z.ZodString;
-    sent_at: z.ZodOptional<z.ZodDate>;
+    sent_at: z.ZodDate;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
+    chat_id: number;
+    message_id: number;
+    sender_id: number;
     message: string;
-    chat_id?: number | null | undefined;
-    message_id?: number | undefined;
-    sender_id?: number | null | undefined;
-    sent_at?: Date | undefined;
+    sent_at: Date;
 }, {
+    chat_id: number;
+    message_id: number;
+    sender_id: number;
     message: string;
-    chat_id?: number | null | undefined;
-    message_id?: number | undefined;
-    sender_id?: number | null | undefined;
-    sent_at?: Date | undefined;
+    sent_at: Date;
 }>;
 declare const chatSelect: z.ZodObject<{
     chat_id: z.ZodNumber;

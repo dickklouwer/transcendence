@@ -48,7 +48,7 @@ export const games = mySchema.table('games', {
 });
 
 export const chats = mySchema.table('chats', {
-	chat_id: serial('chat_id').primaryKey(),
+	chat_id: serial('chat_id').primaryKey().notNull(),
 	is_direct: boolean('is_direct').default(false),
 	title: text('title').notNull(),					// NOTE: Should this be able to be NULL? when a direct message we don't need a 
 	is_public: boolean('is_public').default(false),
@@ -72,8 +72,8 @@ export const chatsUsers = mySchema.table('chatsUsers', {
 
 export const messages = mySchema.table('messages', {
 	message_id: serial('message_id').primaryKey(),
-	sender_id: integer('sender_id').references(() => users.intra_user_id),
-	chat_id: integer('chat_id').references(
+	sender_id: integer('sender_id').notNull().references(() => users.intra_user_id),
+	chat_id: integer('chat_id').notNull().references(
 		() => chats.chat_id,
 	),
 	message: text('message').notNull(),
@@ -95,7 +95,7 @@ export const messageStatus = mySchema.table('messageStatus', {
 export const userInsert = createInsertSchema(users);
 export const userSelect = createSelectSchema(users);
 export const friendsSelect = createSelectSchema(friends);
-export const messagesInsert = createInsertSchema(messages);
+export const messagesInsert = createSelectSchema(messages);
 export const chatSelect = createSelectSchema(chats);
 export const chatsUsersSelect = createSelectSchema(chatsUsers);
 

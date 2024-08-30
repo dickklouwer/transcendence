@@ -17,6 +17,7 @@ import type {
   Friends,
   ChatsUsers,
   Chats,
+  Messages,
 } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
@@ -384,6 +385,48 @@ export class DbService {
       return result;
     } catch (error) {
       console.log('userMessages:', error);
+      return null;
+    }
+  }
+
+  async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
+    try {
+      console.log('In function getChatIdsFromUser');
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const dbChatID = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
+
+      const result: number[] = [];
+      for (let i = 0; i < dbChatID.length; i++) {
+        result.push(dbChatID[i].chat_id);
+      }
+      console.log('result: ', result);
+      return result;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getMessagesFromDataBase(
+    jwtToken: string,
+    chat_id: number,
+  ): Promise<Messages[] | null> {
+    try {
+      console.log('In function getMessagesFromDataBase');
+      const res = await this.db
+        .select()
+        .from(messages)
+        .where(eq(messages.chat_id, chat_id));
+
+      console.log('Messages: ', res);
+      return res;
+    } catch (error) {
+      console.log('Error messags: ', error);
       return null;
     }
   }

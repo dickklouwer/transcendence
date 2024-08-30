@@ -3,37 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
-import {Messages} from '@repo/db';
+import {User, Messages} from '@repo/db';
+import { fetchGet } from '../fetch_functions';
 
-const myId = 77718; // Temporaty: Assuming the current user's ID
-const socket = io(`http://localhost:4433/messages`, { path: "/ws/socket.io" });
 
-const databaseMessages: Messages[] = [
-    {
-        message_id: 1,
-        sender_id: 278,
-        chat_id: 1,
-        message: 'Hello there!',
-        sent_at: new Date('2024-08-28 13:43:17.825774')
-    },
-    {
-        message_id: 2,
-        sender_id: myId,
-        chat_id: 1,
-        message: 'Hi',
-        sent_at: new Date('2024-08-28 13:44:17.825774')
-    },
-    {
-        message_id: 3,
-        sender_id: 278,
-        chat_id: 1,
-        message: 'How are you?',
-        sent_at: new Date('2024-08-28 13:45:17.825774')
-    },
-];
-
-function Message({ message }: { message:Messages }) {
-    const isMyMessage = message.sender_id === myId;
+function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
+    const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
     const renderMessageWithLineBreaks = (text:string) => {
@@ -41,10 +16,13 @@ function Message({ message }: { message:Messages }) {
         // return text.split('\n').map((line, index) => (
         //     <div key={index}>{line}</div>
         // ));
-    };
 
-    // function that convert the sent_at to a more readable format with 24 hour time, yesterday and older dates
-    function renderDate(date: Date | undefined) {
+    };
+    function renderDate(date: Date) {
+        if (!date) 
+            return 'no date';
+        if (!(date instanceof Date))
+            return 'not a date';
         return date ? date.toLocaleTimeString().slice(0,4) : '';
     }
 
@@ -89,50 +67,90 @@ function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearch
 }
 
 export default function DC() {
+    const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
-    const [messages, setMessages] = useState(databaseMessages);
+    const [messages, setMessages] = useState<Messages[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+    const socket = io(`http://localhost:4433/messages`, { 
+        path: "/ws/socket.io", 
+        query: {
+            intra_user_id: user?.intra_user_id
+        }}
+    );
+    
+    
     useEffect(() => {
-        socket.on('serverToClient', (message) => {
-        alert('Received message: ' + message);
-        setMessages([...messages, message]);
+        /* Load user info form database and store in const user */
+        fetchGet<User>('api/profile')
+        .then((user) => {
+            setUser(user);
+            console.log('intra_id', user.intra_user_id);
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+        
+        const chat_id = 1; // TODO: get chat_id from the URL
+        /* Load messages form database form right chat, using query chat_id: number */
+        fetchGet<Messages[]>(`api/messages?chat_id=${chat_id}`)
+        .then((res) => {
+            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+            const transformedMessages = res.map(message => ({
+                ...message,
+                sent_at: new Date(message.sent_at)
+            }));
+            console.log('Retrieved Messages: ', transformedMessages);
+            setMessages(transformedMessages);
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
         });
 
+        /* Get messages while online */
+        socket.on('serverToClient', (message: Messages) => {
+            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+            message.sent_at = new Date(message.sent_at);
+            console.log('Received message: ' + message.message);
+            setMessages((prevMessages) => [...prevMessages, message]);
+            /* Auto scroll to last message */
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        });
+    
         /* Auto scroll to last message */
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // or instant
+    
         return () => {
             socket.off('serverToClient');
         };
-    }, [messages]);
-  
-    const sendMessage = () => {
-        console.log('Sending message: ' + newMessage);
-        socket.emit('clientToServer', newMessage);
+    }, []);
+
+    const sendMessage = (message: Messages) => {
+        console.log('Sending message: ' + message.message);
+        socket.emit('clientToServer', message);
         setNewMessage('');
     };
 
-    const handleSendMessage = () => {
+    const handleSendMessage = (intra_id: number) => {
         if (newMessage.trim() === '') return;
-
+        
         const message = {
-            message_id: databaseMessages[databaseMessages.length - 1].message_id + 1,
-            sender_id: myId,
+            message_id: (messages[messages.length - 1]?.message_id ?? 0) + 1,
+            sender_id: intra_id,
             chat_id: 1,
             message: newMessage,
-            sent_at: new Date().toLocaleTimeString()
+            sent_at: new Date()
         };
-
-        setMessages([...messages, message]);
-        sendMessage();
+        
+        // setMessages([...messages, message]);
+        sendMessage(message);
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSendMessage();
+            handleSendMessage(intra_id);
         }
     };
 
@@ -143,8 +161,8 @@ export default function DC() {
                 {customTransparantToBlack()}
                 <div className="overflow-auto h-full">
                     <div className="h-10"></div> {/* making sure you can see the first message */}
-                    {messages.map((message, index) => (
-                        <Message key={index} message={message} />
+                    {user && messages.map((message, index) => (
+                        <Message key={index} message={message} intra_id={user.intra_user_id} />
                     ))}
                     <div ref={messagesEndRef} /> {/* Used for auto scroll to last message */}
                 </div>
@@ -157,7 +175,7 @@ export default function DC() {
                     rows={2}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPress(e, user?.intra_user_id ?? 0)}
                 ></textarea>
                 <div className='flow-root'>
                     <Link className="float-left py-2 px-4" href={'/chats'}>
@@ -165,8 +183,8 @@ export default function DC() {
                     </Link>
                     <button
                         className="float-right py-2 px-4 rounded bg-blue-500 text-black font-bold "
-                        onClick={handleSendMessage}
-                        >
+                        onClick={() => handleSendMessage(user?.intra_user_id ?? 0)}
+                    >
                         Send
                     </button>
                 </div>
