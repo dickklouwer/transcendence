@@ -123,12 +123,10 @@ export default function Profile() {
           <h2 className="text-xl mb-4">Wins and Losses</h2>
           <div className="flex space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-lg">Wins: 10</span>{" "}
-              {/* This 10 should be replaced with the actual number of wins */}
+              <span className="text-lg">Wins: {user.wins}</span>{" "}
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-lg">Losses: 5</span>{" "}
-              {/* This 5 should be replaced with the actual number of losses */}
+              <span className="text-lg">Losses: {user.losses}</span>{" "}
             </div>
           </div>
         </div>

@@ -385,7 +385,8 @@ export class MultiplayerPongGateway
 
     // Emit updated state to clients
     this.server.to(room.roomID).emit('ball', room.ball);
-    this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+    if (room.players[1] !== undefined)
+      this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
     this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
   }
 
@@ -412,6 +413,10 @@ export class MultiplayerPongGateway
       });
 
       if (score1 > score2) {
+        const swap = player1;
+        player1 = player2;
+        player2 = swap;
+      }
         await this.db
           .update(users)
           .set({
@@ -424,20 +429,6 @@ export class MultiplayerPongGateway
             losses: sql`${users.losses} + 1`,
           })
           .where(eq(users.intra_user_id, player2));
-      } else {
-        await this.db
-          .update(users)
-          .set({
-            wins: sql`${users.wins} + 1`,
-          })
-          .where(or(eq(users.intra_user_id, player2)));
-        await this.db
-          .update(users)
-          .set({
-            losses: sql`${users.losses} + 1`,
-          })
-          .where(or(eq(users.intra_user_id, player1)));
-      }
 
       console.log('Game score inserted');
     } catch (error) {

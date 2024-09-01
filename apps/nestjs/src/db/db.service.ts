@@ -154,6 +154,8 @@ export class DbService {
           email: users.email,
           state: users.state,
           image: users.image,
+          wins: users.wins,
+          losses: users.losses,
         })
         .from(users)
         .where(not(eq(users.token, jwtToken)));
