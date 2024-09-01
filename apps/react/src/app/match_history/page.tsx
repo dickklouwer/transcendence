@@ -5,21 +5,25 @@ import { fetchGet } from "../fetch_functions";
 import { ExternalUser, User } from "@repo/db";
 import classNames from "classnames";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function MatchHistoryPage() {
     return (
-    <div className="flex space-x-4">
-        <LadderList />
-        <MatchList />
-    </div>
+        <div>
+            <div className="flex space-x-4">
+                <LadderList />
+                <MatchList />
+            </div>
+            <Link href="/menu" className="bg-blue-500 text-white flex justify-center items-center p-4 rounded hover:bg-blue-600 transition duration-300 m-6"> Back to Menu </Link>
+        </div>
     );
 }
 
 function LadderList(){
-
     type ExtendedUser = ExternalUser | User;
 
     const [ladder, setLadder] = useState<ExtendedUser[]>([]);
+    const [user, setUser] = useState<User>();
 
     useEffect(() => {
 
@@ -32,12 +36,18 @@ function LadderList(){
     useEffect(() => {
         fetchGet<User>('api/profile')
         .then((res) => {
+            setUser(res);
             setLadder((prev) => prev.concat(res));
         })
+        .finally(() => {
+        setLadder((prev) => prev.sort((a, b) => b.wins - a.wins));
+        })
     }, []);
-    
-    const sortedLadder = ladder?.sort((a, b) => b.wins - a.wins);
 
+    if (!user)
+        return <div>Loading</div>;
+
+    const position = ladder?.findIndex((search) => search.intra_user_id === user.intra_user_id);
 
     return (
         <div className="bg-slate-800 p-2 flex-col items-center justify-center rounded-lg shadow-lg shadow-red-500">
@@ -45,8 +55,8 @@ function LadderList(){
                 <h1 className="flex items-center justify-center"> Leaderboard </h1>
                 <p className="flex items-center justify-center pb-[0.6rem]"> &#60;-------------------&#62;</p>
             </div>
-            <div className="h-[31rem] overflow-scroll">
-                {sortedLadder?.map((user, idx) => {
+            <div className="h-[29rem] overflow-scroll">
+                {ladder?.map((user, idx) => {
                     let bgColor;
                     let shadowColor;
                     let borderColor;
@@ -100,9 +110,11 @@ function LadderList(){
                             </div>
                         </div>
                     </div>
-                    );
-                    
+                    );   
                 })}
+            </div>
+            <div className="flex justify-center items-center p-1">
+                <p className="text-white">Your Position: {position + 1}</p>
             </div>
         </div>
     );
@@ -145,7 +157,7 @@ function MatchList(){
             <div className="h-[31rem] overflow-scroll">
                 {matchHistory?.length === 0 && <p className="text-white text-center">No Matches Played</p>}
                 {matchHistory?.map((opponent, idx) => (
-                    <div className="bg-black p-2 m-1 rounded-lg " key={idx}>
+                    <div className="bg-black p-2 m-1 rounded-lg whitespace-nowrap " key={idx}>
                         <div className="flex items-center space-x-2">
                             <Image className='rounded-full w-14 h-14' src={user.image} alt="Profile Picture" width={100} height={100} />
                             {user.nick_name === null ? 
