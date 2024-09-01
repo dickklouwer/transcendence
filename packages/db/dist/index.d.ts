@@ -643,8 +643,15 @@ type ExternalUser = {
     email: string;
     state: 'Online' | 'Offline' | 'In-Game';
     image: string;
-    wins: number;
-    losses: number;
+};
+type MultiplayerMatches = {
+    player1_id: number;
+    player2_id: number;
+    player1_score: number;
+    player2_score: number;
+    user_name: string;
+    nick_name: string;
+    image: string;
 };
 
-export { type ExternalUser, type Friends, type User, type UserChats, createDrizzleClient, createQueryClient, friends, games, groupChats, messages, users };
+export { type ExternalUser, type Friends, type MultiplayerMatches, type User, type UserChats, createDrizzleClient, createQueryClient, friends, games, groupChats, messages, users };

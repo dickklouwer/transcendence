@@ -10,7 +10,7 @@ import {
   createDrizzleClient,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats } from '@repo/db';
+import type { MultiplayerMatches, User, UserChats } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
 @Injectable()
@@ -390,7 +390,7 @@ export class DbService {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const res = await this.db
+      const res: MultiplayerMatches[] = await this.db
         .select({
           player1_id: games.player1_id,
           player2_id: games.player2_id,
