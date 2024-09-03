@@ -34,7 +34,7 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ te
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 w-full">
+    <div className="min-h-screen flex items-center justify-center w-full">
       <div className="bg-white shadow-lg rounded-lg p-6 w-96">
         <h1 className="text-2xl mb-4 text-center text-black">Two-Factor Authentication</h1>
         <div className="mb-16">
