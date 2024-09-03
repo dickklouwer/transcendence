@@ -1,40 +1,36 @@
 import { Injectable } from '@nestjs/common';
-// import * as schema from '@repo/db/src';
-import {
-  users,
-  friends,
-  messages,
-  groupChats,
-  games,
-  createQueryClient,
-  createDrizzleClient,
-} from '@repo/db';
+import * as schema from '@repo/db/src';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { MultiplayerMatches, User, UserChats } from '@repo/db';
+import type { MultiplayerMatches, UserChats } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
-  db: ReturnType<typeof createDrizzleClient>;
+  db: ReturnType<typeof schema.createDrizzleClient>;
   constructor() {
     if (!process.env.DATABASE_URL_LOCAL) {
       throw Error('Env DATABASE_URL_LOCAL is undefined');
     }
 
-    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
+    this.db = schema.createDrizzleClient(
+      schema.createQueryClient(process.env.DATABASE_URL),
+    );
   }
 
-  async getUserById(id: number): Promise<User | null> {
-    const result = await this.db.select().from(users).where(eq(users.intra_user_id, id));
+  async getUserById(id: number): Promise<schema.User | null> {
+    const result = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.intra_user_id, id));
     return result.length > 0 ? result[0] : null;
   }
 
   async setUserTwoFactorEnabled(userId: number, enabled: boolean) {
     try {
       await this.db
-        .update(users)
+        .update(schema.users)
         .set({ is_two_factor_enabled: enabled })
-        .where(eq(users.intra_user_id, userId));
+        .where(eq(schema.users.intra_user_id, userId));
       console.log('User 2FA status updated');
     } catch (error) {
       console.error('Error updating 2FA status:', error);
@@ -44,18 +40,18 @@ export class DbService {
   async updateUserTwoFactorSecret(userId: number, secret: string) {
     try {
       await this.db
-        .update(users)
+        .update(schema.users)
         .set({ two_factor_secret: secret })
-        .where(eq(users.intra_user_id, userId));
+        .where(eq(schema.users.intra_user_id, userId));
       console.log('User 2FA secret updated');
     } catch (error) {
       console.error('Error updating 2FA secret:', error);
     }
   }
 
-  async upsertUserInDataBase(fortyTwoUser: FortyTwoUser): Promise<User> {
+  async upsertUserInDataBase(fortyTwoUser: FortyTwoUser): Promise<schema.User> {
     const result = await this.db
-      .insert(users)
+      .insert(schema.users)
       .values({
         intra_user_id: fortyTwoUser.intra_user_id,
         user_name: fortyTwoUser.user_name,
@@ -71,7 +67,7 @@ export class DbService {
         losses: 0
       })
       .onConflictDoUpdate({
-        target: users.intra_user_id,
+        target: schema.users.intra_user_id,
         set: {
           user_name: fortyTwoUser.user_name,
           email: fortyTwoUser.email,
@@ -89,8 +85,8 @@ export class DbService {
     try {
       const user = await this.db
         .select()
-        .from(users)
-        .where(eq(users.token, jwtToken));
+        .from(schema.users)
+        .where(eq(schema.users.token, jwtToken));
 
       return user[0];
     } catch (error) {
@@ -103,8 +99,8 @@ export class DbService {
     try {
       const user = await this.db
         .select()
-        .from(users)
-        .where(eq(users.intra_user_id, intra_user_id));
+        .from(schema.users)
+        .where(eq(schema.users.intra_user_id, intra_user_id));
 
       console.log('User from id: ', user);
       return user[0];
@@ -118,8 +114,8 @@ export class DbService {
     try {
       const user = await this.db
         .select()
-        .from(users)
-        .where(eq(users.nick_name, nickname));
+        .from(schema.users)
+        .where(eq(schema.users.nick_name, nickname));
 
       if (user.length === 0) {
         return true;
@@ -134,9 +130,9 @@ export class DbService {
   async setUserNickname(jwtToken: string, nickname: string): Promise<boolean> {
     try {
       await this.db
-        .update(users)
+        .update(schema.users)
         .set({ nick_name: nickname })
-        .where(eq(users.token, jwtToken));
+        .where(eq(schema.users.token, jwtToken));
 
       console.log('Nickname Set!');
       return true;
@@ -152,9 +148,9 @@ export class DbService {
   ): Promise<boolean> {
     try {
       await this.db
-        .update(users)
+        .update(schema.users)
         .set({ state: state })
-        .where(eq(users.intra_user_id, intra_user_id));
+        .where(eq(schema.users.intra_user_id, intra_user_id));
 
       console.log('State Set! for', intra_user_id, 'to', state);
       return true;
@@ -168,17 +164,17 @@ export class DbService {
     try {
       const user = await this.db
         .select({
-          intra_user_id: users.intra_user_id,
-          user_name: users.user_name,
-          nick_name: users.nick_name,
-          email: users.email,
-          state: users.state,
-          image: users.image,
-          wins: users.wins,
-          losses: users.losses,
+          intra_user_id: schema.users.intra_user_id,
+          user_name: schema.users.user_name,
+          nick_name: schema.users.nick_name,
+          email: schema.users.email,
+          state: schema.users.state,
+          image: schema.users.image,
+          wins: schema.users.wins,
+          losses: schema.users.losses,
         })
-        .from(users)
-        .where(not(eq(users.token, jwtToken)));
+        .from(schema.users)
+        .where(not(eq(schema.users.token, jwtToken)));
 
       return user;
     } catch (error) {
@@ -193,14 +189,14 @@ export class DbService {
 
       const friendList = await this.db
         .select()
-        .from(friends)
+        .from(schema.friends)
         .where(
           and(
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(schema.friends.user_id_send, user.intra_user_id),
+              eq(schema.friends.user_id_receive, user.intra_user_id),
             ),
-            eq(friends.is_approved, false),
+            eq(schema.friends.is_approved, false),
           ),
         );
       return friendList;
@@ -217,29 +213,29 @@ export class DbService {
 
       const friendList = await this.db
         .select({
-          intra_user_id: users.intra_user_id,
-          user_name: users.user_name,
-          nick_name: users.nick_name,
-          email: users.email,
-          state: users.state,
-          image: users.image,
-          friend_id: friends.friend_id,
+          intra_user_id: schema.users.intra_user_id,
+          user_name: schema.users.user_name,
+          nick_name: schema.users.nick_name,
+          email: schema.users.email,
+          state: schema.users.state,
+          image: schema.users.image,
+          friend_id: schema.friends.friend_id,
         })
-        .from(friends)
+        .from(schema.friends)
         .innerJoin(
-          users,
+          schema.users,
           or(
-            eq(users.intra_user_id, friends.user_id_send),
-            eq(users.intra_user_id, friends.user_id_receive),
+            eq(schema.users.intra_user_id, schema.friends.user_id_send),
+            eq(schema.users.intra_user_id, schema.friends.user_id_receive),
           ),
         )
         .where(
           and(
-            eq(friends.is_approved, true),
-            not(eq(users.intra_user_id, user.intra_user_id)),
+            eq(schema.friends.is_approved, true),
+            not(eq(schema.users.intra_user_id, user.intra_user_id)),
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(schema.friends.user_id_send, user.intra_user_id),
+              eq(schema.friends.user_id_receive, user.intra_user_id),
             ),
           ),
         );
@@ -255,28 +251,28 @@ export class DbService {
     try {
       const friendList = await this.db
         .select({
-          intra_user_id: users.intra_user_id,
-          user_name: users.user_name,
-          nick_name: users.nick_name,
-          email: users.email,
-          state: users.state,
-          image: users.image,
+          intra_user_id: schema.users.intra_user_id,
+          user_name: schema.users.user_name,
+          nick_name: schema.users.nick_name,
+          email: schema.users.email,
+          state: schema.users.state,
+          image: schema.users.image,
         })
-        .from(friends)
+        .from(schema.friends)
         .innerJoin(
-          users,
+          schema.users,
           or(
-            eq(users.intra_user_id, friends.user_id_send),
-            eq(users.intra_user_id, friends.user_id_receive),
+            eq(schema.users.intra_user_id, schema.friends.user_id_send),
+            eq(schema.users.intra_user_id, schema.friends.user_id_receive),
           ),
         )
         .where(
           and(
-            eq(friends.is_approved, true),
-            not(eq(users.intra_user_id, intra_user_id)),
+            eq(schema.friends.is_approved, true),
+            not(eq(schema.users.intra_user_id, intra_user_id)),
             or(
-              eq(friends.user_id_send, intra_user_id),
-              eq(friends.user_id_receive, intra_user_id),
+              eq(schema.friends.user_id_send, intra_user_id),
+              eq(schema.friends.user_id_receive, intra_user_id),
             ),
           ),
         );
@@ -295,26 +291,26 @@ export class DbService {
 
       const friendList = await this.db
         .select({
-          intra_user_id: users.intra_user_id,
-          user_name: users.user_name,
-          nick_name: users.nick_name,
-          email: users.email,
-          state: users.state,
-          image: users.image,
+          intra_user_id: schema.users.intra_user_id,
+          user_name: schema.users.user_name,
+          nick_name: schema.users.nick_name,
+          email: schema.users.email,
+          state: schema.users.state,
+          image: schema.users.image,
         })
-        .from(friends)
+        .from(schema.friends)
         .innerJoin(
-          users,
+          schema.users,
           or(
-            eq(users.intra_user_id, friends.user_id_send),
-            eq(users.intra_user_id, friends.user_id_receive),
+            eq(schema.users.intra_user_id, schema.friends.user_id_send),
+            eq(schema.users.intra_user_id, schema.friends.user_id_receive),
           ),
         )
         .where(
           and(
-            eq(friends.is_approved, false),
-            not(eq(users.intra_user_id, user.intra_user_id)),
-            eq(friends.user_id_receive, user.intra_user_id),
+            eq(schema.friends.is_approved, false),
+            not(eq(schema.users.intra_user_id, user.intra_user_id)),
+            eq(schema.friends.user_id_receive, user.intra_user_id),
           ),
         );
 
@@ -331,7 +327,7 @@ export class DbService {
 
       if (!user) throw Error('Failed to fetch User!');
 
-      await this.db.insert(friends).values({
+      await this.db.insert(schema.friends).values({
         user_id_send: user.intra_user_id,
         user_id_receive: userId,
         is_approved: false,
@@ -353,17 +349,17 @@ export class DbService {
       if (!user) throw Error('Failed to fetch User!');
 
       await this.db
-        .update(friends)
+        .update(schema.friends)
         .set({ is_approved: true })
         .where(
           and(
             or(
-              eq(friends.user_id_send, friend_id),
-              eq(friends.user_id_receive, friend_id),
+              eq(schema.friends.user_id_send, friend_id),
+              eq(schema.friends.user_id_receive, friend_id),
             ),
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(schema.friends.user_id_send, user.intra_user_id),
+              eq(schema.friends.user_id_receive, user.intra_user_id),
             ),
           ),
         );
@@ -384,16 +380,16 @@ export class DbService {
       if (!user) throw Error('Failed to fetch User!');
 
       await this.db
-        .delete(friends)
+        .delete(schema.friends)
         .where(
           and(
             or(
-              eq(friends.user_id_send, friend_id),
-              eq(friends.user_id_receive, friend_id),
+              eq(schema.friends.user_id_send, friend_id),
+              eq(schema.friends.user_id_receive, friend_id),
             ),
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(schema.friends.user_id_send, user.intra_user_id),
+              eq(schema.friends.user_id_receive, user.intra_user_id),
             ),
           ),
         );
@@ -412,29 +408,29 @@ export class DbService {
 
       const res: MultiplayerMatches[] = await this.db
         .select({
-          player1_id: games.player1_id,
-          player2_id: games.player2_id,
-          player1_score: games.player1_score,
-          player2_score: games.player2_score,
-          user_name: users.user_name,
-          nick_name: users.nick_name,
-          image: users.image,
+          player1_id: schema.games.player1_id,
+          player2_id: schema.games.player2_id,
+          player1_score: schema.games.player1_score,
+          player2_score: schema.games.player2_score,
+          user_name: schema.users.user_name,
+          nick_name: schema.users.nick_name,
+          image: schema.users.image,
         })
-        .from(games)
+        .from(schema.games)
         .innerJoin(
-          users,
+          schema.users,
           and(
             or(
-              eq(games.player1_id, user.intra_user_id),
-              eq(games.player2_id, user.intra_user_id),
+              eq(schema.games.player1_id, user.intra_user_id),
+              eq(schema.games.player2_id, user.intra_user_id),
             ),
             or(
-              eq(users.intra_user_id, games.player1_id),
-              eq(users.intra_user_id, games.player2_id),
+              eq(schema.users.intra_user_id, schema.games.player1_id),
+              eq(schema.users.intra_user_id, schema.games.player2_id),
             ),
           ),
         )
-        .where(not(eq(users.intra_user_id, user.intra_user_id)));
+        .where(not(eq(schema.users.intra_user_id, user.intra_user_id)));
 
       console.log('Games: ', res);
 
@@ -454,11 +450,11 @@ export class DbService {
       if (!user) throw Error('Failed to fetch User!');
       const dbMessages = await this.db
         .select()
-        .from(messages)
+        .from(schema.messages)
         .where(
           or(
-            eq(messages.sender_id, user.intra_user_id),
-            eq(messages.receiver_id, user.intra_user_id),
+            eq(schema.messages.sender_id, user.intra_user_id),
+            eq(schema.messages.receiver_id, user.intra_user_id),
           ),
         );
       if (!dbMessages) throw Error('failed to fetch dbMessages');
@@ -467,8 +463,7 @@ export class DbService {
         const message = dbMessages[i];
         const isGroupChat = message.group_chat_id !== null;
         const field: UserChats = {
-          messageId: 0,
-          type: '',
+          chatid: 0,
           title: '',
           image: '',
           lastMessage: '',
@@ -482,14 +477,13 @@ export class DbService {
               ? message.receiver_id
               : message.sender_id;
           if (!otherUserId) throw Error('otherUserId is Invalid');
-          const otherUser: User =
+          const otherUser: schema.User =
             await this.getAnyUserFromDataBase(otherUserId);
           if (!otherUser) {
             continue;
           }
 
-          field.messageId = message.message_id;
-          field.type = 'dm';
+          field.chatid = message.message_id;
           field.title = otherUser.nick_name
             ? otherUser.nick_name
             : otherUser.user_name;
@@ -501,10 +495,10 @@ export class DbService {
         if (isGroupChat) {
           const groupChat = await this.db
             .select()
-            .from(groupChats)
+            .from(schema.groupChats)
             .where(
               eq(
-                groupChats.group_chat_id,
+                schema.groupChats.group_chat_id,
                 message.group_chat_id === null ? -1 : message.group_chat_id,
               ),
             );
@@ -512,8 +506,7 @@ export class DbService {
             continue;
           }
 
-          field.messageId = message.message_id;
-          field.type = 'gm';
+          field.chatid = message.message_id;
           field.title = groupChat[0].group_name;
           field.image = groupChat[0].group_image || '';
           field.lastMessage = message.message;
@@ -533,7 +526,7 @@ export class DbService {
   async mockData(own_intra_id: number): Promise<boolean> {
     // Create Users
     try {
-      await this.db.insert(users).values({
+      await this.db.insert(schema.users).values({
         intra_user_id: 1,
         user_name: 'user 1',
         email: 'user1@user.com',
@@ -544,7 +537,7 @@ export class DbService {
       console.log('Error: ', error);
     }
     try {
-      await this.db.insert(users).values({
+      await this.db.insert(schema.users).values({
         intra_user_id: 2,
         user_name: 'user 2',
         email: 'user2@user.com',
@@ -555,7 +548,7 @@ export class DbService {
       console.log('Error: ', error);
     }
     try {
-      await this.db.insert(users).values({
+      await this.db.insert(schema.users).values({
         intra_user_id: 3,
         user_name: 'user 3',
         email: 'user3@user.com',
@@ -567,9 +560,7 @@ export class DbService {
     }
     // Create Messages
     try {
-      await this.db.insert(messages).values({
-        sender_id: 1,
-        receiver_id: own_intra_id,
+      await this.db.insert(schema.messages).values({
         message: 'Hello from user 1',
       });
       console.log('Message 1 Created!');
@@ -577,9 +568,7 @@ export class DbService {
       console.log('Error: ', error);
     }
     try {
-      await this.db.insert(messages).values({
-        sender_id: 2,
-        receiver_id: own_intra_id,
+      await this.db.insert(schema.messages).values({
         message: 'Hello from User 2',
       });
       console.log('Message 2 Created!');
