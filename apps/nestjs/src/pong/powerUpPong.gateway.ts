@@ -127,9 +127,6 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.powerUpType = this.getRandomNumber(1, 3);
 		this.hitNumber = this.getRandomNumber(2, 6);
 		this.powerUpHeight = this.getRandomNumber(0, 270);
-		this.hitNumber = 2;
-		this.powerUpHeight = 185;
-		this.powerUpType = 1;
 		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
 	}
 	

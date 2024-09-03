@@ -6,13 +6,6 @@ import { GameManager } from './gameManager';
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://localhost:4433/power-up`, { path: "/ws/socket.io" });
-
-interface Score {
-	left: number;
-	right: number;
-}
-
 const paddleWidth = 10;
 const paddleHeight = 100;
 const gameWidth = 400;
@@ -40,12 +33,19 @@ export default function PongGame() {
 	const [gameManager, setGameManager] = useState<GameManager | null>(null);
 	const [score, setScore] = useState<[number, number]>([0, 0]);
 	const [Gamestate, SetGameState] = useState<string>("Playing");
+	const [socket, setSocket] = useState<Socket | null>(null);
+
+	useEffect(() => {
+		if (socket) return;
+		setSocket(io(`http://localhost:4433/power-up`, { path: "/ws/socket.io" }));
+	}, [])
 
 	useEffect(() => {
 		if (canvasRef.current === null) return;
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
 
+		if (!socket) return;
 		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
 		setGameManager(manager);
 
@@ -118,7 +118,7 @@ export default function PongGame() {
 		return () => {
 			manager.removeListeners();
 		};
-	}, []);
+	}, [canvasRef, socket]);
 
 	const startGame = () => {
 		SetGameState("Playing");

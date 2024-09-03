@@ -85,7 +85,7 @@ export class MultiplayerPongGateway
     }
     this.clients.push(client);
 
-    if (this.clients.length % 2 === 0) {
+    if (this.clients.length > 0 && this.clients.length % 2 === 0) {
       // When the second client connects, create a room for these two clients
       const roomId = `room_${this.roomIdCounter++}`;
       const firstClient = this.clients[this.clients.length - 2]; // Second last client
@@ -112,9 +112,6 @@ export class MultiplayerPongGateway
 
 			// Emit begin state to the room
 			this.server.to(roomId).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
-			// this.server.to(roomId).emit('ball', room.ball);
-			// this.server.to(roomId).emit('leftPaddle', room.players[0].paddle);
-			// this.server.to(roomId).emit('rightPaddle', room.players[1].paddle);
 			// this.server.to(roomId).emit('playersReady');
 			setTimeout(() => {
 				this.startGameLoop(room);
@@ -251,7 +248,7 @@ export class MultiplayerPongGateway
     if (payload === 'ArrowUp') {
       this.logger.log('ArrowUp');
       room.players[0].paddle = Math.max(0, room.players[0].paddle - 5);
-      this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+      // this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
     }
     if (payload === 'ArrowDown') {
       this.logger.log('ArrowDown');
@@ -259,7 +256,7 @@ export class MultiplayerPongGateway
         gameHeight - paddleHeight,
         room.players[0].paddle + 5,
       );
-      this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+      // this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
     }
   }
 
@@ -385,6 +382,7 @@ export class MultiplayerPongGateway
     }
 
 		// Emit updated state to clients
+    if (room.players.length > 1)
 		this.server.to(room.roomID).emit('gameUpdate', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
 		// this.server.to(roomId).emit('ball', room.ball);
 		// this.server.to(room.roomID).emit('ball', room.ball);

@@ -5,10 +5,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import { User } from '@repo/db';
 import { GameManager } from './gameManager';
-import Countdown from './countdown';
-import { fetchGet } from '../fetch_functions';
+import Countdown from '../../game_elements/countdown';
+import { fetchGet } from '../../fetch_functions';
+import Link from 'next/link';
 
-const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
+const socket = io(`http://localhost:4433/multiplayer`, { path: "/ws/socket.io" });
 
 interface UserNames {
 	left: string;
@@ -48,7 +49,7 @@ export default function PongGame() {
 
 
 	useEffect(() => {
-		fetchGet<User>('api/profile')
+		fetchGet<User>('/api/profile')
 			.then((res) => {
 				if (res.intra_user_id !== null && res.user_name !== null) {
 					socket.emit('registerUser', { intra_id: res.intra_user_id, user_name: res.user_name });
@@ -66,7 +67,7 @@ export default function PongGame() {
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
 
-		
+
 		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
 		setGameManager(manager);
 
@@ -91,10 +92,10 @@ export default function PongGame() {
 			manager.updatePaddlePosition('right', rightPaddle);
 		});
 
-		socket.on('rightPaddle', (paddle: number) => manager.updatePaddlePosition('right', paddle));
-		socket.on('leftPaddle', (paddle: number) => manager.updatePaddlePosition('left', paddle));
-		socket.on('ball', (ball: { x: number, y: number }) => manager.updateBallPosition(ball.x, ball.y));
-		
+		// socket.on('rightPaddle', (paddle: number) => manager.updatePaddlePosition('right', paddle));
+		// socket.on('leftPaddle', (paddle: number) => manager.updatePaddlePosition('left', paddle));
+		// socket.on('ball', (ball: { x: number, y: number }) => manager.updateBallPosition(ball.x, ball.y));
+
 		socket.on('score', ({ left, right }: { left: number, right: number }) => {
 			setScore([left, right]);
 		});
@@ -110,15 +111,15 @@ export default function PongGame() {
 			SetGameState("AwaitingPlayer");
 			socket.emit('stop');
 		});
-		
+
 		socket.on('names', (user: string[]) => setUserNames({ left: user[0], right: user[1] }));
 		// socket.on('playersReady', () => {
-			// 	SetGameState("Countdown");
+		// 	SetGameState("Countdown");
 		// 	setTimeout(() => SetGameState("Playing"), 3000);
 		// });
-		
+
 		manager.attachListeners();
-		
+
 		return () => {
 			manager.removeListeners();
 			socket.off('rightPaddle');
@@ -130,7 +131,7 @@ export default function PongGame() {
 			socket.off('playersReady');
 		};
 	}, []);
-	
+
 	const startGame = () => {
 		console.log('Starting game');
 		console.log('Gamestate:', gamestateRef.current);
@@ -140,7 +141,7 @@ export default function PongGame() {
 			socket.emit('start');
 		}
 	};
-	
+
 	const GameStateComponent = () => (
 		<>
 			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>
@@ -164,6 +165,9 @@ export default function PongGame() {
 					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={startGame}>
 						New Game
 					</button>
+					<Link className="text-blue-500 mt-4" href={'/'}>
+						Back to Home
+					</Link>
 				</div>
 			)}
 			{Gamestate === "AwaitingPlayer" && (
