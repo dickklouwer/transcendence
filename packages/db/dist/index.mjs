@@ -41,7 +41,7 @@ var games = mySchema.table("games", {
   player2_score: integer("player2_score")
 });
 var chats = mySchema.table("chats", {
-  chat_id: serial("chat_id").primaryKey(),
+  chat_id: serial("chat_id").primaryKey().notNull(),
   is_direct: boolean("is_direct").default(false),
   title: text("title").notNull(),
   // NOTE:  @bprovos Should this be able to be NULL? when a non group message message we don't need a 
@@ -65,8 +65,8 @@ var chatsUsers = mySchema.table("chatsUsers", {
 });
 var messages = mySchema.table("messages", {
   message_id: serial("message_id").primaryKey(),
-  sender_id: integer("sender_id").references(() => users.intra_user_id),
-  chat_id: integer("chat_id").references(
+  sender_id: integer("sender_id").notNull().references(() => users.intra_user_id),
+  chat_id: integer("chat_id").notNull().references(
     () => chats.chat_id
   ),
   message: text("message").notNull(),
@@ -82,7 +82,7 @@ var messageStatus = mySchema.table("messageStatus", {
 var userInsert = createInsertSchema(users);
 var userSelect = createSelectSchema(users);
 var friendsSelect = createSelectSchema(friends);
-var messagesInsert = createInsertSchema(messages);
+var messagesInsert = createSelectSchema(messages);
 var chatsSelect = createSelectSchema(chats);
 var chatsUsersSelect = createSelectSchema(chatsUsers);
 

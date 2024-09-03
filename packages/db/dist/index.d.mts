@@ -609,7 +609,7 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgInteger";
             data: number;
             driverParam: string | number;
-            notNull: false;
+            notNull: true;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
@@ -625,7 +625,7 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgInteger";
             data: number;
             driverParam: string | number;
-            notNull: false;
+            notNull: true;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
@@ -719,6 +719,25 @@ declare const friendsSelect: z.ZodObject<{
     user_id_receive: number;
     is_approved: boolean;
 }>;
+declare const messagesInsert: z.ZodObject<{
+    message_id: z.ZodNumber;
+    sender_id: z.ZodNumber;
+    chat_id: z.ZodNumber;
+    message: z.ZodString;
+    sent_at: z.ZodDate;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    chat_id: number;
+    message_id: number;
+    sender_id: number;
+    message: string;
+    sent_at: Date;
+}, {
+    chat_id: number;
+    message_id: number;
+    sender_id: number;
+    message: string;
+    sent_at: Date;
+}>;
 declare const chatsSelect: z.ZodObject<{
     chat_id: z.ZodNumber;
     is_direct: z.ZodNullable<z.ZodBoolean>;
@@ -776,6 +795,7 @@ type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
 type Chats = z.infer<typeof chatsSelect>;
 type ChatsUsers = z.infer<typeof chatsUsersSelect>;
+type Messages = z.infer<typeof messagesInsert>;
 
 declare const createQueryClient: (input: string) => postgres.Sql<{}>;
 declare const createDrizzleClient: (client: ReturnType<typeof createQueryClient>) => drizzle_orm_postgres_js.PostgresJsDatabase<Record<string, never>>;
@@ -795,4 +815,4 @@ type ExternalUser = {
     image: string;
 };
 
-export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };

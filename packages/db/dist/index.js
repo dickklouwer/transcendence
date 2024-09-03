@@ -76,7 +76,7 @@ var games = mySchema.table("games", {
   player2_score: (0, import_pg_core.integer)("player2_score")
 });
 var chats = mySchema.table("chats", {
-  chat_id: (0, import_pg_core.serial)("chat_id").primaryKey(),
+  chat_id: (0, import_pg_core.serial)("chat_id").primaryKey().notNull(),
   is_direct: (0, import_pg_core.boolean)("is_direct").default(false),
   title: (0, import_pg_core.text)("title").notNull(),
   // NOTE:  @bprovos Should this be able to be NULL? when a non group message message we don't need a 
@@ -100,8 +100,8 @@ var chatsUsers = mySchema.table("chatsUsers", {
 });
 var messages = mySchema.table("messages", {
   message_id: (0, import_pg_core.serial)("message_id").primaryKey(),
-  sender_id: (0, import_pg_core.integer)("sender_id").references(() => users.intra_user_id),
-  chat_id: (0, import_pg_core.integer)("chat_id").references(
+  sender_id: (0, import_pg_core.integer)("sender_id").notNull().references(() => users.intra_user_id),
+  chat_id: (0, import_pg_core.integer)("chat_id").notNull().references(
     () => chats.chat_id
   ),
   message: (0, import_pg_core.text)("message").notNull(),
@@ -117,7 +117,7 @@ var messageStatus = mySchema.table("messageStatus", {
 var userInsert = (0, import_drizzle_zod.createInsertSchema)(users);
 var userSelect = (0, import_drizzle_zod.createSelectSchema)(users);
 var friendsSelect = (0, import_drizzle_zod.createSelectSchema)(friends);
-var messagesInsert = (0, import_drizzle_zod.createInsertSchema)(messages);
+var messagesInsert = (0, import_drizzle_zod.createSelectSchema)(messages);
 var chatsSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
 var chatsUsersSelect = (0, import_drizzle_zod.createSelectSchema)(chatsUsers);
 

@@ -13,12 +13,11 @@ import type { FortyTwoUser } from 'src/auth/auth.service';
 import type {
   User,
   UserChats,
-  Chats,
   ExternalUser,
   Friends,
-  ChatsUsers,
+  Messages,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql } from 'drizzle-orm';
+import { eq, or, not, and, desc } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
@@ -368,7 +367,7 @@ export class DbService {
         .where(eq(chatsUsers.intra_user_id, user.intra_user_id))
         .orderBy(desc(messages.sent_at));
 
-      if (!chatsUsers) throw Error('failed to fetch dbChatID');
+      if (!Allmsg) throw Error('failed to fetch dbChatID');
 
       const firstMsg = [];
       const chatID_Set = new Set();
@@ -382,6 +381,48 @@ export class DbService {
       return firstMsg;
     } catch (error) {
       console.log('userMessages:', error);
+      return null;
+    }
+  }
+
+  async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
+    try {
+      console.log('In function getChatIdsFromUser');
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const dbChatID = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
+
+      const result: number[] = [];
+      for (let i = 0; i < dbChatID.length; i++) {
+        result.push(dbChatID[i].chat_id);
+      }
+      console.log('result: ', result);
+      return result;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getMessagesFromDataBase(
+    jwtToken: string,
+    chat_id: number,
+  ): Promise<Messages[] | null> {
+    try {
+      console.log('In function getMessagesFromDataBase');
+      const res = await this.db
+        .select()
+        .from(messages)
+        .where(eq(messages.chat_id, chat_id));
+
+      console.log('Messages: ', res);
+      return res;
+    } catch (error) {
+      console.log('Error messags: ', error);
       return null;
     }
   }
@@ -422,28 +463,26 @@ export class DbService {
       console.log('Error: ', error);
     }
     // Create Messages
-    /*
-								try {
-									await this.db.insert(messages).values({
-										sender_id: 1,
-										receiver_id: own_intra_id,
-										message: 'Hello from user 1',
-									});
-									console.log('Message 1 Created!');
-								} catch (error) {
-									console.log('Error: ', error);
-								}
-								try {
-									await this.db.insert(messages).values({
-										sender_id: 2,
-										receiver_id: own_intra_id,
-										message: 'Hello from User 2',
-									});
-									console.log('Message 2 Created!');
-								} catch (error) {
-									console.log('Error: ', error);
-								}
-								*/
+    try {
+      await this.db.insert(messages).values({
+        sender_id: own_intra_id,
+        message: 'Hello from user 1',
+        chat_id: 1,
+      });
+      console.log('Message 1 Created!');
+    } catch (error) {
+      console.log('Error: ', error);
+    }
+    try {
+      await this.db.insert(messages).values({
+        sender_id: 2,
+        chat_id: 1,
+        message: 'Hello from User 2',
+      });
+      console.log('Message 2 Created!');
+    } catch (error) {
+      console.log('Error: ', error);
+    }
     return true;
   }
 }
