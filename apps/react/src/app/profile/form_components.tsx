@@ -3,9 +3,8 @@ import { useState, useEffect, ChangeEvent,SetStateAction, Dispatch } from "react
 import Image from "next/image";
 import { fetchGet, fetchPost } from "../fetch_functions";
 import type { ExternalUser, Friends } from "@repo/db";
-import { userSocket } from "../layout";
+import { userSocket } from "../profile_headers";
 import { DisplayUserStatus } from "./page";
-import { read } from "fs";
 
 /* -- SetNicknameForm Component --> */
 export const NicknameForm = ({
@@ -112,38 +111,42 @@ export const AddFriendsForm = () => {
     const [isSend, setIsSend] = useState(false);
 
     useEffect(() => {
-      const fetchData = async () => {
-      try {
-          fetchGet<ExternalUser[]>("/api/getExternalUsers")
-          .then((data) => {
-          setExternalUsers(data);
-          });
+      fetchData();
+    }, []);
 
-          fetchGet<Friends[]>("/api/getFriendsNotApproved")
-          .then((data) => {
-              setFriendsList(data);
-          });
-
-          fetchGet<ExternalUser[]>("/api/getApprovedFriends")
-          .then((data) => {
-              setGetApprovedFriends(data);
-          });
-
-          fetchGet<ExternalUser[]>("/api/incomingFriendRequests")
-          .then((data) => {
-              setIncomingFriendRequests(data);
-          });
-
-      } catch (error) {
-          console.error("Error Getting Friends:", error);
-      }}
-
+    useEffect(() => {
       const delayDebounceFn = setTimeout(() => {
         fetchData();
       }, 300); // Delay before fetching the data
-  
+      
       return () => clearTimeout(delayDebounceFn);      
     }, [isSend, searchName]);
+    
+    const fetchData = async () => {
+    try {
+        fetchGet<ExternalUser[]>("/api/getExternalUsers")
+        .then((data) => {
+        setExternalUsers(data);
+        });
+
+        fetchGet<Friends[]>("/api/getFriendsNotApproved")
+        .then((data) => {
+            setFriendsList(data);
+        });
+
+        fetchGet<ExternalUser[]>("/api/getApprovedFriends")
+        .then((data) => {
+            setGetApprovedFriends(data);
+        });
+
+        fetchGet<ExternalUser[]>("/api/incomingFriendRequests")
+        .then((data) => {
+            setIncomingFriendRequests(data);
+        });
+
+    } catch (error) {
+        console.error("Error Getting Friends:", error);
+    }}
 
     const filteredChatFields = externalUsers?.filter((userField) => {
       return userField.user_name.toLowerCase().includes(searchName.toLowerCase());
@@ -162,6 +165,7 @@ export const AddFriendsForm = () => {
                 setIsSend(prev => !prev);
                 userSocket.emit('FriendRequestNotification', user_intra_id);
             })
+
         } catch (error) {
             console.error("Error Sending Friend Request:", error);
         }

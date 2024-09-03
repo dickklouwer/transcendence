@@ -167,6 +167,38 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
+        wins: drizzle_orm_pg_core.PgColumn<{
+            name: "wins";
+            tableName: "users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        losses: drizzle_orm_pg_core.PgColumn<{
+            name: "losses";
+            tableName: "users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
     };
     dialect: "pg";
 }>;
@@ -545,6 +577,8 @@ declare const userSelect: z.ZodObject<{
     is_two_factor_enabled: z.ZodNullable<z.ZodBoolean>;
     state: z.ZodEnum<["Online", "Offline", "In-Game"]>;
     image: z.ZodString;
+    wins: z.ZodNumber;
+    losses: z.ZodNumber;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     intra_user_id: number;
     user_name: string;
@@ -556,6 +590,8 @@ declare const userSelect: z.ZodObject<{
     is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game";
     image: string;
+    wins: number;
+    losses: number;
 }, {
     intra_user_id: number;
     user_name: string;
@@ -567,6 +603,8 @@ declare const userSelect: z.ZodObject<{
     is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game";
     image: string;
+    wins: number;
+    losses: number;
 }>;
 declare const friendsSelect: z.ZodObject<{
     friend_id: z.ZodNumber;
@@ -606,5 +644,14 @@ type ExternalUser = {
     state: 'Online' | 'Offline' | 'In-Game';
     image: string;
 };
+type MultiplayerMatches = {
+    player1_id: number;
+    player2_id: number;
+    player1_score: number;
+    player2_score: number;
+    user_name: string;
+    nick_name: string;
+    image: string;
+};
 
-export { type ExternalUser, type Friends, type User, type UserChats, createDrizzleClient, createQueryClient, friends, games, groupChats, messages, users };
+export { type ExternalUser, type Friends, type MultiplayerMatches, type User, type UserChats, createDrizzleClient, createQueryClient, friends, games, groupChats, messages, users };

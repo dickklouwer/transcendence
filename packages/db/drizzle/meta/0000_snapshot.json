@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "id": "2db78d50-38b1-4a62-9c1e-a5b32a5e391a",
-=======
-  "id": "33b798ca-7929-4ed5-948b-0fa37af2dd69",
->>>>>>> jisse_friends_lists
+  "id": "a06fc0c4-344c-4a02-aeb8-d8d62638eb87",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -28,7 +24,7 @@
           "name": "user_id_receive",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_approved": {
           "name": "is_approved",
@@ -505,6 +501,20 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "wins": {
+          "name": "wins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "losses": {
+          "name": "losses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         }
       },
       "indexes": {},
@@ -535,8 +545,7 @@
       "values": [
         "Online",
         "Offline",
-        "In-Game",
-        "Idle"
+        "In-Game"
       ]
     }
   },

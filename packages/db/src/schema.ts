@@ -29,6 +29,8 @@ export const users = mySchema.table('users', {
   is_two_factor_enabled: boolean('is_two_factor_enabled').default(false),
   state: user_state('state').notNull().default('Online'),
   image: text('image_url').notNull(),
+  wins: integer('wins').default(0).notNull(),
+  losses: integer('losses').default(0).notNull(),
 });
 
 export const friends = mySchema.table('friends', {

@@ -1,10 +1,10 @@
 import {
-	SubscribeMessage,
-	WebSocketGateway,
-	OnGatewayInit,
-	OnGatewayConnection,
-	OnGatewayDisconnect,
-	WebSocketServer,
+  SubscribeMessage,
+  WebSocketGateway,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
@@ -18,26 +18,33 @@ const paddleHeight = 100;
 const WinScore = 5;
 
 interface Ball {
-	x: number;
-	y: number;
-	vx: number;
-	vy: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
 }
 
-@WebSocketGateway({ cors: { origin: 'http://localhost:2424' }, namespace: 'singleplayer', credentials: true, allowEIO3: true })
-export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-	@WebSocketServer() server: Server;
-	private logger: Logger = new Logger('SingleplayerPongGateway');
-	private leftPaddle: number = 150;
-	private rightPaddle: number = 150;
-	private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
-	private score = { left: 0, right: 0 };
-	private gameInterval: NodeJS.Timeout;
-	// private clients: Socket[] = [];
+@WebSocketGateway({
+  cors: { origin: 'http://localhost:2424' },
+  namespace: 'singleplayer',
+  credentials: true,
+  allowEIO3: true,
+})
+export class SingleplayerPongGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer() server: Server;
+  private logger: Logger = new Logger('SingleplayerPongGateway');
+  private leftPaddle: number = 150;
+  private rightPaddle: number = 150;
+  private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
+  private score = { left: 0, right: 0 };
+  private gameInterval: NodeJS.Timeout;
+  // private clients: Socket[] = [];
 
-	afterInit(server: Server) {
-		this.logger.log('WebSocket SingleplayerPongGateway initialized');
-	}
+  afterInit(server: Server) {
+    this.logger.log('WebSocket SingleplayerPongGateway initialized');
+  }
 
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id} to single player game`);
@@ -50,13 +57,13 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 		this.resetGame(client);
 	}
 
-	@SubscribeMessage('start')
-	handleStart(client: Socket): void {
-		if (!this.gameInterval) {
-			this.logger.log('Starting game loop');
-			this.startGameLoop(client);
-		}
-	}
+  @SubscribeMessage('start')
+  handleStart(client: Socket): void {
+    if (!this.gameInterval) {
+      this.logger.log('Starting game loop');
+      this.startGameLoop(client);
+    }
+  }
 
 	@SubscribeMessage('movement')
 	handleMovement(client: Socket, payload: string): void {
@@ -91,24 +98,24 @@ export class SingleplayerPongGateway implements OnGatewayInit, OnGatewayConnecti
 		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
 	};
 
-	startGameLoop(client: Socket) {
-		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
-	}
+  startGameLoop(client: Socket) {
+    this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
+  }
 
-	changeBallDirection = (paddlePosition: number) => {
-		const diff = this.ball.y - (paddlePosition + paddleHeight / 2);
-		this.ball.vy = diff / 20;
-	};
+  changeBallDirection = (paddlePosition: number) => {
+    const diff = this.ball.y - (paddlePosition + paddleHeight / 2);
+    this.ball.vy = diff / 20;
+  };
 
-	handleGameUpdate(client: Socket) {
-		// Update ball position
-		this.ball.x += this.ball.vx;
-		this.ball.y += this.ball.vy;
+  handleGameUpdate(client: Socket) {
+    // Update ball position
+    this.ball.x += this.ball.vx;
+    this.ball.y += this.ball.vy;
 
-		// Ball collision with walls
-		if (this.ball.y <= borderWidth || this.ball.y >= gameHeight - borderWidth) {
-			this.ball.vy = -this.ball.vy;
-		}
+    // Ball collision with walls
+    if (this.ball.y <= borderWidth || this.ball.y >= gameHeight - borderWidth) {
+      this.ball.vy = -this.ball.vy;
+    }
 
 		// Ball collision with left paddle
 		if (this.ball.x <= paddleWidth + ballSize + 4) {

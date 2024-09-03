@@ -25,5 +25,18 @@ type ExternalUser = {
     image: string;
   };
 
-export type { User, UserChats, ExternalUser, Friends }
+type MultiplayerMatches = {
+  player1_id: number;
+  player2_id: number;
+  player1_score: number;
+  player2_score: number;
+  user_name: string;
+  nick_name: string;
+  image: string;
+};
+
+
+
+
+export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches }
 export { users, friends, messages, groupChats, games};

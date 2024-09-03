@@ -17,7 +17,7 @@ import {
   games,
 } from '@repo/db';
 import type { User } from '@repo/db';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 
 const gameWidth = 400;
 const gameHeight = 400;
@@ -340,20 +340,16 @@ export class MultiplayerPongGateway
     if (room.ball.x <= 0 || room.ball.x >= gameWidth) {
       if (room.ball.x <= 0) {
         room.players[1].score += 1;
-        this.server
-          .to(room.roomID)
-          .emit('score', {
-            left: room.players[0].score,
-            right: room.players[1].score,
-          });
+        this.server.to(room.roomID).emit('score', {
+          left: room.players[0].score,
+          right: room.players[1].score,
+        });
       } else if (room.ball.x >= gameWidth) {
         room.players[0].score += 1;
-        this.server
-          .to(room.roomID)
-          .emit('score', {
-            left: room.players[0].score,
-            right: room.players[1].score,
-          });
+        this.server.to(room.roomID).emit('score', {
+          left: room.players[0].score,
+          right: room.players[1].score,
+        });
       }
       if (
         room.players[0].score == WinScore ||
@@ -370,12 +366,10 @@ export class MultiplayerPongGateway
         );
         room.players[0].score = 0;
         room.players[1].score = 0;
-        this.server
-          .to(room.roomID)
-          .emit('score', {
-            left: room.players[0].score,
-            right: room.players[1].score,
-          });
+        this.server.to(room.roomID).emit('score', {
+          left: room.players[0].score,
+          right: room.players[1].score,
+        });
         this.server.to(room.roomID).emit('gameover');
       }
       this.resetGame(room);
@@ -405,14 +399,31 @@ export class MultiplayerPongGateway
     score2: number,
   ): Promise<void> {
     try {
+      await this.db.insert(games).values({
+        player1_id: player1,
+        player2_id: player2,
+        player1_score: score1,
+        player2_score: score2,
+      });
+
+      if (score1 > score2) {
+        const swap = player1;
+        player1 = player2;
+        player2 = swap;
+      }
       await this.db
-        .insert(games)
-        .values({
-          player1_id: player1,
-          player2_id: player2,
-          player1_score: score1,
-          player2_score: score2,
-        });
+        .update(users)
+        .set({
+          wins: sql`${users.wins} + 1`,
+        })
+        .where(eq(users.intra_user_id, player1));
+      await this.db
+        .update(users)
+        .set({
+          losses: sql`${users.losses} + 1`,
+        })
+        .where(eq(users.intra_user_id, player2));
+
       console.log('Game score inserted');
     } catch (error) {
       console.error('Error inserting game score:', error);
