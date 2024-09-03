@@ -1,11 +1,13 @@
 "use client";
 
 import Link from 'next/link';
+import { userSocket } from '../profile_headers';
 
 export default function Menu() {
   
     function Logout() {
       localStorage.removeItem('token');
+      userSocket.disconnect();
       window.location.replace('/login');
     }
   

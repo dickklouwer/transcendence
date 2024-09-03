@@ -8,7 +8,16 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { createQueryClient, createDrizzleClient, games } from '@repo/db';
+import {
+  users,
+  messages,
+  groupChats,
+  createQueryClient,
+  createDrizzleClient,
+  games,
+} from '@repo/db';
+import type { User } from '@repo/db';
+import { eq, or, sql } from 'drizzle-orm';
 
 const gameWidth = 400;
 const gameHeight = 400;
@@ -65,7 +74,7 @@ export class MultiplayerPongGateway
     return { x: 200, y: 200, vx: 2, vy: 0 };
   }
 
-  afterInit() {
+  afterInit(server: Server) {
     this.logger.log('WebSocket MultiplayerPongGateway initialized');
   }
 
@@ -281,7 +290,7 @@ export class MultiplayerPongGateway
   }
 
   @SubscribeMessage('stop')
-  handleStop(): void {
+  handleStop(client: Socket): void {
     if (this.gameInterval) {
       this.logger.log('Stopping game loop');
       clearInterval(this.gameInterval);
@@ -376,7 +385,8 @@ export class MultiplayerPongGateway
 
     // Emit updated state to clients
     this.server.to(room.roomID).emit('ball', room.ball);
-    this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+    if (room.players[1] !== undefined) // How can this be undefined?
+      this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
     this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
   }
 
@@ -401,6 +411,25 @@ export class MultiplayerPongGateway
         player1_score: score1,
         player2_score: score2,
       });
+
+      if (score1 > score2) {
+        const swap = player1;
+        player1 = player2;
+        player2 = swap;
+      }
+      await this.db
+        .update(users)
+        .set({
+          wins: sql`${users.wins} + 1`,
+        })
+        .where(eq(users.intra_user_id, player1));
+      await this.db
+        .update(users)
+        .set({
+          losses: sql`${users.losses} + 1`,
+        })
+        .where(eq(users.intra_user_id, player2));
+
       console.log('Game score inserted');
     } catch (error) {
       console.error('Error inserting game score:', error);

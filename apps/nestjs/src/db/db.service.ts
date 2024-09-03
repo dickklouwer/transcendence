@@ -1,73 +1,96 @@
 import { Injectable } from '@nestjs/common';
-import * as schema from '@repo/db';
+// import * as schema from '@repo/db/src';
+import {
+  users,
+  friends,
+  messages,
+  groupChats,
+  games,
+  createQueryClient,
+  createDrizzleClient,
+} from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
+import type { MultiplayerMatches, User, UserChats } from '@repo/db';
 import { eq, or, not, and } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
-  db: ReturnType<typeof schema.createDrizzleClient>;
+  db: ReturnType<typeof createDrizzleClient>;
   constructor() {
     if (!process.env.DATABASE_URL_LOCAL) {
       throw Error('Env DATABASE_URL_LOCAL is undefined');
     }
-    this.db = schema.createDrizzleClient(
-      schema.createQueryClient(process.env.DATABASE_URL),
-    );
+
+    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
 
-  async setUserTwoFactorEnabled(
-    userId: number,
-    enabled: boolean,
-  ): Promise<void> {
+  async getUserById(id: number): Promise<User | null> {
+    const result = await this.db.select().from(users).where(eq(users.intra_user_id, id));
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async setUserTwoFactorEnabled(userId: number, enabled: boolean) {
     try {
       await this.db
-        .update(schema.users)
+        .update(users)
         .set({ is_two_factor_enabled: enabled })
-        .where(eq(schema.users.intra_user_id, userId));
+        .where(eq(users.intra_user_id, userId));
       console.log('User 2FA status updated');
     } catch (error) {
       console.error('Error updating 2FA status:', error);
     }
   }
 
-  async updateUserTwoFactorSecret(
-    userId: number,
-    secret: string,
-  ): Promise<void> {
+  async updateUserTwoFactorSecret(userId: number, secret: string) {
     try {
       await this.db
-        .update(schema.users)
+        .update(users)
         .set({ two_factor_secret: secret })
-        .where(eq(schema.users.intra_user_id, userId));
+        .where(eq(users.intra_user_id, userId));
       console.log('User 2FA secret updated');
     } catch (error) {
       console.error('Error updating 2FA secret:', error);
     }
   }
 
-  async upsertUserInDataBase(user: FortyTwoUser): Promise<boolean> {
-    try {
-      await this.db
-        .insert(schema.users)
-        .values(user)
-        .onConflictDoUpdate({
-          target: [schema.users.intra_user_id],
-          set: { token: user.token },
-        });
-      console.log('User Created2!');
-      return true;
-    } catch (error) {
-      console.log('User Could be already Created!', error);
-    }
-    return false;
+  async upsertUserInDataBase(fortyTwoUser: FortyTwoUser): Promise<User> {
+    const result = await this.db
+      .insert(users)
+      .values({
+        intra_user_id: fortyTwoUser.intra_user_id,
+        user_name: fortyTwoUser.user_name,
+        nick_name: fortyTwoUser.user_name,
+        email: fortyTwoUser.email,
+        state: fortyTwoUser.state,
+        image: fortyTwoUser.image,
+        token: fortyTwoUser.token,
+        is_two_factor_enabled: false,
+        password: '',
+        two_factor_secret: '',
+        wins: 0,
+        losses: 0
+      })
+      .onConflictDoUpdate({
+        target: users.intra_user_id,
+        set: {
+          user_name: fortyTwoUser.user_name,
+          email: fortyTwoUser.email,
+          state: fortyTwoUser.state,
+          image: fortyTwoUser.image,
+          token: fortyTwoUser.token,
+        },
+      })
+      .returning();
+  
+    return result[0];
   }
 
-  async getUserFromDataBase(jwtToken: string): Promise<schema.User | null> {
+  async getUserFromDataBase(jwtToken: string) {
     try {
       const user = await this.db
         .select()
-        .from(schema.users)
-        .where(eq(schema.users.token, jwtToken));
+        .from(users)
+        .where(eq(users.token, jwtToken));
 
       return user[0];
     } catch (error) {
@@ -76,14 +99,12 @@ export class DbService {
     }
   }
 
-  async getAnyUserFromDataBase(
-    intra_user_id: number,
-  ): Promise<schema.User | null> {
+  async getAnyUserFromDataBase(intra_user_id: number) {
     try {
       const user = await this.db
         .select()
-        .from(schema.users)
-        .where(eq(schema.users.intra_user_id, intra_user_id));
+        .from(users)
+        .where(eq(users.intra_user_id, intra_user_id));
 
       console.log('User from id: ', user);
       return user[0];
@@ -95,10 +116,10 @@ export class DbService {
 
   async CheckNicknameIsUnque(nickname: string): Promise<boolean> {
     try {
-      const user: schema.User[] = await this.db
+      const user = await this.db
         .select()
-        .from(schema.users)
-        .where(eq(schema.users.nick_name, nickname));
+        .from(users)
+        .where(eq(users.nick_name, nickname));
 
       if (user.length === 0) {
         return true;
@@ -113,9 +134,9 @@ export class DbService {
   async setUserNickname(jwtToken: string, nickname: string): Promise<boolean> {
     try {
       await this.db
-        .update(schema.users)
+        .update(users)
         .set({ nick_name: nickname })
-        .where(eq(schema.users.token, jwtToken));
+        .where(eq(users.token, jwtToken));
 
       console.log('Nickname Set!');
       return true;
@@ -125,21 +146,39 @@ export class DbService {
     }
   }
 
-  async getAllExternalUsers(
-    jwtToken: string,
-  ): Promise<schema.ExternalUser[] | null> {
+  async setUserState(
+    intra_user_id: number,
+    state: 'Online' | 'Offline' | 'In-Game',
+  ): Promise<boolean> {
     try {
-      const user: schema.ExternalUser[] = await this.db
+      await this.db
+        .update(users)
+        .set({ state: state })
+        .where(eq(users.intra_user_id, intra_user_id));
+
+      console.log('State Set! for', intra_user_id, 'to', state);
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async getAllExternalUsers(jwtToken: string) {
+    try {
+      const user = await this.db
         .select({
-          intra_user_id: schema.users.intra_user_id,
-          user_name: schema.users.user_name,
-          nick_name: schema.users.nick_name,
-          email: schema.users.email,
-          state: schema.users.state,
-          image: schema.users.image,
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+          wins: users.wins,
+          losses: users.losses,
         })
-        .from(schema.users)
-        .where(not(eq(schema.users.token, jwtToken)));
+        .from(users)
+        .where(not(eq(users.token, jwtToken)));
 
       return user;
     } catch (error) {
@@ -147,23 +186,21 @@ export class DbService {
       return null;
     }
   }
-  async getFriendsNotApprovedFromDataBase(
-    jwtToken: string,
-  ): Promise<schema.Friends[] | null> {
+  async getFriendsNotApprovedFromDataBase(jwtToken: string) {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const friendList: schema.Friends[] = await this.db
+      const friendList = await this.db
         .select()
-        .from(schema.friends)
+        .from(friends)
         .where(
           and(
             or(
-              eq(schema.friends.user_id_send, user.intra_user_id),
-              eq(schema.friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
             ),
-            eq(schema.friends.is_approved, false),
+            eq(friends.is_approved, false),
           ),
         );
       return friendList;
@@ -173,38 +210,36 @@ export class DbService {
     }
   }
 
-  async getFriendsApprovedFromDataBase(
-    jwtToken: string,
-  ): Promise<schema.ExternalUser[] | null> {
+  async getFriendsApprovedFromDataBase(jwtToken: string) {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
       const friendList = await this.db
         .select({
-          intra_user_id: schema.users.intra_user_id,
-          user_name: schema.users.user_name,
-          nick_name: schema.users.nick_name,
-          email: schema.users.email,
-          state: schema.users.state,
-          image: schema.users.image,
-          friend_id: schema.friends.friend_id,
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+          friend_id: friends.friend_id,
         })
-        .from(schema.friends)
+        .from(friends)
         .innerJoin(
-          schema.users,
+          users,
           or(
-            eq(schema.users.intra_user_id, schema.friends.user_id_send),
-            eq(schema.users.intra_user_id, schema.friends.user_id_receive),
+            eq(users.intra_user_id, friends.user_id_send),
+            eq(users.intra_user_id, friends.user_id_receive),
           ),
         )
         .where(
           and(
-            eq(schema.friends.is_approved, true),
-            not(eq(schema.users.intra_user_id, user.intra_user_id)),
+            eq(friends.is_approved, true),
+            not(eq(users.intra_user_id, user.intra_user_id)),
             or(
-              eq(schema.friends.user_id_send, user.intra_user_id),
-              eq(schema.friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
             ),
           ),
         );
@@ -216,35 +251,70 @@ export class DbService {
     }
   }
 
-  async getIncomingFriendRequests(
-    jwtToken: string,
-  ): Promise<schema.ExternalUser[] | null> {
+  async getAnyApprovedFriends(intra_user_id: number) {
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-
-      const friendList: schema.ExternalUser[] = await this.db
+      const friendList = await this.db
         .select({
-          intra_user_id: schema.users.intra_user_id,
-          user_name: schema.users.user_name,
-          nick_name: schema.users.nick_name,
-          email: schema.users.email,
-          state: schema.users.state,
-          image: schema.users.image,
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
         })
-        .from(schema.friends)
+        .from(friends)
         .innerJoin(
-          schema.users,
+          users,
           or(
-            eq(schema.users.intra_user_id, schema.friends.user_id_send),
-            eq(schema.users.intra_user_id, schema.friends.user_id_receive),
+            eq(users.intra_user_id, friends.user_id_send),
+            eq(users.intra_user_id, friends.user_id_receive),
           ),
         )
         .where(
           and(
-            eq(schema.friends.is_approved, false),
-            not(eq(schema.users.intra_user_id, user.intra_user_id)),
-            eq(schema.friends.user_id_receive, user.intra_user_id),
+            eq(friends.is_approved, true),
+            not(eq(users.intra_user_id, intra_user_id)),
+            or(
+              eq(friends.user_id_send, intra_user_id),
+              eq(friends.user_id_receive, intra_user_id),
+            ),
+          ),
+        );
+
+      return friendList;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getIncomingFriendRequests(jwtToken: string) {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const friendList = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+        })
+        .from(friends)
+        .innerJoin(
+          users,
+          or(
+            eq(users.intra_user_id, friends.user_id_send),
+            eq(users.intra_user_id, friends.user_id_receive),
+          ),
+        )
+        .where(
+          and(
+            eq(friends.is_approved, false),
+            not(eq(users.intra_user_id, user.intra_user_id)),
+            eq(friends.user_id_receive, user.intra_user_id),
           ),
         );
 
@@ -261,7 +331,7 @@ export class DbService {
 
       if (!user) throw Error('Failed to fetch User!');
 
-      await this.db.insert(schema.friends).values({
+      await this.db.insert(friends).values({
         user_id_send: user.intra_user_id,
         user_id_receive: userId,
         is_approved: false,
@@ -283,17 +353,17 @@ export class DbService {
       if (!user) throw Error('Failed to fetch User!');
 
       await this.db
-        .update(schema.friends)
+        .update(friends)
         .set({ is_approved: true })
         .where(
           and(
             or(
-              eq(schema.friends.user_id_send, friend_id),
-              eq(schema.friends.user_id_receive, friend_id),
+              eq(friends.user_id_send, friend_id),
+              eq(friends.user_id_receive, friend_id),
             ),
             or(
-              eq(schema.friends.user_id_send, user.intra_user_id),
-              eq(schema.friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
             ),
           ),
         );
@@ -314,16 +384,16 @@ export class DbService {
       if (!user) throw Error('Failed to fetch User!');
 
       await this.db
-        .delete(schema.friends)
+        .delete(friends)
         .where(
           and(
             or(
-              eq(schema.friends.user_id_send, friend_id),
-              eq(schema.friends.user_id_receive, friend_id),
+              eq(friends.user_id_send, friend_id),
+              eq(friends.user_id_receive, friend_id),
             ),
             or(
-              eq(schema.friends.user_id_send, user.intra_user_id),
-              eq(schema.friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
             ),
           ),
         );
@@ -335,38 +405,121 @@ export class DbService {
     }
   }
 
-  //Suggest:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
-  async getChatsFromDataBase(
-    jwtToken: string,
-  ): Promise<schema.UserChats[] | null> {
-    const result: schema.UserChats[] = [];
-
+  async getYourGames(jwtToken: string) {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
-      const dbChatID = await this.db
+
+      const res: MultiplayerMatches[] = await this.db
+        .select({
+          player1_id: games.player1_id,
+          player2_id: games.player2_id,
+          player1_score: games.player1_score,
+          player2_score: games.player2_score,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          image: users.image,
+        })
+        .from(games)
+        .innerJoin(
+          users,
+          and(
+            or(
+              eq(games.player1_id, user.intra_user_id),
+              eq(games.player2_id, user.intra_user_id),
+            ),
+            or(
+              eq(users.intra_user_id, games.player1_id),
+              eq(users.intra_user_id, games.player2_id),
+            ),
+          ),
+        )
+        .where(not(eq(users.intra_user_id, user.intra_user_id)));
+
+      console.log('Games: ', res);
+
+      return res;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
+    const result: UserChats[] = [];
+
+    try {
+      console.log('In function getChatsFromDataBase');
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+      const dbMessages = await this.db
         .select()
-        .from(schema.chatsUsers)
-        .where(eq(schema.chatsUsers.intra_user_id, user.intra_user_id));
-      if (!dbChatID) throw Error('failed to fetch dbChatID');
+        .from(messages)
+        .where(
+          or(
+            eq(messages.sender_id, user.intra_user_id),
+            eq(messages.receiver_id, user.intra_user_id),
+          ),
+        );
+      if (!dbMessages) throw Error('failed to fetch dbMessages');
 
-      for (let i = 0; i < dbChatID.length; i++) {
-        //NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
-        const chatinfo: schema.Chats[] = await this.db
-          .select()
-          .from(schema.chats)
-          .where(eq(schema.chats.chat_id, dbChatID[i].chat_id));
-
-        //NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
-        const field: schema.UserChats = {
-          chatid: dbChatID[i].chat_id,
-          title: chatinfo[i].title,
-          image: chatinfo[i].image,
+      for (let i = 0; i < dbMessages.length; i++) {
+        const message = dbMessages[i];
+        const isGroupChat = message.group_chat_id !== null;
+        const field: UserChats = {
+          messageId: 0,
+          type: '',
+          title: '',
+          image: '',
           lastMessage: '',
           time: new Date(),
           unreadMessages: 0,
         };
 
+        if (!isGroupChat) {
+          const otherUserId =
+            message.sender_id === user.intra_user_id
+              ? message.receiver_id
+              : message.sender_id;
+          if (!otherUserId) throw Error('otherUserId is Invalid');
+          const otherUser: User =
+            await this.getAnyUserFromDataBase(otherUserId);
+          if (!otherUser) {
+            continue;
+          }
+
+          field.messageId = message.message_id;
+          field.type = 'dm';
+          field.title = otherUser.nick_name
+            ? otherUser.nick_name
+            : otherUser.user_name;
+          field.image = otherUser.image;
+          field.lastMessage = message.message;
+          field.time = message.sent_at;
+          field.unreadMessages = 0;
+        }
+        if (isGroupChat) {
+          const groupChat = await this.db
+            .select()
+            .from(groupChats)
+            .where(
+              eq(
+                groupChats.group_chat_id,
+                message.group_chat_id === null ? -1 : message.group_chat_id,
+              ),
+            );
+          if (!groupChat) {
+            continue;
+          }
+
+          field.messageId = message.message_id;
+          field.type = 'gm';
+          field.title = groupChat[0].group_name;
+          field.image = groupChat[0].group_image || '';
+          field.lastMessage = message.message;
+          field.time = message.sent_at;
+          field.unreadMessages = 0;
+        }
         result.push(field);
       }
       console.log('result: ', result);
@@ -377,66 +530,10 @@ export class DbService {
     }
   }
 
-  async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
-    try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-
-      const dbChatID = await this.db
-        .select()
-        .from(schema.chatsUsers)
-        .where(eq(schema.chatsUsers.intra_user_id, user.intra_user_id));
-
-      const result: number[] = [];
-      for (let i = 0; i < dbChatID.length; i++) {
-        result.push(dbChatID[i].chat_id);
-      }
-      console.log('result: ', result);
-      return result;
-    } catch (error) {
-      console.log('Error: ', error);
-      return null;
-    }
-  }
-
-  async getMessagesFromDataBase(
-    jwtToken: string,
-    chat_id: number,
-  ): Promise<schema.Messages[] | null> {
-    try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      // check if intra_user_id is in the same colom of chat_id
-      const chatUserData = await this.db
-        .select()
-        .from(schema.chatsUsers)
-        .where(
-          and(
-            eq(schema.chatsUsers.intra_user_id, user.intra_user_id),
-            eq(schema.chatsUsers.chat_id, chat_id),
-          ),
-        );
-      // do not return messages if user is not in the chat
-      if (chatUserData.length === 0) {
-        return null;
-      }
-
-      const res = await this.db
-        .select()
-        .from(schema.messages)
-        .where(eq(schema.messages.chat_id, chat_id));
-
-      console.log('Messages: ', res);
-      return res;
-    } catch (error) {
-      console.log('Error messags: ', error);
-      return null;
-    }
-  }
-
   async mockData(own_intra_id: number): Promise<boolean> {
     // Create Users
     try {
-      await this.db.insert(schema.users).values({
+      await this.db.insert(users).values({
         intra_user_id: 1,
         user_name: 'user 1',
         email: 'user1@user.com',
@@ -447,7 +544,7 @@ export class DbService {
       console.log('Error: ', error);
     }
     try {
-      await this.db.insert(schema.users).values({
+      await this.db.insert(users).values({
         intra_user_id: 2,
         user_name: 'user 2',
         email: 'user2@user.com',
@@ -458,7 +555,7 @@ export class DbService {
       console.log('Error: ', error);
     }
     try {
-      await this.db.insert(schema.users).values({
+      await this.db.insert(users).values({
         intra_user_id: 3,
         user_name: 'user 3',
         email: 'user3@user.com',
@@ -470,19 +567,19 @@ export class DbService {
     }
     // Create Messages
     try {
-      await this.db.insert(schema.messages).values({
-        sender_id: own_intra_id,
+      await this.db.insert(messages).values({
+        sender_id: 1,
+        receiver_id: own_intra_id,
         message: 'Hello from user 1',
-        chat_id: 1,
       });
       console.log('Message 1 Created!');
     } catch (error) {
       console.log('Error: ', error);
     }
     try {
-      await this.db.insert(schema.messages).values({
+      await this.db.insert(messages).values({
         sender_id: 2,
-        chat_id: 1,
+        receiver_id: own_intra_id,
         message: 'Hello from User 2',
       });
       console.log('Message 2 Created!');

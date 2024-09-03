@@ -3,7 +3,8 @@ import { useState, useEffect, ChangeEvent,SetStateAction, Dispatch } from "react
 import Image from "next/image";
 import { fetchGet, fetchPost } from "../fetch_functions";
 import type { ExternalUser, Friends } from "@repo/db";
-import { userSocket } from "../layout";
+import { userSocket } from "../profile_headers";
+import { DisplayUserStatus } from "./page";
 
 /* -- SetNicknameForm Component --> */
 export const NicknameForm = ({
@@ -110,38 +111,42 @@ export const AddFriendsForm = () => {
     const [isSend, setIsSend] = useState(false);
 
     useEffect(() => {
-      const fetchData = async () => {
-      try {
-          fetchGet<ExternalUser[]>("/api/getExternalUsers")
-          .then((data) => {
-          setExternalUsers(data);
-          });
+      fetchData();
+    }, []);
 
-          fetchGet<Friends[]>("/api/getFriendsNotApproved")
-          .then((data) => {
-              setFriendsList(data);
-          });
-
-          fetchGet<ExternalUser[]>("/api/getApprovedFriends")
-          .then((data) => {
-              setGetApprovedFriends(data);
-          });
-
-          fetchGet<ExternalUser[]>("/api/incomingFriendRequests")
-          .then((data) => {
-              setIncomingFriendRequests(data);
-          });
-
-      } catch (error) {
-          console.error("Error Getting Friends:", error);
-      }}
-
+    useEffect(() => {
       const delayDebounceFn = setTimeout(() => {
         fetchData();
       }, 300); // Delay before fetching the data
-  
+      
       return () => clearTimeout(delayDebounceFn);      
     }, [isSend, searchName]);
+    
+    const fetchData = async () => {
+    try {
+        fetchGet<ExternalUser[]>("/api/getExternalUsers")
+        .then((data) => {
+        setExternalUsers(data);
+        });
+
+        fetchGet<Friends[]>("/api/getFriendsNotApproved")
+        .then((data) => {
+            setFriendsList(data);
+        });
+
+        fetchGet<ExternalUser[]>("/api/getApprovedFriends")
+        .then((data) => {
+            setGetApprovedFriends(data);
+        });
+
+        fetchGet<ExternalUser[]>("/api/incomingFriendRequests")
+        .then((data) => {
+            setIncomingFriendRequests(data);
+        });
+
+    } catch (error) {
+        console.error("Error Getting Friends:", error);
+    }}
 
     const filteredChatFields = externalUsers?.filter((userField) => {
       return userField.user_name.toLowerCase().includes(searchName.toLowerCase());
@@ -160,6 +165,7 @@ export const AddFriendsForm = () => {
                 setIsSend(prev => !prev);
                 userSocket.emit('FriendRequestNotification', user_intra_id);
             })
+
         } catch (error) {
             console.error("Error Sending Friend Request:", error);
         }
@@ -210,7 +216,7 @@ export const AddFriendsForm = () => {
                               <button className=" bg-green-500 hover:bg-green-700 transition-all duration-300 p-2 rounded-md"
                               onClick={() => {sendFriendRequest(user.intra_user_id)}
                               }>
-                                  <svg className="pl-2 h-11 w-11 items-center" fill="#ffffff" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <rect y="100.174" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="311.652" y="100.174" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="100.174" width="144.696" height="33.391"></rect> </g> </g> <g> <g> <rect x="33.391" y="66.783" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="66.783" y="33.391" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="244.87" y="33.391" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="278.261" y="66.783" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="33.391" y="244.87" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="278.261" y="244.87" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <polygon points="244.87,278.261 244.87,311.652 211.478,311.652 211.478,345.043 278.261,345.043 278.261,278.261 "></polygon> </g> </g> <g> <g> <rect x="33.391" y="345.043" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <polygon points="100.174,311.652 100.174,278.261 66.783,278.261 66.783,345.043 133.565,345.043 133.565,311.652 "></polygon> </g> </g> <g> <g> <polygon points="411.826,378.435 411.826,345.043 378.435,345.043 378.435,378.435 345.043,378.435 345.043,411.826 378.435,411.826 378.435,445.217 411.826,445.217 411.826,411.826 445.217,411.826 445.217,378.435 "></polygon> </g> </g> <g> <g> <rect x="478.609" y="345.043" width="33.391" height="100.174"></rect> </g> </g> <g> <g> <rect x="345.043" y="478.609" width="100.174" height="33.391"></rect> </g> </g> <g> <g> <rect x="345.043" y="278.261" width="100.174" height="33.391"></rect> </g> </g> <g> <g> <polygon points="278.261,345.043 278.261,411.826 33.391,411.826 33.391,378.435 0,378.435 0,445.217 311.652,445.217 311.652,345.043 "></polygon> </g> </g> <g> <g> <rect x="311.652" y="311.652" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="445.217" y="311.652" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="445.217" y="445.217" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="311.652" y="445.217" width="33.391" height="33.391"></rect> </g> </g> </g></svg>
+                                  <svg className="pl-2 h-11 w-11 items-center" fill="#ffffff" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <rect y="100.174" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="311.652" y="100.174" width="33.391" height="144.696"></rect> </g> </g> <g> <g> <rect x="100.174" width="144.696" height="33.391"></rect> </g> </g> <g> <g> <rect x="33.391" y="66.783" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="66.783" y="33.391" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="244.87" y="33.391" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="278.261" y="66.783" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="33.391" y="244.87" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="278.261" y="244.87" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <polygon points="244.87,278.261 244.87,311.652 211.478,311.652 211.478,345.043 278.261,345.043 278.261,278.261 "></polygon> </g> </g> <g> <g> <rect x="33.391" y="345.043" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <polygon points="100.174,311.652 100.174,278.261 66.783,278.261 66.783,345.043 133.565,345.043 133.565,311.652 "></polygon> </g> </g> <g> <g> <polygon points="411.826,378.435 411.826,345.043 378.435,345.043 378.435,378.435 345.043,378.435 345.043,411.826 378.435,411.826 378.435,445.217 411.826,445.217 411.826,411.826 445.217,411.826 445.217,378.435 "></polygon> </g> </g> <g> <g> <rect x="478.609" y="345.043" width="33.391" height="100.174"></rect> </g> </g> <g> <g> <rect x="345.043" y="478.609" width="100.174" height="33.391"></rect> </g> </g> <g> <g> <rect x="345.043" y="278.261" width="100.174" height="33.391"></rect> </g> </g> <g> <g> <polygon points="278.261,345.043 278.261,411.826 33.391,411.826 33.391,378.435 0,378.435 0,445.217 311.652,445.217 311.652,345.043 "></polygon> </g> </g> <g> <g> <rect x="311.652" y="311.652" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="445.217" y="311.652" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="445.217" y="445.217" width="33.391" height="33.391"></rect> </g> </g> <g> <g> <rect x="311.652" y="445.217" width="33.391" height="33.391"></rect> </g> </g> </g></svg>
                               </button>}
                             </div>
                         </div>}
@@ -224,19 +230,27 @@ export const AddFriendsForm = () => {
 
 export const FriendsList = () => {
     const [friendsList, setFriendsList] = useState<ExternalUser[]>([]);
+    const [reload, setReload] = useState<boolean>(false);
 
     useEffect(() => {
         try {
-
             fetchGet<ExternalUser[]>("/api/getApprovedFriends")
             .then((data) => {
                 setFriendsList(data);
             });
+            
+            userSocket.on('statusChange', () => {
+                setReload(prev => !prev);
+            });
 
         } catch (error) {
             console.error("Error Getting Friends:", error);
-        } 
-       }, []);
+        }
+
+        return () => {
+            userSocket.off('statusChange');
+        };
+       }, [reload]);
 
     return (
       <div className="container mx-auto">
@@ -244,25 +258,28 @@ export const FriendsList = () => {
           {friendsList.length === 0 && <p className="text-center text-1xl whitespace-nowrap">No friends :(</p>}
                   {friendsList.map((user) => (
                       <div key={user.intra_user_id} className="">
-                          <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded-md">
-                              <div className="flex items-center space-x-4">
-                                  <Image
-                                      src={user.image}
-                                      alt="Profile Image"
-                                      className="w-11 h-11 rounded-full"
-                                      width={100}
-                                      height={100}
-                                  />
-                                  <div className="min-w-0 p-1 break-all">
-                                    {user.nick_name === null ? 
-                                      <h1 className="text-1xl">{user.user_name}</h1> :
-                                      <div>
-                                        <h1 className="text-1xl">{user.nick_name}</h1>
-                                      </div>
-                                      }
-                                      <p className="text-blue-400 break-all">{user.email}</p>
+                        <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded-md">
+                            <div className="flex items-center space-x-4">
+                              <div className="relative">
+                                <Image
+                                    src={user.image}
+                                    alt="Profile Image"
+                                    className="w-11 h-11 rounded-full"
+                                    width={100}
+                                    height={100}
+                                />
+                                <DisplayUserStatus state={user.state} width={15} height={15} />
+                              </div>
+                              <div className="min-w-0 p-1 break-all">
+                                {user.nick_name === null ? 
+                                  <h1 className="text-1xl">{user.user_name}</h1> :
+                                  <div>
+                                    <h1 className="text-1xl">{user.nick_name}</h1>
                                   </div>
-                              </div> 
+                                  }
+                                  <p className="text-blue-400 break-all">{user.email}</p>
+                              </div>
+                            </div> 
                           </div>
                       </div>
                   ))}      
