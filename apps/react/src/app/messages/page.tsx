@@ -5,6 +5,7 @@ import Link from 'next/link';
 import io from 'socket.io-client';
 import {User, Messages} from '@repo/db';
 import { fetchGet } from '../fetch_functions';
+import { NEXT_CACHE_IMPLICIT_TAG_ID } from 'next/dist/lib/constants';
 
 function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
@@ -79,15 +80,9 @@ export default function DC() {
     );
     
     useEffect(() => {
-        // TODO: check if chat has a password, that is stored in the database chats.password
-        // if (chat.password) {
-        //     // prompt for password
-        //     // if (password is correct) {
-        //     //     // connect to chat
-        //     // } else {
-        //     //     // show error message
-        //     // }
-        // }
+        const chat_id = 1 // TODO: get chat_id from the inbox
+
+        // TODO: check if chat has a password
 
         /* Load user info form database and store in const user */
         fetchGet<User>('api/profile')
@@ -99,10 +94,13 @@ export default function DC() {
             console.log('Error: ', error);
         });
         
-        const chat_id = 1; // TODO: get chat_id from the URL
         /* Load messages form database form right chat, using query chat_id: number */
         fetchGet<Messages[]>(`api/messages?chat_id=${chat_id}`)
         .then((res) => {
+            if (!res) {
+                console.log('No messages found');
+                return;
+            }
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             const transformedMessages = res.map(message => ({
                 ...message,
