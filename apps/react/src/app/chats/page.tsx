@@ -5,11 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-<<<<<<< HEAD
 import { UserChats } from '@repo/db';
-=======
-import {UserChats} from '@repo/db';
->>>>>>> 3ed459c39c31e771a39c2dccc13af487a500fef9
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
 	return (
@@ -30,14 +26,15 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
 	const userImage = chatField.image ? chatField.image : defaultUserImage;
 
-<<<<<<< HEAD
 	return (
 		<div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
 			<div className="flex items-center space-x-4 p-4 justify-between">
 				<button onClick={() => alert('Showing profile of ' + chatField.title)}>
 					<Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
 				</button>
-				<Link className="flex-grow" href={'/messages'}>
+				{/* Use nextjs dynamic app routing */}
+				<Link className="flex-grow" href={`/messages`
+				}>
 					<div className="flex justify-between w-full">
 						<div>
 							<h3 className="font-bold text-left">{chatField.title}</h3>
@@ -45,37 +42,13 @@ function ChatField({ chatField }: { chatField: UserChats }) {
 						</div>
 						<div className="text-right">
 							<p>{chatField.time.toString().slice(11, 16)}</p>
+//							{chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
 						</div>
 					</div>
 				</Link>
 			</div>
 		</div>
 	);
-=======
-    return (
-        <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
-            <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing profile of ' + chatField.title)}>
-                    <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
-                </button>
-                {/* Use nextjs dynamic app routing */}
-                <Link className="flex-grow" href={`/messages`
-                }>
-                    <div className="flex justify-between w-full">
-                        <div>
-                            <h3 className="font-bold text-left">{chatField.title}</h3>
-                            <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
-                        </div>
-                        <div className="text-right">
-                            <p>{chatField.time.toString().slice(11,16)}</p>
-                            {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
-                        </div>
-                    </div>
-                </Link>
-            </div>
-        </div>
-    );
->>>>>>> 3ed459c39c31e771a39c2dccc13af487a500fef9
 }
 
 export default function Chats() {
