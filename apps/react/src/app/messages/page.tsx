@@ -6,7 +6,6 @@ import io from 'socket.io-client';
 import {User, Messages} from '@repo/db';
 import { fetchGet } from '../fetch_functions';
 
-
 function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
@@ -79,8 +78,17 @@ export default function DC() {
         }}
     );
     
-    
     useEffect(() => {
+        // TODO: check if chat has a password, that is stored in the database chats.password
+        // if (chat.password) {
+        //     // prompt for password
+        //     // if (password is correct) {
+        //     //     // connect to chat
+        //     // } else {
+        //     //     // show error message
+        //     // }
+        // }
+
         /* Load user info form database and store in const user */
         fetchGet<User>('api/profile')
         .then((user) => {
@@ -145,7 +153,6 @@ export default function DC() {
         // setMessages([...messages, message]);
         sendMessage(message);
     };
-
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
         if (e.key === 'Enter' && !e.shiftKey) {
