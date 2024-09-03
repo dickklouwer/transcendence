@@ -15,6 +15,13 @@
       "when": 1725355630404,
       "tag": "0001_tiny_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1725353152208,
+      "tag": "0002_loud_skreet",
+      "breakpoints": true
     }
   ]
 }
