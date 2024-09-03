@@ -24,6 +24,11 @@ export class DbService {
     this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
 
+  async getUserById(id: number): Promise<User | null> {
+    const result = await this.db.select().from(users).where(eq(users.intra_user_id, id));
+    return result.length > 0 ? result[0] : null;
+  }
+
   async setUserTwoFactorEnabled(userId: number, enabled: boolean) {
     try {
       await this.db
@@ -48,21 +53,36 @@ export class DbService {
     }
   }
 
-  async upsertUserInDataBase(user: FortyTwoUser): Promise<boolean> {
-    try {
-      await this.db
-        .insert(users)
-        .values(user)
-        .onConflictDoUpdate({
-          target: [users.intra_user_id],
-          set: { token: user.token },
-        });
-      console.log('User Created2!');
-      return true;
-    } catch (error) {
-      console.log('User Could be already Created!', error);
-    }
-    return false;
+  async upsertUserInDataBase(fortyTwoUser: FortyTwoUser): Promise<User> {
+    const result = await this.db
+      .insert(users)
+      .values({
+        intra_user_id: fortyTwoUser.intra_user_id,
+        user_name: fortyTwoUser.user_name,
+        nick_name: fortyTwoUser.user_name,
+        email: fortyTwoUser.email,
+        state: fortyTwoUser.state,
+        image: fortyTwoUser.image,
+        token: fortyTwoUser.token,
+        is_two_factor_enabled: false,
+        password: '',
+        two_factor_secret: '',
+        wins: 0,
+        losses: 0
+      })
+      .onConflictDoUpdate({
+        target: users.intra_user_id,
+        set: {
+          user_name: fortyTwoUser.user_name,
+          email: fortyTwoUser.email,
+          state: fortyTwoUser.state,
+          image: fortyTwoUser.image,
+          token: fortyTwoUser.token,
+        },
+      })
+      .returning();
+  
+    return result[0];
   }
 
   async getUserFromDataBase(jwtToken: string) {
