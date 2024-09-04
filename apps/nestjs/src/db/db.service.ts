@@ -4,8 +4,9 @@ import {
   users,
   friends,
   messages,
-  groupChats,
+  chatsUsers,
   games,
+  chats,
   createQueryClient,
   createDrizzleClient,
 } from '@repo/db';
@@ -25,7 +26,10 @@ export class DbService {
   }
 
   async getUserById(id: number): Promise<User | null> {
-    const result = await this.db.select().from(users).where(eq(users.intra_user_id, id));
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.intra_user_id, id));
     return result.length > 0 ? result[0] : null;
   }
 
@@ -68,7 +72,7 @@ export class DbService {
         password: '',
         two_factor_secret: '',
         wins: 0,
-        losses: 0
+        losses: 0,
       })
       .onConflictDoUpdate({
         target: users.intra_user_id,
@@ -81,7 +85,6 @@ export class DbService {
         },
       })
       .returning();
-  
     return result[0];
   }
 
@@ -445,87 +448,98 @@ export class DbService {
     }
   }
 
+  //Suggest:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
   async getChatsFromDataBase(jwtToken: string): Promise<UserChats[] | null> {
     const result: UserChats[] = [];
 
     try {
-      console.log('In function getChatsFromDataBase');
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
-      const dbMessages = await this.db
+      const dbChatID = await this.db
         .select()
-        .from(messages)
-        .where(
-          or(
-            eq(messages.sender_id, user.intra_user_id),
-            eq(messages.receiver_id, user.intra_user_id),
-          ),
-        );
-      if (!dbMessages) throw Error('failed to fetch dbMessages');
+        .from(chatsUsers)
+        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
+      if (!dbChatID) throw Error('failed to fetch dbChatID');
 
-      for (let i = 0; i < dbMessages.length; i++) {
-        const message = dbMessages[i];
-        const isGroupChat = message.group_chat_id !== null;
+      for (let i = 0; i < dbChatID.length; i++) {
+        //NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
+        const chatinfo: Chats[] = await this.db
+          .select()
+          .from(chats)
+          .where(eq(chats.chat_id, dbChatID[i].chat_id));
+
+        //NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
         const field: UserChats = {
-          messageId: 0,
-          type: '',
-          title: '',
-          image: '',
+          chatid: dbChatID[i].chat_id,
+          title: chatinfo[i].title,
+          image: chatinfo[i].image,
           lastMessage: '',
           time: new Date(),
           unreadMessages: 0,
         };
 
-        if (!isGroupChat) {
-          const otherUserId =
-            message.sender_id === user.intra_user_id
-              ? message.receiver_id
-              : message.sender_id;
-          if (!otherUserId) throw Error('otherUserId is Invalid');
-          const otherUser: User =
-            await this.getAnyUserFromDataBase(otherUserId);
-          if (!otherUser) {
-            continue;
-          }
-
-          field.messageId = message.message_id;
-          field.type = 'dm';
-          field.title = otherUser.nick_name
-            ? otherUser.nick_name
-            : otherUser.user_name;
-          field.image = otherUser.image;
-          field.lastMessage = message.message;
-          field.time = message.sent_at;
-          field.unreadMessages = 0;
-        }
-        if (isGroupChat) {
-          const groupChat = await this.db
-            .select()
-            .from(groupChats)
-            .where(
-              eq(
-                groupChats.group_chat_id,
-                message.group_chat_id === null ? -1 : message.group_chat_id,
-              ),
-            );
-          if (!groupChat) {
-            continue;
-          }
-
-          field.messageId = message.message_id;
-          field.type = 'gm';
-          field.title = groupChat[0].group_name;
-          field.image = groupChat[0].group_image || '';
-          field.lastMessage = message.message;
-          field.time = message.sent_at;
-          field.unreadMessages = 0;
-        }
         result.push(field);
       }
       console.log('result: ', result);
       return result;
     } catch (error) {
       console.log('userMessages:', error);
+      return null;
+    }
+  }
+
+  async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const dbChatID = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
+
+      const result: number[] = [];
+      for (let i = 0; i < dbChatID.length; i++) {
+        result.push(dbChatID[i].chat_id);
+      }
+      console.log('result: ', result);
+      return result;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getMessagesFromDataBase(
+    jwtToken: string,
+    chat_id: number,
+  ): Promise<Messages[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      // check if intra_user_id is in the same colom of chat_id
+      const chatUserData = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(chatsUsers.chat_id, chat_id),
+          ),
+        );
+      // do not return messages if user is not in the chat
+      if (chatUserData.length === 0) {
+        return null;
+      }
+
+      const res = await this.db
+        .select()
+        .from(messages)
+        .where(eq(messages.chat_id, chat_id));
+
+      console.log('Messages: ', res);
+      return res;
+    } catch (error) {
+      console.log('Error messags: ', error);
       return null;
     }
   }
