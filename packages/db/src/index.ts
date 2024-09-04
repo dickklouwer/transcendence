@@ -1,4 +1,4 @@
-import type { User, Friends } from './schema';
+import type { User, Friends, Chats } from './schema';
 import { users, messages, groupChats, friends, games } from './schema';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
@@ -38,5 +38,5 @@ type MultiplayerMatches = {
 
 
 
-export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches }
+export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches, Chats }
 export { users, friends, messages, groupChats, games};
