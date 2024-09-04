@@ -404,22 +404,6 @@ export class DbService {
     chat_id: number,
   ): Promise<schema.Messages[] | null> {
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      // check if intra_user_id is in the same colom of chat_id
-      const chatUserData = await this.db
-        .select()
-        .from(schema.chatsUsers)
-        .where(
-          and(
-            eq(schema.chatsUsers.intra_user_id, user.intra_user_id),
-            eq(schema.chatsUsers.chat_id, chat_id),
-          ),
-        );
-      // do not return messages if user is not in the chat
-      if (chatUserData.length === 0) {
-        return null;
-      }
-
       const res = await this.db
         .select()
         .from(schema.messages)
