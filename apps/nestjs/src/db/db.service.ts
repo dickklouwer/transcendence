@@ -25,7 +25,10 @@ export class DbService {
   }
 
   async getUserById(id: number): Promise<User | null> {
-    const result = await this.db.select().from(users).where(eq(users.intra_user_id, id));
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.intra_user_id, id));
     return result.length > 0 ? result[0] : null;
   }
 
@@ -68,7 +71,7 @@ export class DbService {
         password: '',
         two_factor_secret: '',
         wins: 0,
-        losses: 0
+        losses: 0,
       })
       .onConflictDoUpdate({
         target: users.intra_user_id,
