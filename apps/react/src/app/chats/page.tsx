@@ -92,9 +92,11 @@ export default function Chats() {
     else
         console.log('User Chats: ', userChats);
 
-    const filteredChatFields = userChats?.filter((chatField) => {
+
+    const validUserChats = Array.isArray(userChats) ? userChats : [];
+    const filteredChatFields = validUserChats.filter((chatField) => {
         return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
-    }) ?? [];
+    });
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
