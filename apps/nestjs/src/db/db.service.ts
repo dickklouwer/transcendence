@@ -353,7 +353,6 @@ export class DbService {
         .where(eq(schema.chatsUsers.intra_user_id, user.intra_user_id));
       if (!dbChatID) throw Error('failed to fetch dbChatID');
 
-      console.log('dbChatID length: ', dbChatID.length);
       for (let i = 0; i < dbChatID.length; i++) {
         //NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
         const chatinfo: schema.Chats[] = await this.db
@@ -364,8 +363,8 @@ export class DbService {
         //NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
         const field: schema.UserChats = {
           chatid: dbChatID[i].chat_id,
-          title: chatinfo[i].title,
-          image: chatinfo[i].image,
+          title: chatinfo[0].title,
+          image: chatinfo[0].image,
           lastMessage: '',
           time: new Date(),
           unreadMessages: 0,
@@ -590,20 +589,6 @@ export class DbService {
     try {
       await this.db.insert(schema.chatsUsers).values({
         chat_user_id: 6,
-        chat_id: 2,
-        intra_user_id: 77718,
-      });
-      console.log('Chat User Bram Added!');
-    } catch (error) {
-      if (error.code === dublicated_key) {
-        console.log('Chat users already added!');
-      } else {
-        console.log('Error: ', error);
-      }
-    }
-    try {
-      await this.db.insert(schema.chatsUsers).values({
-        chat_user_id: 7,
         chat_id: 2,
         intra_user_id: 77718,
       });
