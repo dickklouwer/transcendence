@@ -136,6 +136,7 @@ function MatchList(){
 
     useEffect(() => {
         try {
+            fetchGet<ExternalUser[]>(`api/getExternalUsers?id=${user?.intra_user_id}`)
             fetchGet<User>('api/profile')
             .then((res) => {
                 setUser(res);

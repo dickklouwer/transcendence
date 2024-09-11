@@ -23,6 +23,8 @@ type ExternalUser = {
     email: string;
     state: 'Online' | 'Offline' | 'In-Game';
     image: string;
+    wins: number;
+    losses: number;
   };
 
 type MultiplayerMatches = {
