@@ -1,11 +1,14 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import type { User } from '@repo/db';
 import { DbService } from '../db/db.service';
 import { TwoFactorAuthenticationService } from './2fa.service';
 import * as speakeasy from 'speakeasy';
-import * as crypto from 'crypto';
 
 export type UserChats = {
   messageId: number;
@@ -17,14 +20,14 @@ export type UserChats = {
   unreadMessages: number;
 };
 
-export interface FortyTwoUser {
+export type FortyTwoUser = {
   intra_user_id: number;
   user_name: string;
   email: string;
-  state: "Online" | "Offline" | "In-Game";
+  state: 'Online' | 'Offline' | 'In-Game';
   image: string;
   token: string | null;
-}
+};
 
 @Injectable()
 export class AuthService {
@@ -38,7 +41,7 @@ export class AuthService {
     const payload = {
       sub: user.intra_user_id,
       username: user.user_name,
-      type: 'temporary'
+      type: 'temporary',
     };
 
     // Create a token that expires in 5 minutes
@@ -48,13 +51,13 @@ export class AuthService {
   async getUserFromTemporaryToken(tempToken: string): Promise<User> {
     try {
       const payload = await this.jwtService.verify(tempToken);
-      
+
       if (payload.type !== 'temporary') {
         throw new UnauthorizedException('Invalid token type');
       }
 
       const user = await this.dbService.getUserById(payload.sub);
-      
+
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
@@ -64,31 +67,6 @@ export class AuthService {
       console.error('Error verifying temporary token:', error);
       throw new UnauthorizedException('Invalid or expired temporary token');
     }
-  }
-
-  private verifyToken(token: string, secret: string): string | null {
-    const timeStep = 30;
-    const currentTime = Math.floor(Date.now() / 1000 / timeStep);
-
-    for (let i = -1; i <= 1; i++) {
-      const expectedToken = this.generateToken(secret, currentTime + i);
-      if (token === expectedToken) {
-        return expectedToken;
-      }
-    }
-
-    return null;
-  }
-
-  private generateToken(secret: string, time: number): string {
-    const hmac = crypto.createHmac('sha1', secret);
-    const timeHex = Buffer.alloc(8);
-    timeHex.writeBigInt64BE(BigInt(time), 0);
-    hmac.update(timeHex);
-    const hmacResult = hmac.digest();
-    const offset = hmacResult[hmacResult.length - 1] & 0xf;
-    const code = hmacResult.readUInt32BE(offset) & 0x7fffffff;
-    return (code % 1000000).toString().padStart(6, '0');
   }
   /**
    * This Method is used to validate the access code.
@@ -181,7 +159,7 @@ export class AuthService {
 
   /**
    * This Method is used to validate the access token.
-   * @returns {Promise<any>} - Returns the user profile
+   * @returns {Promise<FortyTwoUser>} - Returns the user profile
    */
   async validateToken(accessToken: string): Promise<FortyTwoUser> {
     const response = await axios.get('https://api.intra.42.fr/v2/me', {

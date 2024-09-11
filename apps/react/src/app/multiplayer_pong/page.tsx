@@ -25,7 +25,7 @@ interface userNames {
 }
 
 export default function PongGame() {
-	const canvasRef = useRef(null);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [rightPaddle, setRightPaddle] = useState(150);
 	const [leftPaddle, setLeftPaddle] = useState(150);
 	const [score, setScore] = useState<Score>({ left: 0, right: 0 });
@@ -62,6 +62,7 @@ export default function PongGame() {
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
+		if (!canvas) return;
 		const context = canvas.getContext('2d');
 
 		const drawGame = (context) => {

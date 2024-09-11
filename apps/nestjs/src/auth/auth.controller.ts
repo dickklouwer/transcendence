@@ -45,7 +45,9 @@ export class AuthController {
       if (dbUser.is_two_factor_enabled) {
         // If 2FA is enabled, create a temporary token
         const tempToken = await this.authService.createTemporaryToken(dbUser);
-        return res.redirect(`http://localhost:4433/2fa/verify_2fa?tempToken=${tempToken}`);
+        return res.redirect(
+          `http://localhost:4433/2fa/verify_2fa?tempToken=${tempToken}`,
+        );
       } else {
         // If 2FA is not enabled, create and return the JWT
         const jwt = await this.authService.CreateJWT(dbUser);
@@ -62,16 +64,18 @@ export class AuthController {
 
   @Post('2fa/login-verify')
   async verifyTwoFactorAuthenticationForLogin(
-    @Body() body: { tempToken: string, twoFactorCode: string },
+    @Body() body: { tempToken: string; twoFactorCode: string },
     @Res() res: Response,
   ) {
     try {
-      const user = await this.authService.getUserFromTemporaryToken(body.tempToken);
+      const user = await this.authService.getUserFromTemporaryToken(
+        body.tempToken,
+      );
       const isValid = await this.authService.verifyTwoFactorAuthentication(
         user,
         body.twoFactorCode,
       );
-  
+
       if (isValid) {
         const jwt = await this.authService.CreateJWT(user);
         user.token = jwt;
@@ -82,7 +86,9 @@ export class AuthController {
       }
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: 'Authentication Failed Please Try again' });
+      res
+        .status(500)
+        .json({ message: 'Authentication Failed Please Try again' });
     }
   }
 
@@ -108,27 +114,30 @@ export class AuthController {
         'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg',
       token: null,
     };
-    
+
     try {
       const dbUser = await this.dbservice.upsertUserInDataBase(fortyTwoUser);
-      
+
       if (!dbUser) {
         return res.status(500).send('Failed to create or update user');
       }
-  
+
       dbUser.token = await this.authService.CreateJWT(dbUser);
       console.log('JWT::', dbUser.token);
-      
+
       // Update the user with the new token
-      await this.dbservice.upsertUserInDataBase({...fortyTwoUser, token: dbUser.token});
-      
+      await this.dbservice.upsertUserInDataBase({
+        ...fortyTwoUser,
+        token: dbUser.token,
+      });
+
       return res.redirect(`http://localhost:4433/?token=${dbUser.token}`);
     } catch (error) {
       console.error('Error in dev validation:', error);
       return res.status(500).send('User creation or update failed');
     }
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @Post('2fa/enable')
   async enableTwoFactorAuthentication(

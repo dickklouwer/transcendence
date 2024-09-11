@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 // import vicImage from './vic.png';  // Import the image directly
 import { StaticImageData } from 'next/image';
-import vicImage from './pongbal.png'; 
+import vicImage from './images/pongbal.png'; 
 
 const PongAnimation = () => {
-  const canvasRef = useRef(null);
-  const [ballImage, setBallImage] = useState(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ballImage, setBallImage] = useState<HTMLImageElement>();
   const [ballSize, setBallSize] = useState({ width: 30, height: 30 });
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const PongAnimation = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationFrameId;
+    let animationFrameId: number;
 
     // Game objects
     const ball = {

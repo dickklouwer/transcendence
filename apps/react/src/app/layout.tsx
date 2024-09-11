@@ -19,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
         <head>
+          
           <title>ft_transcendence42</title>
         </head>
         <body className='relative flex-grow flex-col min-h-screen w-full'>
