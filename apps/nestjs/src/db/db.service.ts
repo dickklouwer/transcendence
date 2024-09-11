@@ -394,7 +394,6 @@ export class DbService {
       for (let i = 0; i < dbChatID.length; i++) {
         result.push(dbChatID[i].chat_id);
       }
-      console.log('result: ', result);
       return result;
     } catch (error) {
       console.log('Error: ', error);
