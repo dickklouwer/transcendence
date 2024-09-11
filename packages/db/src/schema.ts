@@ -50,7 +50,7 @@ export const games = mySchema.table('games', {
 export const chats = mySchema.table('chats', {
 	chat_id: serial('chat_id').primaryKey().notNull(),
 	is_direct: boolean('is_direct').default(false),
-	title: text('title').notNull(),					// NOTE: Should this be able to be NULL? when a direct message we don't need a 
+	title: text('title').default(''),
 	is_public: boolean('is_public').default(false),
 	password: text('password'),
 	image: text('image'),

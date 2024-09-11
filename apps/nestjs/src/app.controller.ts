@@ -120,8 +120,7 @@ export class AppController {
 
   @Post('createMockData')
   async mockData(): Promise<boolean> {
-    const hardcoddedIntraId = 77718;
-    const response = await this.dbservice.mockData(hardcoddedIntraId);
+    const response = await this.dbservice.mockData();
     return response;
   }
 

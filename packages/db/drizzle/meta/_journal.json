@@ -5,22 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1724333745172,
-      "tag": "0000_ordinary_molly_hayes",
+      "when": 1726056063177,
+      "tag": "0000_wide_secret_warriors",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1724333868414,
-      "tag": "0001_striped_blacklash",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1725353152208,
-      "tag": "0002_loud_skreet",
+      "when": 1726061809743,
+      "tag": "0001_graceful_warstar",
       "breakpoints": true
     }
   ]

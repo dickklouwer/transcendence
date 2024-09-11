@@ -1,6 +1,6 @@
 {
-  "id": "ecc3cce3-2f92-4532-98a0-1446600b022d",
-  "prevId": "18dfd02b-b562-48db-837d-6237cfe7d838",
+  "id": "a48e7592-c965-448c-9188-85ee29f55a14",
+  "prevId": "ff20965f-75fa-44a7-b3e0-ff1de60d4ce3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -25,7 +25,8 @@
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "''"
         },
         "is_public": {
           "name": "is_public",
@@ -366,19 +367,13 @@
           "name": "sender_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
-        },
-        "receiver_id": {
-          "name": "receiver_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "chat_id": {
           "name": "chat_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "message": {
           "name": "message",
@@ -403,20 +398,6 @@
           "schemaTo": "pong",
           "columnsFrom": [
             "sender_id"
-          ],
-          "columnsTo": [
-            "intra_user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "messages_receiver_id_users_intra_user_id_fk": {
-          "name": "messages_receiver_id_users_intra_user_id_fk",
-          "tableFrom": "messages",
-          "tableTo": "users",
-          "schemaTo": "pong",
-          "columnsFrom": [
-            "receiver_id"
           ],
           "columnsTo": [
             "intra_user_id"
