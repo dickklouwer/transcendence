@@ -18,7 +18,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { User, ExternalUser, UserChats } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
-import { writeFileSync } from 'fs';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')

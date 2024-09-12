@@ -78,7 +78,7 @@ export async function fetchPostImage(url: string, body: FormData) {
             Authorization: `Bearer ${localStorage.getItem('token')}`
         }
         });
-        if(response.status !== 200)
+        if(response.status !== 201)
             throw `Unauthorized ${response.status}`;
         return response.data;
     } catch (error) {

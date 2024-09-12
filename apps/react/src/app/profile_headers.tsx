@@ -152,7 +152,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
         console.log('Error: ', error);
         Router.push('/login', { scroll: false });
       });
-  }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams]);
+  }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams, nicknameProps.reload]);
 
   const handleVerificationComplete = (newToken: string) => {
     localStorage.setItem('token', newToken);

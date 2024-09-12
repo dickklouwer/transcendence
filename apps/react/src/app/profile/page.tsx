@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { AddFriendsForm, NicknameForm, FriendsList } from "./form_components";
-import { useState, useEffect, useContext, useRef, MutableRefObject } from "react";
+import { useState, useEffect, useContext, useRef, MutableRefObject, Dispatch, SetStateAction } from "react";
 import { fetchGet, fetchPost, fetchPostImage } from "../fetch_functions";
 import Link from "next/link";
 import { NicknameContext, NicknameFormProps } from "../layout";
@@ -54,6 +54,7 @@ export default function Profile() {
   const [user, setUser] = useState<User>();
   const [tempNickname, setTempNickname] = useState<string>("");
   const nicknameContext: NicknameFormProps | undefined = useContext(NicknameContext);
+  const [reload, setReload] = useState<boolean>(false);
 
   if (nicknameContext == undefined)
     throw new Error("Cannot find NicknameContext");
@@ -66,7 +67,7 @@ export default function Profile() {
       .catch((error) => {
         console.log("Error: ", error);
       });
-  }, []);
+  }, [reload]);
 
   if (!user) 
     return <div>Loading...</div>;
@@ -89,7 +90,7 @@ export default function Profile() {
               height={100}
               className="min-w-24 min-h-24 max-w-24 max-h-24 rounded-full object-cover"
               />
-              <ImageUpload />          
+              <ImageUpload setReload={setReload} nicknameContext={nicknameContext} />          
           </div>
           <div className="flex-grow min-w-0 mb-4">
             {nicknameContext.nickname === undefined ? (
@@ -162,7 +163,7 @@ export default function Profile() {
   )
 }
 
-const ImageUpload = () => {
+const ImageUpload = ({ setReload , nicknameContext} : {setReload: Dispatch<SetStateAction<boolean>>, nicknameContext: NicknameFormProps | undefined}) => {
 
   const fileinputRef = useRef<HTMLInputElement | null>(null);
 
@@ -183,10 +184,12 @@ const ImageUpload = () => {
     formData.append("file", image);
     if (image.type.startsWith("image/")) {
       console.log("formData: ", formData);
-      await fetchPostImage<Boolean>("api/UploadImage", formData)
+      await fetchPostImage("api/UploadImage", formData)
       .then((res) => {
         console.log("Response: ", res);
-      });
+        setReload(prev => !prev);
+        nicknameContext?.setReload(prev => !prev);
+      })
     } else {
       alert("Invalid file type");
     }  
