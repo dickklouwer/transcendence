@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import {UserChats} from '@repo/db';
+import { useParams } from 'next/navigation';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -26,15 +27,16 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
 
+    console.log('chatField.chatid:', chatField.chatid); // Add this line for logging
+
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
                 <button onClick={() => alert('Showing profile of ' + chatField.title)}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
-                {/* give the chat_id as Query trough /messages */}
-                <Link className="flex-grow" href={'/messages?chat_id=' + chatField.chatid
-                }>
+                <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
+                {/* <Link className="flex-grow" href={`/messages?chat_id=${chatField.chatid}`}> */}
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>

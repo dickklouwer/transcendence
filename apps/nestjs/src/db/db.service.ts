@@ -5,6 +5,7 @@ import { eq, or, not, and } from 'drizzle-orm';
 import { channel } from 'diagnostics_channel';
 
 const dublicated_key = '23505';
+const defaultUserImage = 'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg';
 
 @Injectable()
 export class DbService {
@@ -405,6 +406,7 @@ export class DbService {
     jwtToken: string,
     chat_id: number,
   ): Promise<schema.Messages[] | null> {
+    console.log('chat_id: ', chat_id);
     try {
       const res = await this.db
         .select()
@@ -426,7 +428,7 @@ export class DbService {
         intra_user_id: 278,
         user_name: 'Bas_dev',
         email: 'Bas@dev.com',
-        image: '',
+        image: defaultUserImage,
       });
       console.log('User 2 Created!');
     } catch (error) {
@@ -441,7 +443,7 @@ export class DbService {
         intra_user_id: 372,
         user_name: 'Daan_dev',
         email: 'Daan@dev.com',
-        image: '',
+        image: defaultUserImage,
       });
       console.log('User 2 Created!');
     } catch (error) {
@@ -456,7 +458,7 @@ export class DbService {
         intra_user_id: 392,
         user_name: 'Kees_dev',
         email: 'Kees@dev.com',
-        image: '',
+        image: defaultUserImage,
       });
     } catch (error) {
       if (error.code === dublicated_key) {
@@ -470,7 +472,7 @@ export class DbService {
         intra_user_id: 77718,
         user_name: 'Bram',
         email: 'Bram@codam.com',
-        image: '',
+        image: defaultUserImage,
       });
       console.log('User Bram Created!');
     } catch (error) {

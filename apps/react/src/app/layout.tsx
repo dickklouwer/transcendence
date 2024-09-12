@@ -107,7 +107,7 @@ function FriendsInbox() {
 }
 
 function MessageInbox() {
-  const [numberOfMessages, setNumberOfMessages] = useState<number>(0);
+  const [numberOfMessages, setNumberOfMessages] = useState<number>(2);
   return (
     <div className='relative inline-block'>
       <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
