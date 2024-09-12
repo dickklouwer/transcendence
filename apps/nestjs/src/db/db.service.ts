@@ -32,6 +32,18 @@ export class DbService {
     return result.length > 0 ? result[0] : null;
   }
 
+  async updateImage(id: number, image: string) {
+    try {
+      await this.db
+        .update(users)
+        .set({ image: image })
+        .where(eq(users.intra_user_id, id));
+      console.log('Image updated');
+    } catch (error) {
+      console.error('Error updating image:', error);
+    }
+  }
+
   async setUserTwoFactorEnabled(userId: number, enabled: boolean) {
     try {
       await this.db

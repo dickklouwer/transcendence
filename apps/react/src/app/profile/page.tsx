@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
 import { AddFriendsForm, NicknameForm, FriendsList } from "./form_components";
-import { useState, useEffect, useContext } from "react";
-import { fetchGet } from "../fetch_functions";
+import { useState, useEffect, useContext, useRef, MutableRefObject } from "react";
+import { fetchGet, fetchPost, fetchPostImage } from "../fetch_functions";
 import Link from "next/link";
 import { NicknameContext, NicknameFormProps } from "../layout";
 import { User } from "@repo/db"
+import { imageConfigDefault } from "next/dist/shared/lib/image-config";
 
 function createMockData() {
   fetch('/api/createMockData', {
@@ -88,7 +89,7 @@ export default function Profile() {
               height={100}
               className="min-w-24 min-h-24 max-w-24 max-h-24 rounded-full object-cover"
               />
-          <DisplayUserStatus state={'Online'} width={20} height={20} />
+              <ImageUpload />          
           </div>
           <div className="flex-grow min-w-0 mb-4">
             {nicknameContext.nickname === undefined ? (
@@ -159,4 +160,47 @@ export default function Profile() {
     </div>
     </div>
   )
+}
+
+const ImageUpload = () => {
+
+  const fileinputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleClick = () => {
+    if (fileinputRef.current)
+      fileinputRef.current.click();
+  }
+
+  async function UploadImage(e: React.ChangeEvent<HTMLInputElement>) {
+
+    const image = e.target.files?.[0];
+
+    if (!image)
+      return;
+    console.log("Image: ", image);
+    let formData = new FormData();
+    formData.append("name", "Profile Image");
+    formData.append("file", image);
+    if (image.type.startsWith("image/")) {
+      console.log("formData: ", formData);
+      await fetchPostImage<Boolean>("api/UploadImage", formData)
+      .then((res) => {
+        console.log("Response: ", res);
+      });
+    } else {
+      alert("Invalid file type");
+    }  
+  };
+
+return (
+  <div>
+    <input 
+    type="file"
+    ref={fileinputRef}
+    className="hidden"
+    accept="image/*"
+    onChange={UploadImage}
+    />
+    <svg className="h-7 w-7 absolute bottom-[-4px] right-[-15px] cursor-pointer" onClick={handleClick} viewBox="0 -0.5 21 21" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>plus_circle [#1427]</title> <desc>Created with Sketch.</desc> <defs> </defs> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="Dribbble-Light-Preview" transform="translate(-179.000000, -600.000000)" fill="#ffffff"> <g id="icons" transform="translate(56.000000, 160.000000)"> <path d="M137.7,450 C137.7,450.552 137.2296,451 136.65,451 L134.55,451 L134.55,453 C134.55,453.552 134.0796,454 133.5,454 C132.9204,454 132.45,453.552 132.45,453 L132.45,451 L130.35,451 C129.7704,451 129.3,450.552 129.3,450 C129.3,449.448 129.7704,449 130.35,449 L132.45,449 L132.45,447 C132.45,446.448 132.9204,446 133.5,446 C134.0796,446 134.55,446.448 134.55,447 L134.55,449 L136.65,449 C137.2296,449 137.7,449.448 137.7,450 M133.5,458 C128.86845,458 125.1,454.411 125.1,450 C125.1,445.589 128.86845,442 133.5,442 C138.13155,442 141.9,445.589 141.9,450 C141.9,454.411 138.13155,458 133.5,458 M133.5,440 C127.70085,440 123,444.477 123,450 C123,455.523 127.70085,460 133.5,460 C139.29915,460 144,455.523 144,450 C144,444.477 139.29915,440 133.5,440" id="plus_circle-[#1427]"> </path> </g> </g> </g> </g></svg> 
+  </div> )
 }

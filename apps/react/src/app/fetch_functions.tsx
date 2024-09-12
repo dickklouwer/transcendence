@@ -1,4 +1,5 @@
 import { User, UserChats } from '@repo/db';
+import axios from 'axios';
 
 export async function fetchProfile(token : string | null): Promise<User> {
     const profile = await fetch('api/profile', {
@@ -63,6 +64,23 @@ export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
 
         const data = await response.json();
         return data;
+    } catch (error) {
+        throw 'Fetch Error: ' + error;
+    }
+}
+
+export async function fetchPostImage(url: string, body: FormData) {
+    try {
+        if (!body)
+            throw new Error('No image provided');
+        const response = await axios.post(url, body, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+        });
+        if(response.status !== 200)
+            throw `Unauthorized ${response.status}`;
+        return response.data;
     } catch (error) {
         throw 'Fetch Error: ' + error;
     }
