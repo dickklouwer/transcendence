@@ -10,8 +10,13 @@ import {
   createDrizzleClient,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { MultiplayerMatches, User, UserChats } from '@repo/db';
-import { eq, or, not, and } from 'drizzle-orm';
+import type {
+  MultiplayerMatches,
+  User,
+  UserChats,
+  ExternalUser,
+} from '@repo/db';
+import { eq, or, not, and, desc } from 'drizzle-orm';
 
 @Injectable()
 export class DbService {
@@ -114,6 +119,29 @@ export class DbService {
 
       console.log('User from id: ', user);
       return user[0];
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getLeaderboardFromDataBase() {
+    try {
+      const res: ExternalUser[] = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+          wins: users.wins,
+          losses: users.losses,
+        })
+        .from(users)
+        .orderBy(desc(users.wins));
+
+      return res;
     } catch (error) {
       console.log('Error: ', error);
       return null;

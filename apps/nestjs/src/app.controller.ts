@@ -179,6 +179,17 @@ export class AppController {
     res.status(200).send(friends);
   }
 
+  @Get('getLeaderboard')
+  async getLeaderboard() {
+    const leaderboard = await this.dbservice.getLeaderboardFromDataBase();
+
+    if (!leaderboard) {
+      throw Error('Failed to fetch leaderboard');
+    }
+
+    return leaderboard;
+  }
+
   @Get('getApprovedFriends')
   async getApprovedFriends(
     @Headers('authorization') token: string,
