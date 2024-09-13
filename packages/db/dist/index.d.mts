@@ -140,14 +140,14 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             tableName: "users";
             dataType: "string";
             columnType: "PgEnumColumn";
-            data: "Online" | "Offline" | "In-Game" | "Idle";
+            data: "Online" | "Offline" | "In-Game";
             driverParam: string;
             notNull: true;
             hasDefault: true;
             isPrimaryKey: false;
             isAutoincrement: false;
             hasRuntimeDefault: false;
-            enumValues: ["Online", "Offline", "In-Game", "Idle"];
+            enumValues: ["Online", "Offline", "In-Game"];
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
@@ -164,6 +164,38 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             isAutoincrement: false;
             hasRuntimeDefault: false;
             enumValues: [string, ...string[]];
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        wins: drizzle_orm_pg_core.PgColumn<{
+            name: "wins";
+            tableName: "users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        losses: drizzle_orm_pg_core.PgColumn<{
+            name: "losses";
+            tableName: "users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
@@ -678,8 +710,10 @@ declare const userSelect: z.ZodObject<{
     password: z.ZodNullable<z.ZodString>;
     two_factor_secret: z.ZodNullable<z.ZodString>;
     is_two_factor_enabled: z.ZodNullable<z.ZodBoolean>;
-    state: z.ZodEnum<["Online", "Offline", "In-Game", "Idle"]>;
+    state: z.ZodEnum<["Online", "Offline", "In-Game"]>;
     image: z.ZodString;
+    wins: z.ZodNumber;
+    losses: z.ZodNumber;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     intra_user_id: number;
     user_name: string;
@@ -689,8 +723,10 @@ declare const userSelect: z.ZodObject<{
     password: string | null;
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
-    state: "Online" | "Offline" | "In-Game" | "Idle";
+    state: "Online" | "Offline" | "In-Game";
     image: string;
+    wins: number;
+    losses: number;
 }, {
     intra_user_id: number;
     user_name: string;
@@ -700,8 +736,10 @@ declare const userSelect: z.ZodObject<{
     password: string | null;
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
-    state: "Online" | "Offline" | "In-Game" | "Idle";
+    state: "Online" | "Offline" | "In-Game";
     image: string;
+    wins: number;
+    losses: number;
 }>;
 declare const friendsSelect: z.ZodObject<{
     friend_id: z.ZodNumber;
@@ -812,8 +850,23 @@ type ExternalUser = {
     user_name: string;
     nick_name: string;
     email: string;
-    state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
+    state: 'Online' | 'Offline' | 'In-Game';
+    image: string;
+    wins: number;
+    losses: number;
+};
+type MultiplayerMatches = {
+    player1_id: number;
+    player2_id: number;
+    player1_score: number;
+    player2_score: number;
+    user_name: string;
+    nick_name: string;
     image: string;
 };
 
+<<<<<<< HEAD
 export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+=======
+export { type ExternalUser, type Friends, type MultiplayerMatches, type User, type UserChats, createDrizzleClient, createQueryClient, friends, games, groupChats, messages, users };
+>>>>>>> main

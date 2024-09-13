@@ -16,13 +16,28 @@ type UserChats = {
 };
 
 type ExternalUser = {
-	intra_user_id: number;
-	user_name: string;
-	nick_name: string;
-	email: string;
-	state: 'Online' | 'Offline' | 'In-Game' | 'Idle';
-	image: string;
+    intra_user_id: number;
+    user_name: string;
+    nick_name: string;
+    email: string;
+    state: 'Online' | 'Offline' | 'In-Game';
+    image: string;
+    wins: number;
+    losses: number;
+  };
+
+type MultiplayerMatches = {
+  player1_id: number;
+  player2_id: number;
+  player1_score: number;
+  player2_score: number;
+  user_name: string;
+  nick_name: string;
+  image: string;
 };
 
-export type { User, Friends, ChatsUsers, UserChats, Chats, Messages, ExternalUser }
-export { users, friends, chatsUsers, chats, games, messages };
+
+
+
+export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches, ChatsUsers, Chats, Messages };
+export { users, friends, messages, chats, games, chatsUsers};

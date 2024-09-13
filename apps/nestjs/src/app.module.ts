@@ -6,8 +6,8 @@ import { DbModule } from './db/db.module';
 import { DbService } from './db/db.service';
 import { PongModule } from './pong/pong.module';
 import { ConfigModule } from '@nestjs/config';
-import { UserGateway } from './friends/user.gateway';
 import { MessagesGateway } from './messages/messages.gateway';
+import { UserGateway } from './user/user.gateway';
 
 @Module({
   imports: [

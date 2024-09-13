@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "id": "ff20965f-75fa-44a7-b3e0-ff1de60d4ce3",
+=======
+  "id": "174b09e7-d0fd-422b-bf80-5ec2128d8092",
+>>>>>>> main
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -488,6 +492,20 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "wins": {
+          "name": "wins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "losses": {
+          "name": "losses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         }
       },
       "indexes": {},
@@ -518,8 +536,7 @@
       "values": [
         "Online",
         "Offline",
-        "In-Game",
-        "Idle"
+        "In-Game"
       ]
     }
   },

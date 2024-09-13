@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import type { User } from '@repo/db';
@@ -20,7 +24,7 @@ export type FortyTwoUser = {
   intra_user_id: number;
   user_name: string;
   email: string;
-  state: 'Online';
+  state: 'Online' | 'Offline' | 'In-Game';
   image: string;
   token: string | null;
 };
@@ -33,6 +37,37 @@ export class AuthService {
     private dbService: DbService,
   ) {}
 
+  async createTemporaryToken(user: FortyTwoUser): Promise<string> {
+    const payload = {
+      sub: user.intra_user_id,
+      username: user.user_name,
+      type: 'temporary',
+    };
+
+    // Create a token that expires in 5 minutes
+    return this.jwtService.sign(payload, { expiresIn: '5m' });
+  }
+
+  async getUserFromTemporaryToken(tempToken: string): Promise<User> {
+    try {
+      const payload = await this.jwtService.verify(tempToken);
+
+      if (payload.type !== 'temporary') {
+        throw new UnauthorizedException('Invalid token type');
+      }
+
+      const user = await this.dbService.getUserById(payload.sub);
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error verifying temporary token:', error);
+      throw new UnauthorizedException('Invalid or expired temporary token');
+    }
+  }
   /**
    * This Method is used to validate the access code.
    * first creating an url with the access code and other required parameters
@@ -124,7 +159,7 @@ export class AuthService {
 
   /**
    * This Method is used to validate the access token.
-   * @returns {Promise<any>} - Returns the user profile
+   * @returns {Promise<FortyTwoUser>} - Returns the user profile
    */
   async validateToken(accessToken: string): Promise<FortyTwoUser> {
     const response = await axios.get('https://api.intra.42.fr/v2/me', {

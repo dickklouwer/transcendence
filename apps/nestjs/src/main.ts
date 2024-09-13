@@ -14,6 +14,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors(corsConfig);
+
   // Enable CORS with options
   // app.use(cors({
   //   origin: 'http://react:2424', // Allow only this origin

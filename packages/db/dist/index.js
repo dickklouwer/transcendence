@@ -47,8 +47,7 @@ var mySchema = (0, import_pg_core.pgSchema)("pong");
 var user_state = mySchema.enum("user_state", [
   "Online",
   "Offline",
-  "In-Game",
-  "Idle"
+  "In-Game"
 ]);
 var users = mySchema.table("users", {
   intra_user_id: (0, import_pg_core.integer)("intra_user_id").primaryKey(),
@@ -60,7 +59,9 @@ var users = mySchema.table("users", {
   two_factor_secret: (0, import_pg_core.text)("two_factor_secret"),
   is_two_factor_enabled: (0, import_pg_core.boolean)("is_two_factor_enabled").default(false),
   state: user_state("state").notNull().default("Online"),
-  image: (0, import_pg_core.text)("image_url").notNull()
+  image: (0, import_pg_core.text)("image_url").notNull(),
+  wins: (0, import_pg_core.integer)("wins").default(0).notNull(),
+  losses: (0, import_pg_core.integer)("losses").default(0).notNull()
 });
 var friends = mySchema.table("friends", {
   friend_id: (0, import_pg_core.serial)("friend_id").primaryKey(),

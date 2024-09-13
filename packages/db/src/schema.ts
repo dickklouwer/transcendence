@@ -13,23 +13,24 @@ import type { z } from 'zod';
 export const mySchema = pgSchema('pong');
 
 export const user_state = mySchema.enum('user_state', [
-	'Online',
-	'Offline',
-	'In-Game',
-	'Idle',
+  'Online',
+  'Offline',
+  'In-Game',
 ]);
 
 export const users = mySchema.table('users', {
-	intra_user_id: integer('intra_user_id').primaryKey(),
-	user_name: text('user_name').notNull().unique(),
-	nick_name: text('nick_name'),
-	token: text('token'),
-	email: text('email').notNull().unique(),
-	password: text('password'),
-	two_factor_secret: text('two_factor_secret'),
-	is_two_factor_enabled: boolean('is_two_factor_enabled').default(false),
-	state: user_state('state').notNull().default('Online'),
-	image: text('image_url').notNull(),
+  intra_user_id: integer('intra_user_id').primaryKey(),
+  user_name: text('user_name').notNull().unique(),
+  nick_name: text('nick_name'),
+  token: text('token'),
+  email: text('email').notNull().unique(),
+  password: text('password'),
+  two_factor_secret: text('two_factor_secret'),
+  is_two_factor_enabled: boolean('is_two_factor_enabled').default(false),
+  state: user_state('state').notNull().default('Online'),
+  image: text('image_url').notNull(),
+  wins: integer('wins').default(0).notNull(),
+  losses: integer('losses').default(0).notNull(),
 });
 
 export const friends = mySchema.table('friends', {
