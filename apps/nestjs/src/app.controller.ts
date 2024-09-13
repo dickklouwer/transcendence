@@ -122,10 +122,54 @@ export class AppController {
     return userChats;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('chatHasPassword')
+  async chatHasPassword(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ): Promise<boolean> {
+    const hasPassword = await this.dbservice.chatHasPassword(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return hasPassword;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('isValidChatPassword')
+  async isValidChatPassword(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+    @Query('password') password: string,
+    @Res() res: Response,
+  ) {
+    const isValid = await this.dbservice.isValidChatPassword(
+      token.split(' ')[1],
+      chat_id,
+      password,
+    );
+    res.status(200).send(isValid);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('messages')
+  async getMessages(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ) {
+    console.log(`messages?chat_id=${chat_id}`);
+    const messages = await this.dbservice.getMessagesFromDataBase(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return messages;
+  }
+
   @Post('createMockData')
   async mockData(): Promise<boolean> {
-    const hardcoddedIntraId = 77718;
-    const response = await this.dbservice.mockData(hardcoddedIntraId);
+    const response = await this.dbservice.mockData();
     return response;
   }
 

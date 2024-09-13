@@ -5,75 +5,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-import {UserChats} from '../../../../nestjs/src/auth/auth.service';
-
-/* notes for showing inbox
-
-Show message in inbox when:
-- messages.receiver_id === own_id (use fetchProfile() to get own_id)
-  show:
-  - users.user_name where users.intra_user_id === messages.sender_id
-  - messages.message where (last send)
-  - messages.sent_at where (last send)
-  - (count where messages.message_id === message_status.message_id && message_status.read_at === null)
-- group_chats_users.intra_user_id == own_id (use fetchProfile() to get own_id)
-  show:
-  - group_chats.group_name where group_chats_users
-  - messages.message where (last send)
-  - messages.sent_at where (last send)
-  - (count where messages.message_id === message_status.message_id && message_status.read_at === null)
-
-Back-end function for chats:
-    get_chats() {
-        return (
-            {
-                message_id,
-                type: [dm | gm],
-                titel: [users.user_name | group_chats.group_name],
-                image: [users.image | group_chats.group_image],
-                lastMessage: messages.message where (last send),
-                time: messages.sent_at where (last send),
-                unreadMessages: ''
-            }
-        );
-    }
-
-    
-
-Back-end function for dm & gm:
-custom functions:
-    get_chat_info(message_id) {
-        return (
-            {
-                titel: [users.user_name | group_chats.group_name],
-                image: [users.image | group_chats.group_image],
-                users: [
-                    user_id,
-                    user_name,
-                    user_image
-                ]
-            }
-        );
-    }
-    
-    get_chat(message_id) {
-        return (
-            {
-                message_id,
-                sender_id,
-                receiver_id,
-                group_chat_id,
-                message,
-                sent_at
-            }
-        )
-    }
-
-    get_own_id() {
-        return (own_id);
-    }
-
-*/
+import {UserChats} from '@repo/db';
+import { useParams } from 'next/navigation';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -92,24 +25,9 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 }
 
 function ChatField({ chatField }: { chatField: UserChats }) {
-    // const formatTime = (time: Date) => {
-    //     const today = new Date();
-    //     const yesterday = new Date(today);
-    //     yesterday.setDate(yesterday.getDate() - 1);
-
-    //     if (time.toDateString() === today.toDateString()) {
-    //         return time.toTimeString().slice(0, 5); // Only show the time
-    //     } else if (time.toDateString() === yesterday.toDateString()) {
-    //         return "Yesterday";
-    //     } else {
-    //         const day = time.getDate();
-    //         const month = time.toLocaleString('default', { month: 'short' }).toLowerCase();
-    //         const year = time.getFullYear();
-    //         return `${day}-${month}-${year}`;
-    //     }
-    // };
-
     const userImage = chatField.image ? chatField.image : defaultUserImage;
+
+    console.log('chatField.chatid:', chatField.chatid); // Add this line for logging
 
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
@@ -117,14 +35,14 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                 <button onClick={() => alert('Showing profile of ' + chatField.title)}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
-                <Link className="flex-grow" href={'/dc'}>
+                <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
+                {/* <Link className="flex-grow" href={`/messages?chat_id=${chatField.chatid}`}> */}
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
                         </div>
                         <div className="text-right">
-                            {/* <p>{formatTime(chatField.time)}</p> */}
                             <p>{chatField.time.toString().slice(11,16)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
@@ -157,13 +75,6 @@ export default function Chats() {
             return userChats;
         });
 
-        // load user chats with fetchGet
-        // fetchGet('chats')
-        // .then((data) => {
-        //     console.log('Received Chats Data: ');
-        //     setUserChats(data);
-        // })
-
         fetchChats(localStorage.getItem('token'))
         .then((data) => {
             console.log('Received Chats Data: ');
@@ -183,9 +94,11 @@ export default function Chats() {
     else
         console.log('User Chats: ', userChats);
 
-    const filteredChatFields = userChats?.filter((chatField) => {
+
+    const validUserChats = Array.isArray(userChats) ? userChats : [];
+    const filteredChatFields = validUserChats.filter((chatField) => {
         return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
-    }) ?? [];
+    });
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
@@ -199,13 +112,6 @@ export default function Chats() {
             </div>
             <Link className="text-blue-500 mt-4" href={'/menu'}>
                 Back to Menu
-            </Link>
-            <p>----- Temporary -----</p>
-            <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/dc'}>
-                DC
-            </Link>
-            <Link className="bg-blue-500 text-white font-bold py-2 px-4 rounded" href={'/gc'}>
-                GC
             </Link>
         </div>
     );
