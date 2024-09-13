@@ -356,6 +356,34 @@ export class DbService {
     }
   }
 
+  async isValidChatPassword(
+    jwtToken: string,
+    chat_id: number,
+    password: string,
+  ): Promise<boolean> {
+    try {
+      const chat = await this.db
+        .select()
+        .from(schema.chats)
+        .where(eq(schema.chats.chat_id, chat_id));
+
+      if (!chat[0].password) {
+        console.log('Chat has no password!');
+        return true;
+      }
+
+      if (chat[0].password === password) {
+        console.log('Password is correct!');
+        return true;
+      }
+      console.log('Password is incorrect!');
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async getChatOverviewfromDB(
     jwtToken: string,
   ): Promise<schema.UserChats[] | null> {

@@ -117,12 +117,27 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('isValidChatPassword')
+  async isValidChatPassword(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+    @Query('password') password: string,
+    @Res() res: Response,
+  ) {
+    const isValid = await this.dbservice.isValidChatPassword(
+      token.split(' ')[1],
+      chat_id,
+      password,
+    );
+    res.status(200).send(isValid);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('messages')
   async getMessages(
     @Headers('authorization') token: string,
     @Query('chat_id') chat_id: number,
   ) {
-    // chat_id = 1; // TODO: remove this line
     console.log(`messages?chat_id=${chat_id}`);
     const messages = await this.dbservice.getMessagesFromDataBase(
       token.split(' ')[1],

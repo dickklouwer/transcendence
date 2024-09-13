@@ -82,7 +82,7 @@ export default function DC() {
         }}
     );
     
-    const chat_id = searchParams?.get('chat_id') ? searchParams.get('chat_id') : '-1';
+    const chat_id = searchParams?.get('chat_id') ?? '-1';
 
     useEffect(() => {
         // TODO: check if chat has a password, that is stored in the database chats.password
@@ -182,7 +182,7 @@ export default function DC() {
                 <div className='flow-root w-96'>
                     <button
                         className="py-2 px-4 rounded bg-blue-500 text-black font-bold float-right"
-                        onClick={() => fetchPost<{password: string}, boolean>('api/chatPassword', {password: password})
+                        onClick={() => fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
                         .then((res) => {
                             if (res) setHasPassword(false);
                             else alert('Wrong password');
@@ -190,9 +190,7 @@ export default function DC() {
                         .catch((error) => {
                             console.log('Error: ', error);
                         })}
-                    >
-                        Submit
-                    </button>
+                    >Submit</button>
                     <Link href={'/chats'}>
                         <button className="py-2 px-2 text-blue-500 font-bold float-left">
                             Back
