@@ -403,8 +403,8 @@ declare const chats: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgText";
             data: string;
             driverParam: string;
-            notNull: true;
-            hasDefault: false;
+            notNull: false;
+            hasDefault: true;
             isPrimaryKey: false;
             isAutoincrement: false;
             hasRuntimeDefault: false;
@@ -779,7 +779,7 @@ declare const messagesInsert: z.ZodObject<{
 declare const chatSelect: z.ZodObject<{
     chat_id: z.ZodNumber;
     is_direct: z.ZodNullable<z.ZodBoolean>;
-    title: z.ZodString;
+    title: z.ZodNullable<z.ZodString>;
     is_public: z.ZodNullable<z.ZodBoolean>;
     password: z.ZodNullable<z.ZodString>;
     image: z.ZodNullable<z.ZodString>;
@@ -789,7 +789,7 @@ declare const chatSelect: z.ZodObject<{
     image: string | null;
     chat_id: number;
     is_direct: boolean | null;
-    title: string;
+    title: string | null;
     is_public: boolean | null;
     created_at: Date | null;
 }, {
@@ -797,7 +797,7 @@ declare const chatSelect: z.ZodObject<{
     image: string | null;
     chat_id: number;
     is_direct: boolean | null;
-    title: string;
+    title: string | null;
     is_public: boolean | null;
     created_at: Date | null;
 }>;
@@ -865,8 +865,4 @@ type MultiplayerMatches = {
     image: string;
 };
 
-<<<<<<< HEAD
-export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
-=======
-export { type ExternalUser, type Friends, type MultiplayerMatches, type User, type UserChats, createDrizzleClient, createQueryClient, friends, games, groupChats, messages, users };
->>>>>>> main
+export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };

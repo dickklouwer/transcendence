@@ -113,7 +113,7 @@ export class AppController {
   async getChats(
     @Headers('authorization') token: string,
   ): Promise<UserChats[]> {
-    const userChats = await this.dbservice.getChatOverviewfromDB(
+    const userChats = await this.dbservice.getChatsFromDataBase(
       token.split(' ')[1],
     );
 

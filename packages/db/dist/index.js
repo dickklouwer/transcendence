@@ -79,8 +79,7 @@ var games = mySchema.table("games", {
 var chats = mySchema.table("chats", {
   chat_id: (0, import_pg_core.serial)("chat_id").primaryKey().notNull(),
   is_direct: (0, import_pg_core.boolean)("is_direct").default(false),
-  title: (0, import_pg_core.text)("title").notNull(),
-  // NOTE: Should this be able to be NULL? when a direct message we don't need a 
+  title: (0, import_pg_core.text)("title").default(""),
   is_public: (0, import_pg_core.boolean)("is_public").default(false),
   password: (0, import_pg_core.text)("password"),
   image: (0, import_pg_core.text)("image"),

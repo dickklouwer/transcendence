@@ -9,7 +9,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS "pong"."chats" (
 	"chat_id" serial PRIMARY KEY NOT NULL,
 	"is_direct" boolean DEFAULT false,
-	"title" text NOT NULL,
+	"title" text DEFAULT '',
 	"is_public" boolean DEFAULT false,
 	"password" text,
 	"image" text,

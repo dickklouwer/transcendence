@@ -10,7 +10,6 @@ import { TwoFactorVerification } from './verify_2fa_component';
 
 export const userSocket = io('http://localhost:4433/user', { path: "/ws/socket.io/user" });
 
-
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();
   const [reload, setReload] = useState<boolean>(false);
@@ -110,7 +109,20 @@ function MatchHistory() {
     )
 }
 
-
+function MessageInbox() {
+  const [numberOfMessages, setNumberOfMessages] = useState<number>(2);
+  return (
+    <div className='relative inline-block'>
+      <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
+        <svg className="w-8 h-8 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+          <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd"/>
+          <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd"/>
+        </svg>
+        {numberOfMessages > 0 && <span className="absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{numberOfMessages}</span>}
+      </Link>
+    </div>
+  );
+}
 
 export default function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<string | undefined>> }) {
   const [user, setUser] = useState<User>();
@@ -169,6 +181,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
 
   return (
     <div className='flex space-x-2'>
+      <MessageInbox />
       <MatchHistory />
       <FriendsInbox />
       <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">

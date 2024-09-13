@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "id": "ff20965f-75fa-44a7-b3e0-ff1de60d4ce3",
-=======
-  "id": "174b09e7-d0fd-422b-bf80-5ec2128d8092",
->>>>>>> main
+  "id": "ff58e6eb-55c9-4a5b-923e-94d44588111c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -29,7 +25,8 @@
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "''"
         },
         "is_public": {
           "name": "is_public",
