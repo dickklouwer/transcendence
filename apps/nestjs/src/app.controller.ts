@@ -93,7 +93,7 @@ export class AppController {
   async getChats(
     @Headers('authorization') token: string,
   ): Promise<UserChats[]> {
-    const userChats = await this.dbservice.getChatsFromDataBase(
+    const userChats = await this.dbservice.getChatOverviewfromDB(
       token.split(' ')[1],
     );
 
@@ -103,19 +103,31 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('chatHasPassword')
+  async chatHasPassword(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ): Promise<boolean> {
+    const hasPassword = await this.dbservice.chatHasPassword(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return hasPassword;
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('messages')
   async getMessages(
     @Headers('authorization') token: string,
     @Query('chat_id') chat_id: number,
   ) {
-    // chat_id = 2;
-    console.log('messages?chat_id', chat_id);
+    // chat_id = 1; // TODO: remove this line
+    console.log(`messages?chat_id=${chat_id}`);
     const messages = await this.dbservice.getMessagesFromDataBase(
       token.split(' ')[1],
       chat_id,
     );
-
-    if (!messages) throw Error('Failed to fetch messages');
 
     return messages;
   }

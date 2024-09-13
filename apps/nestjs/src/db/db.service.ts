@@ -339,8 +339,24 @@ export class DbService {
     }
   }
 
-  //Suggest:	async getChatOverviewfromDB(jwtToken: string): Promise<UserChats[] | null> {
-  async getChatsFromDataBase(
+  async chatHasPassword(jwtToken: string, chat_id: number): Promise<boolean> {
+    try {
+      const chat = await this.db
+        .select()
+        .from(schema.chats)
+        .where(eq(schema.chats.chat_id, chat_id));
+
+      if (chat[0].password) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async getChatOverviewfromDB(
     jwtToken: string,
   ): Promise<schema.UserChats[] | null> {
     const result: schema.UserChats[] = [];
@@ -407,6 +423,27 @@ export class DbService {
     chat_id: number,
   ): Promise<schema.Messages[] | null> {
     console.log('chat_id: ', chat_id);
+    const user = await this.getUserFromDataBase(jwtToken);
+    /* Check if user is in the chat */
+    try {
+      const isUserInChat = await this.db
+        .select()
+        .from(schema.chatsUsers)
+        .where(
+          and(
+            eq(schema.chatsUsers.chat_id, chat_id),
+            eq(schema.chatsUsers.intra_user_id, user?.intra_user_id),
+          ),
+        );
+      if (isUserInChat.length === 0) {
+        console.log('User not in chat');
+        return null;
+      }
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+    /* Get the messages */
     try {
       const res = await this.db
         .select()
@@ -488,6 +525,7 @@ export class DbService {
         chat_id: 1,
         title: 'Group Chat 1',
         image: '',
+        password: '123',
       });
       console.log('Group Chat Created!');
     } catch (error) {
@@ -602,6 +640,21 @@ export class DbService {
       }
     }
     // add messages
+    try {
+      await this.db.insert(schema.messages).values({
+        message_id: 1,
+        chat_id: 1,
+        sender_id: 278,
+        message: 'Hello from Bas',
+      });
+      console.log('Message 1 Added!');
+    } catch (error) {
+      if (error.code === dublicated_key) {
+        console.log('Message already added!');
+      } else {
+        console.log('Error: ', error);
+      }
+    }
     try {
       await this.db.insert(schema.messages).values({
         message_id: 2,

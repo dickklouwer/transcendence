@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
 import {User, Messages} from '@repo/db';
-import { fetchGet } from '../fetch_functions';
+import { fetchGet, fetchPost } from '../fetch_functions';
+import { useSearchParams } from 'next/navigation';
 
 function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
@@ -66,10 +67,13 @@ function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearch
 }
 
 export default function DC() {
+    const searchParams = useSearchParams();
     const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState<Messages[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [hasPassword, setHasPassword] = useState(false);
+    const [password, setPassword] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socket = io(`http://localhost:4433/messages`, { 
         path: "/ws/socket.io", 
@@ -78,16 +82,17 @@ export default function DC() {
         }}
     );
     
+    const chat_id = searchParams?.get('chat_id') ? searchParams.get('chat_id') : '-1';
+
     useEffect(() => {
         // TODO: check if chat has a password, that is stored in the database chats.password
-        // if (chat.password) {
-        //     // prompt for password
-        //     // if (password is correct) {
-        //     //     // connect to chat
-        //     // } else {
-        //     //     // show error message
-        //     // }
-        // }
+        fetchGet<boolean>(`api/chatHasPassword?chat_id=${ chat_id }`)
+        .then((res) => {
+            setHasPassword(res);
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
 
         /* Load user info form database and store in const user */
         fetchGet<User>('api/profile')
@@ -99,7 +104,6 @@ export default function DC() {
             console.log('Error: ', error);
         });
         
-        const chat_id = 1; // TODO: get chat_id from the URL
         /* Load messages form database form right chat, using query chat_id: number */
         fetchGet<Messages[]>(`api/messages?chat_id=${chat_id}`)
         .then((res) => {
@@ -133,6 +137,9 @@ export default function DC() {
         };
     }, []);
 
+    console.log('chat_id', chat_id);
+    console.log('hasPassword', hasPassword);
+
     const sendMessage = (message: Messages) => {
         console.log('Sending message: ' + message.message);
         socket.emit('clientToServer', message);
@@ -160,6 +167,55 @@ export default function DC() {
             handleSendMessage(intra_id);
         }
     };
+
+    if (hasPassword) {
+        return (
+            <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                <h2 className="text-2xl font-bold text-center">Password Protected Chat</h2>
+                <input
+                    type="password"
+                    className="bg-gray-900 focus:bg-white focus:outline-none rounded-lg p-2 w-96 text-black"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <div className='flow-root w-96'>
+                    <button
+                        className="py-2 px-4 rounded bg-blue-500 text-black font-bold float-right"
+                        onClick={() => fetchPost<{password: string}, boolean>('api/chatPassword', {password: password})
+                        .then((res) => {
+                            if (res) setHasPassword(false);
+                            else alert('Wrong password');
+                        })
+                        .catch((error) => {
+                            console.log('Error: ', error);
+                        })}
+                    >
+                        Submit
+                    </button>
+                    <Link href={'/chats'}>
+                        <button className="py-2 px-2 text-blue-500 font-bold float-left">
+                            Back
+                        </button>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (chat_id === '-1') {
+        /* no chat found */
+        return (
+            <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                <h2 className="text-2xl font-bold text-center">Chat not found</h2>
+                <Link href={'/chats'}>
+                    <button className="py-2 px-2 text-blue-500 font-bold">
+                        Back
+                    </button>
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
