@@ -9,7 +9,7 @@ import Countdown from '../../game_elements/countdown';
 import { fetchGet } from '../../fetch_functions';
 import Link from 'next/link';
 
-const socket = io(`http://localhost:4433/multiplayer`, { path: "/ws/socket.io" });
+const socket = io(`http://localhost:4433/multiplayer`, { path: "/ws/socket.io"});
 
 interface UserNames {
 	left: string;
@@ -63,6 +63,10 @@ export default function PongGame() {
 	}, []);
 
 	useEffect(() => {
+		socket.emit('normal game');
+	}, []);
+
+	useEffect(() => {
 		if (canvasRef.current === null) return;
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
@@ -102,7 +106,6 @@ export default function PongGame() {
 
 		socket.on('gameover', () => {
 			SetGameState("GameOver");
-			manager.updateGameState("GameOver");
 			socket.emit('stop');
 		});
 
@@ -142,6 +145,15 @@ export default function PongGame() {
 		}
 	};
 
+	const rematch = () => {
+		SetGameState("AwaitingPlayer");
+		socket.emit('rematch', true);
+	}
+
+	const leave = () => {
+		socket.emit('disconnect');
+	}
+
 	const GameStateComponent = () => (
 		<>
 			<h1 style={{ fontSize: '2.5rem' }}>Pong Game</h1>
@@ -162,12 +174,15 @@ export default function PongGame() {
 					fontSize: '2rem'
 				}}>
 					<div>Game Over!</div>
-					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={startGame}>
+					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={rematch}>
 						New Game
 					</button>
-					<Link className="text-blue-500 mt-4" href={'/'}>
-						Back to Home
+					<Link href={'/'}>
+						<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={leave}>
+							Back to Home
+						</button>
 					</Link>
+
 				</div>
 			)}
 			{Gamestate === "AwaitingPlayer" && (

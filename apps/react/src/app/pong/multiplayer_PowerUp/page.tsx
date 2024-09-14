@@ -8,7 +8,7 @@ import { GameManager } from './gameManager';
 import Countdown from '../../game_elements/countdown';
 import { fetchGet } from '../../fetch_functions';
 
-const socket = io(`http://${window.location.host}/multiplayerPowerUp`, { path: "/ws/socket.io" });
+const socket = io(`http://${window.location.host}/multiplayer`, { path: "/ws/socket.io" });
 
 interface UserNames {
 	left: string;
@@ -60,6 +60,10 @@ export default function PongGame() {
 			.catch((error) => {
 				console.error('Error fetching user profile:', error);
 			});
+	}, []);
+
+	useEffect(() => {
+		socket.emit('powerUp game');
 	}, []);
 
 	useEffect(() => {

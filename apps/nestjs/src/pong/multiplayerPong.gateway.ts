@@ -38,6 +38,7 @@ interface Room {
   roomID: string;
   players: Player[];
   ball: Ball;
+  rematch: number;
 }
 
 interface Player {
@@ -53,8 +54,7 @@ interface Player {
   allowEIO3: true,
 })
 export class MultiplayerPongGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MultiplayerPongGateway');
   private gameInterval: NodeJS.Timeout;
@@ -68,7 +68,7 @@ export class MultiplayerPongGateway
     return { client: client, paddle: 150, score: 0 };
   }
   private createRoom(roomID: string, players: Player[], ball: Ball): Room {
-    return { roomID, players, ball };
+    return { roomID, players, ball, rematch: 0 };
   }
   private createBall(): Ball {
     return { x: 200, y: 200, vx: 2, vy: 0 };
@@ -110,19 +110,19 @@ export class MultiplayerPongGateway
       firstClient.join(roomId);
       secondClient.join(roomId);
 
-			// Emit begin state to the room
-			this.server.to(roomId).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
-			// this.server.to(roomId).emit('playersReady');
-			setTimeout(() => {
-				this.startGameLoop(room);
-			}, 3000);
-		}
-		else {
-			// If it's the first client, just notify them to wait for another player
-			client.emit('awaitPlayer');
-			this.logger.log('client waiting, client length: ' + this.clients.length);
-		}
-	}
+      // Emit begin state to the room
+      this.server.to(roomId).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
+      // this.server.to(roomId).emit('playersReady');
+      setTimeout(() => {
+        this.startGameLoop(room);
+      }, 3000);
+    }
+    else {
+      // If it's the first client, just notify them to wait for another player
+      client.emit('awaitPlayer');
+      this.logger.log('client waiting, client length: ' + this.clients.length);
+    }
+  }
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
@@ -260,18 +260,18 @@ export class MultiplayerPongGateway
     }
   }
 
-	moveRightPaddle(room: Room, payload: string): void {
-		if (payload === 'ArrowUp') {
-			this.logger.log('ArrowUp');
-			room.players[1].paddle = Math.max(0, room.players[1].paddle - 5);
-			// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
-		}
-		if (payload === 'ArrowDown') {
-			this.logger.log('ArrowDown');
-			room.players[1].paddle = Math.min(gameHeight - paddleHeight, room.players[1].paddle + 5);
-			// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
-		}
-	}
+  moveRightPaddle(room: Room, payload: string): void {
+    if (payload === 'ArrowUp') {
+      this.logger.log('ArrowUp');
+      room.players[1].paddle = Math.max(0, room.players[1].paddle - 5);
+      // this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+    }
+    if (payload === 'ArrowDown') {
+      this.logger.log('ArrowDown');
+      room.players[1].paddle = Math.min(gameHeight - paddleHeight, room.players[1].paddle + 5);
+      // this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+    }
+  }
 
   @SubscribeMessage('start')
   handleStart(client: Socket): void {
@@ -292,6 +292,36 @@ export class MultiplayerPongGateway
       clearInterval(this.gameInterval);
       this.gameInterval = undefined;
     }
+  }
+
+  @SubscribeMessage('rematch')
+  handleRematch(client: Socket, payload: boolean): void {
+    const roomId = this.clientRoomMap.get(client.id);
+    if (roomId) {
+      const room = this.rooms.get(roomId);
+      if (room) {
+        if (payload === true) {
+          if (room.rematch === 2) {
+            room.rematch += 1;
+            this.resetGame(room);
+            this.server.to(room.roomID).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
+            // this.server.to(room.roomID).emit('playersReady');
+            setTimeout(() => {
+              this.startGameLoop(room);
+            }, 3000);
+            // this.startGameLoop(room);
+            room.rematch = 0;
+          }
+        }
+        else if (payload === false)
+          room.rematch = 0;
+      }
+    }
+  }
+
+  @SubscribeMessage('disconnect')
+  handleDisconnectGame(client: Socket): void {
+    this.handleDisconnect(client);
   }
 
   resetGame = (room: Room) => {
@@ -319,22 +349,22 @@ export class MultiplayerPongGateway
       room.ball.vy = -room.ball.vy;
     }
 
-		// Ball collision with left paddle
-		if (room.ball.x <= paddleWidth + ballSize + 4) {
-			if (room.ball.y >= room.players[0].paddle && room.ball.y <= room.players[0].paddle + paddleHeight) {
-				if (room.ball.vx < 0)
-					room.ball.vx = -room.ball.vx;
-				this.changeBallDirection(room.players[0].paddle, room);
-			}
-		}
-		// Ball collision with right paddle
-		else if (room.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
-			if (room.ball.y >= room.players[1].paddle && room.ball.y <= room.players[1].paddle + paddleHeight) {
-				if (room.ball.vx > 0)
-					room.ball.vx = -room.ball.vx;
-				this.changeBallDirection(room.players[1].paddle, room);
-			}
-		}
+    // Ball collision with left paddle
+    if (room.ball.x <= paddleWidth + ballSize + 4) {
+      if (room.ball.y >= room.players[0].paddle && room.ball.y <= room.players[0].paddle + paddleHeight) {
+        if (room.ball.vx < 0)
+          room.ball.vx = -room.ball.vx;
+        this.changeBallDirection(room.players[0].paddle, room);
+      }
+    }
+    // Ball collision with right paddle
+    else if (room.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
+      if (room.ball.y >= room.players[1].paddle && room.ball.y <= room.players[1].paddle + paddleHeight) {
+        if (room.ball.vx > 0)
+          room.ball.vx = -room.ball.vx;
+        this.changeBallDirection(room.players[1].paddle, room);
+      }
+    }
 
     // Ball out of bounds
     if (room.ball.x <= 0 || room.ball.x >= gameWidth) {
@@ -351,10 +381,7 @@ export class MultiplayerPongGateway
           right: room.players[1].score,
         });
       }
-      if (
-        room.players[0].score == WinScore ||
-        room.players[1].score == WinScore
-      ) {
+      if (room.players[0].score == WinScore || room.players[1].score == WinScore) {
         this.insertGameScore(
           room.players[0].client.data.intra_id,
           room.players[1].client.data.intra_id,
@@ -375,14 +402,10 @@ export class MultiplayerPongGateway
       this.resetGame(room);
     }
 
-		// Emit updated state to clients
+    // Emit updated state to clients
     if (room.players.length > 1)
-		this.server.to(room.roomID).emit('gameUpdate', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
-		// this.server.to(roomId).emit('ball', room.ball);
-		// this.server.to(room.roomID).emit('ball', room.ball);
-		// this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
-		// this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
-	}
+      this.server.to(room.roomID).emit('gameUpdate', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
+  }
 
   db: ReturnType<typeof createDrizzleClient>;
   constructor() {
