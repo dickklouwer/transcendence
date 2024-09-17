@@ -32,6 +32,27 @@ export class DbService {
     return result.length > 0 ? result[0] : null;
   }
 
+  async getExternalUser(id: number) {
+    try {
+      const user = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+        })
+        .from(users)
+        .where(eq(users.intra_user_id, id));
+      console.log('ExternalUser: ', user);
+      return user;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
   async setUserTwoFactorEnabled(userId: number, enabled: boolean) {
     try {
       await this.db
@@ -84,7 +105,7 @@ export class DbService {
         },
       })
       .returning();
-  
+
     return result[0];
   }
 
