@@ -15,6 +15,8 @@ import type {
   User,
   UserChats,
   ExternalUser,
+  Messages,
+  Chats,
 } from '@repo/db';
 import { eq, or, not, and, desc } from 'drizzle-orm';
 

@@ -31,7 +31,7 @@ if (!process.env.FRONT_END_URL) {
 console.log('FRONT_END_URL:', process.env.FRONT_END_URL);
 
 @WebSocketGateway({
-  cors: { origin: "http://localhost:2424" },
+  cors: { origin: 'http://localhost:2424' },
   namespace: 'singleplayer',
   credentials: true,
   allowEIO3: true,
@@ -48,7 +48,7 @@ export class SingleplayerPongGateway
   private gameInterval: NodeJS.Timeout;
   // private clients: Socket[] = [];
 
-  afterInit(server: Server) {
+  afterInit() {
     this.logger.log('WebSocket SingleplayerPongGateway initialized');
   }
 
