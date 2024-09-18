@@ -6,7 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { fetchGet } from "../fetch_functions";
 import { ExternalUser } from "@repo/db"
-import { FriendsList } from "../profile/form_components";
+//import { FriendsList } from "../profile/form_components";
+import { ExternalFriendsList } from "./form_components";
 import { DisplayUserStatus } from "../profile/page";
 
 export default function ProfileExternalPage() {
@@ -72,7 +73,7 @@ export default function ProfileExternalPage() {
             <div className="p-4 m-2 bg-slate-800 rounded-lg w-11/12">
               <h1 className="text-2xl text-center text-white">Friends</h1>
               <p className="w-auto text-center whitespace-nowrap pb-4 ">&#60;--------------&#62;</p>
-              <FriendsList />
+              <ExternalFriendsList userId={externalUser.intra_user_id} />
             </div>
           </div>
 
