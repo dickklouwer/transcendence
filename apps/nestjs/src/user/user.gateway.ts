@@ -10,12 +10,8 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { DbService } from '../db/db.service';
 
-if (!process.env.FRONT_END_URL) {
-  throw Error('Env DATABASE_URL is undefined');
-}
-
 @WebSocketGateway({
-  cors: { origin: "http://localhost:2424" },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'user',
   credentials: true,
   allowEIO3: true,

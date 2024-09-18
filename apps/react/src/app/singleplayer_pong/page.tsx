@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(`http://${window.location.host}/singleplayer`, { path: "/ws/socket.io" });
+const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}/singleplayer`, { path: "/ws/socket.io" });
 
 interface Ball {
 	x: number;

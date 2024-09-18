@@ -24,14 +24,8 @@ interface Ball {
   vy: number;
 }
 
-if (!process.env.FRONT_END_URL) {
-  throw Error('Env FRONT_END_URL is undefined');
-}
-
-console.log('FRONT_END_URL:', process.env.FRONT_END_URL);
-
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:2424' },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'singleplayer',
   credentials: true,
   allowEIO3: true,

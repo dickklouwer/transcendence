@@ -12,6 +12,10 @@ if (!process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET) {
   throw new Error("NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET is not set");
 }
 
+if (!process.env.NEXT_PUBLIC_HOST_NAME) {
+  throw new Error("HOST_NAME is not set");
+}
+
 export const authOptions = {
   // Configure one or more authentication providers
   providers: [
@@ -25,7 +29,7 @@ export const authOptions = {
   pages: {
     signIn: "https://api.intra.42.fr/oauth/authorize?client_id="
     + process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID
-    + "&redirect_uri=http://127.0.0.1:4242/auth/validate&response_type=code"
+    + `&redirect_uri=http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/validate&response_type=code`
   }
 }
 

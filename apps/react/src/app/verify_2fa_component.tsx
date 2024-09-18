@@ -16,7 +16,7 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ te
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:4242/auth/2fa/login-verify', {
+      const response = await axios.post(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, {
         tempToken,
         twoFactorCode
       });

@@ -75,7 +75,7 @@ export default function DC() {
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const socket = io(`http://localhost:4433/messages`, { 
+    const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { 
         path: "/ws/socket.io", 
         query: {
             intra_user_id: user?.intra_user_id

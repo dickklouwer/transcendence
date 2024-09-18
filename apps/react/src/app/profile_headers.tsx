@@ -8,7 +8,7 @@ import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
 
-export const userSocket = io('http://localhost:4433/user', { path: "/ws/socket.io/user" });
+export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();

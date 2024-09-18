@@ -38,12 +38,8 @@ interface Player {
   score: number;
 }
 
-if (!process.env.FRONT_END_URL) {
-  throw Error('Env FRONT_END_URL is undefined');
-}
-
 @WebSocketGateway({
-  cors: { origin: "http://localhost:2424" },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'multiplayer',
   credentials: true,
   allowEIO3: true,
