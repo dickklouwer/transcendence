@@ -161,7 +161,24 @@ export default function DC() {
         sendMessage(message);
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
+    const handlePasswordCheck = () => {
+        fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
+        .then((res) => {
+            if (res) setHasPassword(false);
+            else alert('Wrong password');
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    }
+
+    const handleKeyPressPassword = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handlePasswordCheck();
+        }
+    }
+
+    const handleKeyPressMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage(intra_id);
@@ -178,18 +195,12 @@ export default function DC() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyUp={handleKeyPressPassword}
                 />
                 <div className='flow-root w-96'>
                     <button
                         className="py-2 px-4 rounded bg-blue-500 text-black font-bold float-right"
-                        onClick={() => fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
-                        .then((res) => {
-                            if (res) setHasPassword(false);
-                            else alert('Wrong password');
-                        })
-                        .catch((error) => {
-                            console.log('Error: ', error);
-                        })}
+                        onClick={handlePasswordCheck}
                     >Submit</button>
                     <Link href={'/chats'}>
                         <button className="py-2 px-2 text-blue-500 font-bold float-left">
@@ -236,7 +247,7 @@ export default function DC() {
                     rows={2}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPress(e, user?.intra_user_id ?? 0)}
+                    onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPressMessage(e, user?.intra_user_id ?? 0)}
                 ></textarea>
                 <div className='flow-root'>
                     <Link className="float-left py-2 px-4" href={'/chats'}>
