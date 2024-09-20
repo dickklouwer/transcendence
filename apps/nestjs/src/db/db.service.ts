@@ -548,13 +548,32 @@ export class DbService {
           .from(chats)
           .where(eq(chats.chat_id, dbChatID[i].chat_id));
 
+        // get last message and time form chat_id
+        const idMessages: Messages[] = await this.db
+          .select()
+          .from(messages)
+          .where(eq(messages.chat_id, dbChatID[i].chat_id));
+
+        // console.log('' dbChatID[i]);
+        console.log('chatinfo: created ', chatinfo[0].created_at);
+
+        const lastMessage: Messages = idMessages[idMessages.length - 1]
+          ? idMessages[idMessages.length - 1]
+          : {
+              message_id: 0,
+              chat_id: dbChatID[i].chat_id,
+              sender_id: 0,
+              message: '',
+              sent_at: chatinfo[0].created_at,
+            };
+
         //NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
         const field: UserChats = {
           chatid: dbChatID[i].chat_id,
           title: chatinfo[0].title,
           image: chatinfo[0].image,
-          lastMessage: '',
-          time: new Date(),
+          lastMessage: lastMessage.message,
+          time: lastMessage.sent_at,
           unreadMessages: 0,
         };
 
@@ -865,7 +884,7 @@ export class DbService {
         chat_id: 1,
         sender_id: 77718,
         message: 'Hello from Bram',
-        sent_at: new Date(Date.now() - 3 * 60000),
+        sent_at: new Date(Date.now() - 0 * 60000),
       });
       console.log('Message 3 Added!');
     } catch (error) {
@@ -881,7 +900,7 @@ export class DbService {
         chat_id: 2,
         sender_id: 278,
         message: 'Hello from Bas',
-        sent_at: new Date(Date.now() - 2 * 60000),
+        sent_at: new Date(Date.now() - 3 * 60000),
       });
       console.log('Message 5 Added!');
     } catch (error) {
@@ -897,9 +916,25 @@ export class DbService {
         chat_id: 2,
         sender_id: 77718,
         message: 'Hello from Bram',
-        sent_at: new Date(Date.now() - 1 * 60000),
+        sent_at: new Date(Date.now() - 2 * 60000),
       });
       console.log('Message 6 Added!');
+    } catch (error) {
+      if (error.code === dublicated_key) {
+        console.log('Message already added!');
+      } else {
+        console.log('Error: ', error);
+      }
+    }
+    try {
+      await this.db.insert(messages).values({
+        message_id: 7,
+        chat_id: 2,
+        sender_id: 278,
+        message: 'Hi Bram',
+        sent_at: new Date(Date.now() - 1 * 60000),
+      });
+      console.log('Message 7 Added!');
     } catch (error) {
       if (error.code === dublicated_key) {
         console.log('Message already added!');

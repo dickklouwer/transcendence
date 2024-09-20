@@ -65,15 +65,6 @@ export default function Chats() {
             console.log('Retrieved Profile Data: ');
             setUser(data);
         })
-        // Sort the chatFields by time, with the newest messages at the top
-        setUserChats(userChats => {
-            if (userChats) {
-                return userChats.sort((a, b) => {
-                    return b.time.getTime() - a.time.getTime();
-                });
-            }
-            return userChats;
-        });
 
         fetchChats(localStorage.getItem('token'))
         .then((data) => {
@@ -96,9 +87,12 @@ export default function Chats() {
 
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];
-    const filteredChatFields = validUserChats.filter((chatField) => {
-        return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    const filteredChatFields = validUserChats
+        .filter((chatField) => chatField.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => {
+            return new Date(b.time).getTime() - new Date(a.time).getTime();
+        }
+    );
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
