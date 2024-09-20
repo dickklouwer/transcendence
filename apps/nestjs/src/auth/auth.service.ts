@@ -76,8 +76,9 @@ export class AuthService {
   async validateCode(accessCode: string): Promise<string> {
     const clientId = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID;
     const clientSecret = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET;
+    const redirectUri = process.env.HOST_NAME;
 
-    if (!clientId || !clientSecret) {
+    if (!clientId || !clientSecret || !redirectUri) {
       throw new InternalServerErrorException(
         'Client ID or Secret is not defined',
       );
@@ -88,7 +89,7 @@ export class AuthService {
       client_id: clientId,
       client_secret: clientSecret,
       code: accessCode,
-      redirect_uri: 'http://127.0.0.1:4242/auth/validate',
+      redirect_uri: `http://${redirectUri}:4242/auth/validate`,
       grant_type: 'authorization_code',
     });
 

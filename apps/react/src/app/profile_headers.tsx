@@ -8,13 +8,12 @@ import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
 
-export const userSocket = io('http://localhost:4433/user', { path: "/ws/socket.io/user" });
+export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();
   const [reload, setReload] = useState<boolean>(false);
   const [numberOfRequests, setNumberOfRequests] = useState<number>(0);
-
 
   useEffect(() => {
     fetchGet<ExternalUser[]>('api/incomingFriendRequests')
@@ -184,7 +183,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
       <MessageInbox />
       <MatchHistory />
       <FriendsInbox />
-      <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
+      <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-full hover:nm-inset-blue-600 nm-flat-blue-500-xs transition duration-500">
         <Image className="rounded-full h-8 w-8 object-cover" src={user.image} alt="Profile Picture" width={100} height={100} />
         {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
       </Link>

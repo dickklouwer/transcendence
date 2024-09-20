@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 import { User } from '@repo/db';
 import { fetchGet } from '../fetch_functions';
 
-const socket = io(`http://localhost:4433/multiplayer`, { path: "/ws/socket.io" });
+const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io" });
 
 interface Ball {
 	x: number;

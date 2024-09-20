@@ -10,11 +10,19 @@ import {
   createDrizzleClient,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
-import type { User, UserChats, Messages, Chats, MultiplayerMatches } from '@repo/db';
-import { eq, or, not, and } from 'drizzle-orm';
+import type {
+  MultiplayerMatches,
+  User,
+  UserChats,
+  ExternalUser,
+  Messages,
+  Chats,
+} from '@repo/db';
+import { eq, or, not, and, desc } from 'drizzle-orm';
 
 const dublicated_key = '23505';
-const defaultUserImage = 'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg';
+const defaultUserImage =
+  'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg';
 
 @Injectable()
 export class DbService {
@@ -23,9 +31,7 @@ export class DbService {
     if (!process.env.DATABASE_URL_LOCAL) {
       throw Error('Env DATABASE_URL_LOCAL is undefined');
     }
-    this.db = createDrizzleClient(
-      createQueryClient(process.env.DATABASE_URL),
-    );
+    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
 
   async getUserById(id: number): Promise<User | null> {
@@ -118,6 +124,29 @@ export class DbService {
 
       console.log('User from id: ', user);
       return user[0];
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getLeaderboardFromDataBase() {
+    try {
+      const res: ExternalUser[] = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+          wins: users.wins,
+          losses: users.losses,
+        })
+        .from(users)
+        .orderBy(desc(users.wins));
+
+      return res;
     } catch (error) {
       console.log('Error: ', error);
       return null;

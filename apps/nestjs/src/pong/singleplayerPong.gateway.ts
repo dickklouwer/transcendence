@@ -25,7 +25,7 @@ interface Ball {
 }
 
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:2424' },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'singleplayer',
   credentials: true,
   allowEIO3: true,
@@ -42,7 +42,7 @@ export class SingleplayerPongGateway
   private gameInterval: NodeJS.Timeout;
   // private clients: Socket[] = [];
 
-  afterInit(server: Server) {
+  afterInit() {
     this.logger.log('WebSocket SingleplayerPongGateway initialized');
   }
 

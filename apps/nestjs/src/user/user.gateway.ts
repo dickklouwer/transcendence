@@ -11,7 +11,7 @@ import { Socket, Server } from 'socket.io';
 import { DbService } from '../db/db.service';
 
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:2424' },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'user',
   credentials: true,
   allowEIO3: true,

@@ -16,7 +16,7 @@ type userData = {
 };
 
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:2424' },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'messages',
   credentials: true,
   allowEIO3: true,
