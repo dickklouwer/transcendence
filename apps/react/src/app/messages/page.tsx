@@ -193,6 +193,7 @@ export default function DC() {
                     type="password"
                     className="bg-gray-900 focus:bg-white focus:outline-none rounded-lg p-2 w-96 text-black"
                     placeholder="Password"
+                    autoFocus={true}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyUp={handleKeyPressPassword}
