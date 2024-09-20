@@ -788,6 +788,7 @@ export class DbService {
         chat_id: 1,
         sender_id: 278,
         message: 'Hello from Bas',
+        sent_at: new Date(Date.now() - 6 * 60000),
       });
       console.log('Message 1 Added!');
     } catch (error) {
@@ -803,6 +804,7 @@ export class DbService {
         chat_id: 1,
         sender_id: 372,
         message: 'Hello from Daan',
+        sent_at: new Date(Date.now() - 5 * 60000),
       });
       console.log('Message 2 Added!');
     } catch (error) {
@@ -818,6 +820,7 @@ export class DbService {
         chat_id: 1,
         sender_id: 392,
         message: 'Hello from Kees',
+        sent_at: new Date(Date.now() - 4 * 60000),
       });
       console.log('Message 3 Added!');
     } catch (error) {
@@ -833,6 +836,7 @@ export class DbService {
         chat_id: 1,
         sender_id: 77718,
         message: 'Hello from Bram',
+        sent_at: new Date(Date.now() - 3 * 60000),
       });
       console.log('Message 3 Added!');
     } catch (error) {
@@ -848,6 +852,7 @@ export class DbService {
         chat_id: 2,
         sender_id: 278,
         message: 'Hello from Bas',
+        sent_at: new Date(Date.now() - 2 * 60000),
       });
       console.log('Message 5 Added!');
     } catch (error) {
@@ -863,6 +868,7 @@ export class DbService {
         chat_id: 2,
         sender_id: 77718,
         message: 'Hello from Bram',
+        sent_at: new Date(Date.now() - 1 * 60000),
       });
       console.log('Message 6 Added!');
     } catch (error) {

@@ -27,8 +27,8 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
 
-    console.log('chatField.chatid:', chatField.chatid); // Add this line for logging
-
+    console.log('chatField.chatid:', chatField.chatid);
+    console.log('time of chatField:', chatField.time);
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
@@ -42,7 +42,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                             <h3 className="font-bold text-left">{chatField.title}</h3>
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right px-4">
                             <p>{chatField.time.toString().slice(11,16)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
