@@ -23,7 +23,7 @@ function Message({ message, intra_id }: { message: Messages, intra_id: number })
             return 'no date';
         if (!(date instanceof Date))
             return 'not a date';
-        return date ? date.toLocaleTimeString().slice(0,4) : '';
+        return date ? date.toString().slice(16,21) : '';
     }
 
     return (
