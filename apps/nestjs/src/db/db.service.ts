@@ -18,7 +18,7 @@ import type {
   Messages,
   Chats,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql, asc } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql } from 'drizzle-orm';
 
 const dublicated_key = '23505';
 const defaultUserImage =
