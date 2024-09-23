@@ -129,6 +129,12 @@ export default function Profile() {
             <div className="flex items-center space-x-2">
               <span className="text-lg">Losses: {user.losses}</span>{" "}
             </div>
+            <div className="flex items-center space-x-2">
+              { (user.wins / user.losses).toFixed(2) === "NaN" || (user.wins / user.losses).toFixed(2) === "Infinity"  ? 
+              (<span></span>) : 
+              (<span className="text-lg">Ratio: {(user.wins / user.losses).toFixed(2)} </span>)
+              }
+            </div>
           </div>
         </div>
         <div className="space-y-4">
