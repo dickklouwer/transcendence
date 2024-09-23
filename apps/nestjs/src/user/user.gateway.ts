@@ -36,6 +36,42 @@ export class UserGateway
     }
   }
 
+  @SubscribeMessage('FriendRequestAcceptedNotification')
+  handleFriendRequestAccepted(client: Socket, friend_id: number) {
+    const friend_client = this.clients.get(friend_id);
+    this.logger.log(`Friend request accepted by: ${friend_id}`);
+    if (friend_client) {
+      friend_client.emit('sendFriendRequestAccepted');
+      client.emit('sendFriendRequestAccepted');
+    } else {
+      this.logger.log('Friend not registered');
+    }
+
+    this.clients.forEach((clients, intra_user_id) => {
+      if (clients === client) {
+        this.dbService.acceptFriendRequest(intra_user_id, friend_id);
+      }
+    });
+  }
+
+  @SubscribeMessage('FriendRequestDeclinedNotification')
+  handleFriendRequestDeclined(client: Socket, friend_id: number) {
+    const friend_client = this.clients.get(friend_id);
+    this.logger.log(`Friend request declined by: ${friend_id}`);
+    if (friend_client) {
+      friend_client.emit('sendFriendRequestDeclined');
+      client.emit('sendFriendRequestDeclined');
+    } else {
+      this.logger.log('Friend not registered');
+    }
+
+    this.clients.forEach((clients, intra_user_id) => {
+      if (clients === client) {
+        this.dbService.declineFriendRequest(intra_user_id, friend_id);
+      }
+    });
+  }
+
   @SubscribeMessage('registerUserId')
   handleRegisterUser(client: Socket, intra_user_id: number) {
     this.clients.set(intra_user_id, client);
