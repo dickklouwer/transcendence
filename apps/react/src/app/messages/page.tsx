@@ -23,7 +23,7 @@ function Message({ message, intra_id }: { message: Messages, intra_id: number })
             return 'no date';
         if (!(date instanceof Date))
             return 'not a date';
-        return date ? date.toLocaleTimeString().slice(0,4) : '';
+        return date ? date.toString().slice(16,21) : '';
     }
 
     return (
@@ -161,7 +161,24 @@ export default function DC() {
         sendMessage(message);
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
+    const handlePasswordCheck = () => {
+        fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
+        .then((res) => {
+            if (res) setHasPassword(false);
+            else alert('Wrong password');
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    }
+
+    const handleKeyPressPassword = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handlePasswordCheck();
+        }
+    }
+
+    const handleKeyPressMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage(intra_id);
@@ -176,20 +193,15 @@ export default function DC() {
                     type="password"
                     className="bg-gray-900 focus:bg-white focus:outline-none rounded-lg p-2 w-96 text-black"
                     placeholder="Password"
+                    autoFocus={true}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyUp={handleKeyPressPassword}
                 />
                 <div className='flow-root w-96'>
                     <button
                         className="py-2 px-4 rounded bg-blue-500 text-black font-bold float-right"
-                        onClick={() => fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
-                        .then((res) => {
-                            if (res) setHasPassword(false);
-                            else alert('Wrong password');
-                        })
-                        .catch((error) => {
-                            console.log('Error: ', error);
-                        })}
+                        onClick={handlePasswordCheck}
                     >Submit</button>
                     <Link href={'/chats'}>
                         <button className="py-2 px-2 text-blue-500 font-bold float-left">
@@ -236,7 +248,7 @@ export default function DC() {
                     rows={2}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPress(e, user?.intra_user_id ?? 0)}
+                    onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPressMessage(e, user?.intra_user_id ?? 0)}
                 ></textarea>
                 <div className='flow-root'>
                     <Link className="float-left py-2 px-4" href={'/chats'}>

@@ -97,6 +97,7 @@ export function SignInDevUser() {
                     value={tempUsername}
                     onChange={handleChange}
                     placeholder="Enter your Username"
+                    autoFocus={true}
                     onKeyUp={(e) => {e.code == "Enter" && devSignIn(tempUsername)}}
                     className={'w-full text-black py-2 px-4 border rounded '}
                     maxLength={15}

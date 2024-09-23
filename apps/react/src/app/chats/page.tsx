@@ -27,8 +27,8 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
 
-    console.log('chatField.chatid:', chatField.chatid); // Add this line for logging
-
+    console.log('chatField.chatid:', chatField.chatid);
+    console.log('time of chatField:', chatField.time);
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
@@ -42,7 +42,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                             <h3 className="font-bold text-left">{chatField.title}</h3>
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right px-4">
                             <p>{chatField.time.toString().slice(11,16)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
@@ -65,15 +65,6 @@ export default function Chats() {
             console.log('Retrieved Profile Data: ');
             setUser(data);
         })
-        // Sort the chatFields by time, with the newest messages at the top
-        setUserChats(userChats => {
-            if (userChats) {
-                return userChats.sort((a, b) => {
-                    return b.time.getTime() - a.time.getTime();
-                });
-            }
-            return userChats;
-        });
 
         fetchChats(localStorage.getItem('token'))
         .then((data) => {
@@ -96,9 +87,12 @@ export default function Chats() {
 
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];
-    const filteredChatFields = validUserChats.filter((chatField) => {
-        return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    const filteredChatFields = validUserChats
+        .filter((chatField) => chatField.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => {
+            return new Date(b.time).getTime() - new Date(a.time).getTime();
+        }
+    );
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
