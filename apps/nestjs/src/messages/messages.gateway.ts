@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { Messages } from '@repo/db';
+import { ChatMessages } from '@repo/db';
 
 type userData = {
   socket: Socket;
@@ -47,14 +47,16 @@ export class MessagesGateway
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('clientToServer')
-  handleMessage(client: Socket, payload: Messages): void {
+  @SubscribeMessage('messageToServer')
+  handleMessage(client: Socket, payload: ChatMessages): void {
     this.logger.log(`Client ${client.id} sent: ${payload}`);
 
     this.usersData.forEach((user) => {
       if (user.chat_ids.includes(payload.chat_id)) {
-        user.socket.emit('serverToClient', payload);
+        user.socket.emit('messageFromServer', payload);
       }
     });
+
+    // update db
   }
 }

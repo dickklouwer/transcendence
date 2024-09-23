@@ -17,6 +17,7 @@ import type {
   ExternalUser,
   Messages,
   Chats,
+  ChatMessages,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql } from 'drizzle-orm';
 
@@ -608,7 +609,7 @@ export class DbService {
   async getMessagesFromDataBase(
     jwtToken: string,
     chat_id: number,
-  ): Promise<Messages[] | null> {
+  ): Promise<ChatMessages[] | null> {
     console.log('chat_id: ', chat_id);
     const user = await this.getUserFromDataBase(jwtToken);
     /* Check if user is in the chat */
@@ -632,13 +633,34 @@ export class DbService {
     }
     /* Get the messages */
     try {
-      const res = await this.db
+      const dbMessages = await this.db
         .select()
         .from(messages)
         .where(eq(messages.chat_id, chat_id));
 
-      console.log('Messages: ', res);
-      return res;
+      console.log('Messages: ', dbMessages);
+
+      // set dbMessages to ChatMessages
+      const chatMessages: ChatMessages[] = [];
+      for (let i = 0; i < dbMessages.length; i++) {
+        const sender = await this.getAnyUserFromDataBase(
+          dbMessages[i].sender_id,
+        );
+        if (!sender) throw Error('Failed to fetch User!');
+
+        const field: ChatMessages = {
+          message_id: dbMessages[i].message_id,
+          chat_id: dbMessages[i].chat_id,
+          sender_id: dbMessages[i].sender_id,
+          sender_name: sender.nick_name ?? sender.user_name,
+          sender_image_url: sender.image,
+          message: dbMessages[i].message,
+          sent_at: dbMessages[i].sent_at,
+        };
+        chatMessages.push(field);
+      }
+
+      return chatMessages;
     } catch (error) {
       console.log('Error messags: ', error);
       return null;

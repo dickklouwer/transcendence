@@ -864,5 +864,14 @@ type MultiplayerMatches = {
     nick_name: string;
     image: string;
 };
+type ChatMessages = {
+    message_id: number;
+    chat_id: number;
+    sender_id: number;
+    sender_name: string;
+    sender_image_url: string;
+    message: string;
+    sent_at: Date;
+};
 
-export { type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type ChatMessages, type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };

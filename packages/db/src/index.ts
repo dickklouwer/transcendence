@@ -36,8 +36,15 @@ type MultiplayerMatches = {
   image: string;
 };
 
+type ChatMessages = {
+  message_id: number;
+  chat_id: number;
+  sender_id: number;
+  sender_name: string;
+  sender_image_url: string;
+  message: string;
+  sent_at: Date;
+};
 
-
-
-export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches, ChatsUsers, Chats, Messages };
+export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatsUsers, Chats, Messages };
 export { users, friends, messages, chats, games, chatsUsers};

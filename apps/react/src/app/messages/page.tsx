@@ -3,24 +3,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
-import {User, Messages, ExternalUser} from '@repo/db';
+import {User, Messages, ChatMessages, ExternalUser} from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
-function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
+function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
-    const [nickName, setNickname] = useState('');
 
-    useEffect(() => {
-        fetchGet<ExternalUser>(`api/user?intra_user_id=${message.sender_id}`)
-        .then((user) => {
-            if (!user) setNickname('Unknown');
-            else if (user.nick_name) setNickname(user.nick_name);
-            else setNickname(user.user_name);
-        }
-        )
-    }, []);
+    // useEffect(() => {
+    //     fetchGet<ExternalUser>(`api/user?intra_user_id=${message.sender_id}`)
+    //     .then((user) => {
+    //         if (!user) setNickname('Unknown');
+    //         else if (user.nick_name) setNickname(user.nick_name);
+    //         else setNickname(user.user_name);
+    //     })
+    // }, []);
 
     const renderMessageWithLineBreaks = (text:string) => {
         return (<div>{text}</div>);
@@ -40,7 +38,7 @@ function Message({ message, intra_id }: { message: Messages, intra_id: number })
     return (
         <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
-                {!isMyMessage && <div className="text-xs text-gray-600">{nickName}</div>}
+                {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
                 <div>{renderMessageWithLineBreaks(message.message)}</div>
                 <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
             </div>
@@ -82,7 +80,7 @@ export default function DC() {
     const searchParams = useSearchParams();
     const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
-    const [messages, setMessages] = useState<Messages[]>([]);
+    const [messages, setMessages] = useState<ChatMessages[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
@@ -94,7 +92,7 @@ export default function DC() {
         }}
     );
     
-    const chat_id = searchParams?.get('chat_id') ?? '-1';
+    const chat_id : number = Number(searchParams?.get('chat_id')) ?? -1;
 
     useEffect(() => {
         // TODO: check if chat has a password, that is stored in the database chats.password
@@ -110,21 +108,20 @@ export default function DC() {
         fetchGet<User>('api/profile')
         .then((user) => {
             setUser(user);
-            console.log('intra_id', user.intra_user_id);
         })
         .catch((error) => {
             console.log('Error: ', error);
         });
         
         /* Load messages form database form right chat, using query chat_id: number */
-        fetchGet<Messages[]>(`api/messages?chat_id=${chat_id}`)
+        fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
         .then((res) => {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             const transformedMessages = res.map(message => ({
                 ...message,
                 sent_at: new Date(message.sent_at)
             }));
-            console.log('Retrieved Messages: ', transformedMessages);
+            console.log('Retrieved Messages form db: ', transformedMessages);
             setMessages(transformedMessages);
         })
         .catch((error) => {
@@ -132,7 +129,7 @@ export default function DC() {
         });
 
         /* Get messages while online */
-        socket.on('serverToClient', (message: Messages) => {
+        socket.on('messageFromServer', (message: ChatMessages) => {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             message.sent_at = new Date(message.sent_at);
             console.log('Received message: ' + message.message);
@@ -145,31 +142,29 @@ export default function DC() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // or instant
     
         return () => {
-            socket.off('serverToClient');
+            socket.off('messageFromServer');
         };
     }, []);
 
-    console.log('chat_id', chat_id);
-    console.log('hasPassword', hasPassword);
-
-    const sendMessage = (message: Messages) => {
+    const sendMessage = (message: ChatMessages) => {
         console.log('Sending message: ' + message.message);
-        socket.emit('clientToServer', message);
+        socket.emit('messageToServer', message);
         setNewMessage('');
     };
 
     const handleSendMessage = (intra_id: number) => {
         if (newMessage.trim() === '') return;
         
-        const message = {
-            message_id: (messages[messages.length - 1]?.message_id ?? 0) + 1,
+        const message: ChatMessages = {
+            message_id: 0,          // generate in the backend with instert returnig
+            chat_id: chat_id,
             sender_id: intra_id,
-            chat_id: 1,
+            sender_name: '',        // get from database
+            sender_image_url: '',   // get from database
             message: newMessage,
-            sent_at: new Date()
+            sent_at: new Date,      // generate in the backend with instert returnig
         };
-        
-        // setMessages([...messages, message]);
+
         sendMessage(message);
     };
 
@@ -197,7 +192,7 @@ export default function DC() {
         }
     };
 
-    if (hasPassword) {
+    if (hasPassword && 0) {
         return (
             <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                 <h2 className="text-2xl font-bold text-center">Password Protected Chat</h2>
@@ -225,7 +220,7 @@ export default function DC() {
         );
     }
 
-    if (chat_id === '-1') {
+    if (chat_id === -1) {
         /* no chat found */
         return (
             <div className="flex flex-col items-center justify-center flex-grow space-y-4">
