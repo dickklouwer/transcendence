@@ -3,21 +3,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
-import {User, Messages} from '@repo/db';
+import {User, Messages, ExternalUser} from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
 function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
+    const [nickName, setNickname] = useState('');
+
+    useEffect(() => {
+        fetchGet<ExternalUser>(`api/user?intra_user_id=${message.sender_id}`)
+        .then((user) => {
+            if (!user) setNickname('Unknown');
+            else if (user.nick_name) setNickname(user.nick_name);
+            else setNickname(user.user_name);
+        }
+        )
+    }, []);
 
     const renderMessageWithLineBreaks = (text:string) => {
         return (<div>{text}</div>);
         // return text.split('\n').map((line, index) => (
         //     <div key={index}>{line}</div>
         // ));
-
     };
+
     function renderDate(date: Date) {
         if (!date) 
             return 'no date';
@@ -29,8 +40,9 @@ function Message({ message, intra_id }: { message: Messages, intra_id: number })
     return (
         <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
+                {!isMyMessage && <div className="text-xs text-gray-600">{nickName}</div>}
                 <div>{renderMessageWithLineBreaks(message.message)}</div>
-                <div className="text-xs text-gray-600">{renderDate(message.sent_at)}</div>
+                <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
             </div>
         </div>
     );
