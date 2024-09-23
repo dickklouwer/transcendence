@@ -95,7 +95,7 @@ export class AppController {
 
   @Get('user')
   async getUser(
-    @Headers('authorization') intra_user_id: number,
+    @Query('intra_user_id') intra_user_id: number,
     @Res() res: Response,
   ): Promise<User> {
     const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
