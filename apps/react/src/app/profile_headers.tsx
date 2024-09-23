@@ -45,20 +45,14 @@ function FriendsInbox() {
   }
   
   const acceptFriendRequest = (friend_id: number) => {
-    fetchPost<{friend_id : number}, boolean>('api/acceptFriendRequest', { friend_id: friend_id })
-    .then((res) => {
-      console.log(res);
-      setReload(prev => !prev);
-    })
-  }
+    userSocket.emit('FriendRequestAcceptedNotification', friend_id);
+    setReload(prev => !prev);
+    }
   
   const declineFriendRequest = (friend_id: number) => {
-    fetchDelete(`api/declineFriendRequest/?friend_id=${friend_id}`)
-    .then((res) => {
-      console.log(res);
-      setReload(prev => !prev);
-    })
-  }
+    userSocket.emit('FriendRequestDeclinedNotification', friend_id);
+    setReload(prev => !prev);
+    }
   
   return (
     <div className='relative inline-block'>

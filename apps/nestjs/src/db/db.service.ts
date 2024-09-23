@@ -18,7 +18,7 @@ import type {
   Messages,
   Chats,
 } from '@repo/db';
-import { eq, or, not, and, desc } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, asc } from 'drizzle-orm';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -144,8 +144,10 @@ export class DbService {
           losses: users.losses,
         })
         .from(users)
-        .orderBy(desc(users.wins));
+        .where(and(not(eq(users.wins, 0)), not(eq(users.losses, 0))))
+        .orderBy(sql`(${users.wins} / NULLIF(${users.losses}, 0)) DESC`);
 
+      // console.log(sql<number>`sum(${users.wins} / ${users.losses})`);
       return res;
     } catch (error) {
       console.log('Error: ', error);
@@ -384,13 +386,10 @@ export class DbService {
   }
 
   async acceptFriendRequest(
-    jwtToken: string,
+    user_id: number,
     friend_id: number,
   ): Promise<boolean> {
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-
       await this.db
         .update(friends)
         .set({ is_approved: true })
@@ -401,8 +400,8 @@ export class DbService {
               eq(friends.user_id_receive, friend_id),
             ),
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, user_id),
+              eq(friends.user_id_receive, user_id),
             ),
           ),
         );
@@ -415,13 +414,10 @@ export class DbService {
   }
 
   async declineFriendRequest(
-    jwtToken: string,
+    user_id: number,
     friend_id: number,
   ): Promise<boolean> {
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-
       await this.db
         .delete(friends)
         .where(
@@ -431,8 +427,8 @@ export class DbService {
               eq(friends.user_id_receive, friend_id),
             ),
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, user_id),
+              eq(friends.user_id_receive, user_id),
             ),
           ),
         );
@@ -505,6 +501,7 @@ export class DbService {
           image: users.image,
         })
         .from(games)
+        .orderBy(desc(games.game_id))
         .innerJoin(
           users,
           and(

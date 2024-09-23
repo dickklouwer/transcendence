@@ -7,7 +7,6 @@ import {
   Post,
   Body,
   Res,
-  Delete,
   UploadedFile,
   ParseFilePipe,
   UseInterceptors,
@@ -266,44 +265,6 @@ export class AppController {
     }
 
     res.status(200).send(requests);
-  }
-
-  @Post('acceptFriendRequest')
-  async acceptFriendRequest(
-    @Headers('authorization') token: string,
-    @Body('friend_id') friend_id: number,
-    @Res() res: Response,
-  ) {
-    const response = await this.dbservice.acceptFriendRequest(
-      token.split(' ')[1],
-      friend_id,
-    );
-
-    if (!response) {
-      res.status(422).send('Failed to accept friend request');
-      return;
-    }
-
-    res.status(200).send(response);
-  }
-
-  @Delete('declineFriendRequest')
-  async declineFriendRequest(
-    @Headers('authorization') token: string,
-    @Query('friend_id') friend_id: number,
-    @Res() res: Response,
-  ) {
-    const response = await this.dbservice.declineFriendRequest(
-      token.split(' ')[1],
-      friend_id,
-    );
-
-    if (!response) {
-      res.status(422).send('Failed to decline friend request');
-      return;
-    }
-
-    res.status(200).send(response);
   }
 
   @Get('getYourGames')
