@@ -595,6 +595,22 @@ declare const chatsUsers: drizzle_orm_pg_core.PgTableWithColumns<{
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
+        joined: drizzle_orm_pg_core.PgColumn<{
+            name: "joined";
+            tableName: "chatsUsers";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
         joined_at: drizzle_orm_pg_core.PgColumn<{
             name: "joined_at";
             tableName: "chatsUsers";
@@ -809,6 +825,7 @@ declare const chatsUsersSelect: z.ZodObject<{
     is_admin: z.ZodBoolean;
     is_banned: z.ZodBoolean;
     mute_untill: z.ZodNullable<z.ZodDate>;
+    joined: z.ZodBoolean;
     joined_at: z.ZodNullable<z.ZodDate>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     intra_user_id: number | null;
@@ -818,6 +835,7 @@ declare const chatsUsersSelect: z.ZodObject<{
     is_admin: boolean;
     is_banned: boolean;
     mute_untill: Date | null;
+    joined: boolean;
     joined_at: Date | null;
 }, {
     intra_user_id: number | null;
@@ -827,6 +845,7 @@ declare const chatsUsersSelect: z.ZodObject<{
     is_admin: boolean;
     is_banned: boolean;
     mute_untill: Date | null;
+    joined: boolean;
     joined_at: Date | null;
 }>;
 type User = z.infer<typeof userSelect>;
@@ -844,6 +863,11 @@ type UserChats = {
     lastMessage: string;
     time: Date;
     unreadMessages: number;
+};
+type InvitedChats = {
+    chatid: number;
+    title: string;
+    image: string;
 };
 type ExternalUser = {
     intra_user_id: number;
@@ -874,4 +898,4 @@ type ChatMessages = {
     sent_at: Date;
 };
 
-export { type ChatMessages, type Chats, type ChatsUsers, type ExternalUser, type Friends, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type ChatMessages, type Chats, type ChatsUsers, type ExternalUser, type Friends, type InvitedChats, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };

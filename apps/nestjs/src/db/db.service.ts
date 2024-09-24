@@ -14,6 +14,7 @@ import type {
   MultiplayerMatches,
   User,
   UserChats,
+  InvitedChats,
   ExternalUser,
   Messages,
   Chats,
@@ -623,6 +624,19 @@ export class DbService {
         result.push(field);
       }
       console.log('result: ', result);
+      return result;
+    } catch (error) {
+      console.log('userMessages:', error);
+      return null;
+    }
+  }
+
+  async getInvitedChatsFromDataBase(
+    jwtToken: string,
+  ): Promise<InvitedChats[] | null> {
+    const result: InvitedChats[] = [];
+
+    try {
       return result;
     } catch (error) {
       console.log('userMessages:', error);

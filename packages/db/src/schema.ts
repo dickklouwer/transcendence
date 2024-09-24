@@ -68,6 +68,7 @@ export const chatsUsers = mySchema.table('chatsUsers', {
 	is_admin: boolean('is_admin').notNull().default(false),
 	is_banned: boolean('is_banned').notNull().default(false),
 	mute_untill: timestamp('mute_untill'),
+	joined: boolean('joined').notNull().default(false),
 	joined_at: timestamp('joined_at').defaultNow(),
 });
 

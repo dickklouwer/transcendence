@@ -121,6 +121,19 @@ export class AppController {
     return userChats;
   }
 
+  @Get('invitedChats')
+  async getInvitedChats(
+    @Headers('authorization') token: string,
+  ): Promise<UserChats[]> {
+    const invitedChats = await this.dbservice.getInvitedChatsFromDataBase(
+      token.split(' ')[1],
+    );
+
+    if (!invitedChats) throw Error('Failed to fetch user');
+
+    return invitedChats;
+  }
+
   @Post('setChatPassword')
   async setChatPassword(
     @Body('chat_id') chat_id: number,

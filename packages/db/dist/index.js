@@ -96,6 +96,7 @@ var chatsUsers = mySchema.table("chatsUsers", {
   is_admin: (0, import_pg_core.boolean)("is_admin").notNull().default(false),
   is_banned: (0, import_pg_core.boolean)("is_banned").notNull().default(false),
   mute_untill: (0, import_pg_core.timestamp)("mute_untill"),
+  joined: (0, import_pg_core.boolean)("joined").notNull().default(false),
   joined_at: (0, import_pg_core.timestamp)("joined_at").defaultNow()
 });
 var messages = mySchema.table("messages", {

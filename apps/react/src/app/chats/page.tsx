@@ -1,12 +1,11 @@
 "use client";
 
-import { fetchProfile, fetchGet, fetchChats } from '@/app/fetch_functions';
+import {fetchGet } from '@/app/fetch_functions';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import {UserChats} from '@repo/db';
-import { useParams } from 'next/navigation';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -52,15 +51,27 @@ function ChatField({ chatField }: { chatField: UserChats }) {
 
 export default function Chats() {
     const [userChats, setUserChats] = useState<UserChats[]>();
+    const [invitedChats, setInvitedChats] = useState<UserChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        fetchChats(localStorage.getItem('token'))
+        fetchGet<UserChats[]>('api/chats')
         .then((data) => {
             console.log('Received Chats Data: ', data);
             setUserChats(data);
         })
+        .catch((error) => {
+            console.log('Error fetching Chats: ', error);
+        });
 
+        fetchGet<UserChats[]>('api/invitedChats')
+        .then((data) => {
+            console.log('Received Invited Chats Data: ', data);
+            setInvitedChats(data);
+        })
+        .catch((error) => {
+            console.log('Error fetching Invited Chats: ', error);
+        });
     }, []);
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];

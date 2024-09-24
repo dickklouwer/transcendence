@@ -15,6 +15,12 @@ type UserChats = {
 	unreadMessages: number;
 };
 
+type InvitedChats = {
+  chatid: number;
+  title: string;
+  image: string;
+};
+
 type ExternalUser = {
     intra_user_id: number;
     user_name: string;
@@ -46,5 +52,5 @@ type ChatMessages = {
   sent_at: Date;
 };
 
-export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatsUsers, Chats, Messages };
+export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatsUsers, Chats, Messages };
 export { users, friends, messages, chats, games, chatsUsers};
