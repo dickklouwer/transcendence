@@ -121,7 +121,22 @@ export class AppController {
     return userChats;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Post('setChatPassword')
+  async setChatPassword(
+    @Body('chat_id') chat_id: number,
+    @Body('password') password: string,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.setChatPassword(chat_id, password);
+
+    if (!response) {
+      res.status(422).send('Failed to set password');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
   @Get('chatHasPassword')
   async chatHasPassword(
     @Headers('authorization') token: string,

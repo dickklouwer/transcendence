@@ -20,6 +20,7 @@ import type {
   ChatMessages,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql } from 'drizzle-orm';
+import * as bycrypt from 'bcrypt';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -445,6 +446,37 @@ export class DbService {
     }
   }
 
+  async setChatPassword(chat_id: number, password: string): Promise<boolean> {
+    try {
+      const chat = await this.db
+        .select()
+        .from(chats)
+        .where(eq(chats.chat_id, chat_id));
+
+      if (!chat) throw Error('Failed to fetch Chat!');
+
+      if (!process.env.SALT_ROUNDS) {
+        console.log('Env SALT_ROUNDS is undefined');
+        console.log('Chat Password Not Set!');
+        return false;
+      }
+
+      const saltRounds = parseInt(process.env.SALT_ROUNDS);
+
+      await this.db
+        .update(chats)
+        .set({ password: bycrypt.hashSync(password, saltRounds) })
+        .where(eq(chats.chat_id, chat_id));
+
+      console.log('Chat Password Set!');
+
+      return true;
+    } catch (error) {
+      console.log('Error set chat password: ', error);
+      return false;
+    }
+  }
+
   async chatHasPassword(jwtToken: string, chat_id: number): Promise<boolean> {
     try {
       const chat = await this.db
@@ -478,11 +510,7 @@ export class DbService {
         return true;
       }
 
-      if (chat[0].password === password) {
-        console.log('Password is correct!');
-        return true;
-      }
-      console.log('Password is incorrect!');
+      if (bycrypt.compareSync(password, chat[0].password)) return true;
       return false;
     } catch (error) {
       console.log('Error: ', error);
@@ -743,7 +771,8 @@ export class DbService {
       } else {
         console.log('Error: ', error);
       }
-    }// date from yesterday
+    }
+    // date from yesterday
     try {
       await this.db.insert(users).values({
         intra_user_id: 77718,
@@ -763,9 +792,8 @@ export class DbService {
     try {
       await this.db.insert(chats).values({
         chat_id: 1,
-        title: 'Group Chat 1',
+        title: 'Pass 123',
         image: '',
-        password: '123',
       });
       console.log('Group Chat Created!');
     } catch (error) {
@@ -775,6 +803,7 @@ export class DbService {
         console.log('Error: ', error);
       }
     }
+    this.setChatPassword(1, '123');
     try {
       await this.db.insert(chats).values({
         chat_id: 2,
