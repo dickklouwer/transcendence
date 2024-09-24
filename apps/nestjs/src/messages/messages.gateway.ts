@@ -9,7 +9,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ChatMessages } from '@repo/db';
-
+import { DbService } from '../db/db.service';
 
 @WebSocketGateway({
   cors: { origin: `http://${process.env.HOST_NAME}:2424` },
@@ -22,6 +22,8 @@ export class MessagesGateway
 {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MessagesGateway');
+
+  constructor(private readonly dbService: DbService) {}
 
   afterInit() {
     this.logger.log('Websocket MESSAGES server initialized');
@@ -53,11 +55,15 @@ export class MessagesGateway
   }
 
   @SubscribeMessage('messageToServer')
-  handleMessage(client: Socket, payload: ChatMessages): void {
+  async handleMessage(client: Socket, payload: ChatMessages): Promise<void> {
     this.logger.log(
       `Client ${client.id} sent: ${payload.message} to chat_id: ${payload.chat_id}`,
     );
 
+    // Save message to the database
+    await this.dbService.saveMessage(payload);
+
+    // Send to everyone in the chat room
     this.server
       .to(payload.chat_id.toString())
       .emit('messageFromServer', payload);

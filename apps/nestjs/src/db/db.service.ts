@@ -663,6 +663,19 @@ export class DbService {
     }
   }
 
+  async saveMessage(payload: ChatMessages) {
+    try {
+      await this.db.insert(messages).values({
+        chat_id: payload.chat_id,
+        sender_id: payload.sender_id,
+        message: payload.message,
+      });
+      console.log('Message saved');
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  }
+
   async mockData(): Promise<boolean> {
     // Create Users
     try {
@@ -847,7 +860,6 @@ export class DbService {
     // add messages
     try {
       await this.db.insert(messages).values({
-        message_id: 1,
         chat_id: 1,
         sender_id: 278,
         message: 'Hello from Bas',
@@ -863,7 +875,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 2,
         chat_id: 1,
         sender_id: 372,
         message: 'Hello from Daan',
@@ -879,7 +890,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 3,
         chat_id: 1,
         sender_id: 392,
         message: 'Hello from Kees',
@@ -895,7 +905,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 4,
         chat_id: 1,
         sender_id: 77718,
         message: 'Hello from Bram',
@@ -911,7 +920,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 5,
         chat_id: 2,
         sender_id: 278,
         message: 'Hello from Bas',
@@ -927,7 +935,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 6,
         chat_id: 2,
         sender_id: 77718,
         message: 'Hello from Bram',
@@ -943,7 +950,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 7,
         chat_id: 2,
         sender_id: 278,
         message: 'Hi Bram',
