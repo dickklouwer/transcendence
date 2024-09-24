@@ -27,8 +27,6 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
 
-    console.log('chatField.chatid:', chatField.chatid);
-    console.log('time of chatField:', chatField.time);
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
@@ -36,7 +34,6 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
                 <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
-                {/* <Link className="flex-grow" href={`/messages?chat_id=${chatField.chatid}`}> */}
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
@@ -54,37 +51,17 @@ function ChatField({ chatField }: { chatField: UserChats }) {
 }
 
 export default function Chats() {
-    const [user , setUser] = useState<any>(null); // This Any needs to be replaced with the correct type that we will get from the backend
     const [userChats, setUserChats] = useState<UserChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        // load user data
-        fetchProfile(localStorage.getItem('token'))
-        .then((data) => {
-            console.log('Retrieved Profile Data: ');
-            setUser(data);
-        })
-
         fetchChats(localStorage.getItem('token'))
         .then((data) => {
-            console.log('Received Chats Data: ');
+            console.log('Received Chats Data: ', data);
             setUserChats(data);
         })
 
     }, []);
-
-    console.log('Get user data');
-    if (!user)
-        console.log('User: none');
-    else
-        console.log('User: availeble');
-    console.log('Get user chats');
-    if (!userChats)
-        console.log('User Chats: none');
-    else
-        console.log('User Chats: ', userChats);
-
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];
     const filteredChatFields = validUserChats

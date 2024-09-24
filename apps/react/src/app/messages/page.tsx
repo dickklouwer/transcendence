@@ -1,20 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
 import { User, Messages, ChatMessages, ExternalUser } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
-const checkPassword: boolean = false;
+const checkPassword: boolean = true;
 
 function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
     const renderMessageWithLineBreaks = (text: string) => {
-        return (<div>{text}</div>);
+        return text.split('\n').map((str, index) => (
+            <div key={index}>{str}</div>
+        ));
     };
 
     function renderDate(date: Date) {
@@ -93,8 +95,6 @@ export default function DC() {
     useEffect(() => {
         if (!user || !user.intra_user_id) return;
 
-        console.log(`user id: ${user.intra_user_id}`);
-
         // Initialize socket connection
         socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
             path: "/ws/socket.io",
@@ -137,12 +137,7 @@ export default function DC() {
             message.sent_at = new Date(message.sent_at);
             console.log('Received message: ' + message.message);
             setMessages((prevMessages) => [...prevMessages, message]);
-            /* Auto scroll to last message */
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         });
-
-        /* Auto scroll to last message */
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // or instant
 
         return () => {
             /* Leave chat */
@@ -151,6 +146,12 @@ export default function DC() {
             socket.disconnect();
         };
     }, [user, chat_id]);
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
     const sendMessage = (message: ChatMessages) => {
         console.log('Sending message: ' + message.message);

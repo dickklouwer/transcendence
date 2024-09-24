@@ -668,23 +668,6 @@ export class DbService {
     }
   }
 
-  // async saveMessage(payload: ChatMessages) {
-  //   try {
-  //     await this.db
-  //       .insert(messages)
-  //       .values({
-  //         chat_id: payload.chat_id,
-  //         sender_id: payload.sender_id,
-  //         message: payload.message,
-  //       })
-  //       .returning();
-  //     console.log('Message saved');
-  //   } catch (error) {
-  //     console.error('Error saving message:', error);
-  //   }
-  // }
-
-  // save message to database and return the returning message
   async saveMessage(payload: ChatMessages): Promise<ChatMessages> {
     try {
       const result = await this.db
