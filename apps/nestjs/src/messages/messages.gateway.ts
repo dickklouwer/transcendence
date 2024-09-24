@@ -61,11 +61,11 @@ export class MessagesGateway
     );
 
     // Save message to the database
-    await this.dbService.saveMessage(payload);
+    const fullMessage = await this.dbService.saveMessage(payload);
 
-    // Send to everyone in the chat room
+    // Send to everyone in the chat room, including the sender
     this.server
-      .to(payload.chat_id.toString())
-      .emit('messageFromServer', payload);
+      .to(fullMessage.chat_id.toString())
+      .emit('messageFromServer', fullMessage);
   }
 }

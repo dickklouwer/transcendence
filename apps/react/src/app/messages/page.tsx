@@ -162,13 +162,13 @@ export default function DC() {
         if (newMessage.trim() === '') return;
 
         const message: ChatMessages = {
-            message_id: 0,          // generate in the backend with instert returnig
+            message_id: 0,          // auto generate in database
             chat_id: chat_id,
             sender_id: intra_id,
-            sender_name: '',        // get from database
-            sender_image_url: '',   // get from database
+            sender_name: '',        // get from user database
+            sender_image_url: '',   // get from user database
             message: newMessage,
-            sent_at: new Date,      // generate in the backend with instert returnig
+            sent_at: new Date()     // generate in the backend with instert returnig
         };
 
         sendMessage(message);

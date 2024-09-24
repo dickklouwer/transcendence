@@ -663,16 +663,50 @@ export class DbService {
     }
   }
 
-  async saveMessage(payload: ChatMessages) {
+  // async saveMessage(payload: ChatMessages) {
+  //   try {
+  //     await this.db
+  //       .insert(messages)
+  //       .values({
+  //         chat_id: payload.chat_id,
+  //         sender_id: payload.sender_id,
+  //         message: payload.message,
+  //       })
+  //       .returning();
+  //     console.log('Message saved');
+  //   } catch (error) {
+  //     console.error('Error saving message:', error);
+  //   }
+  // }
+
+  // save message to database and return the returning message
+  async saveMessage(payload: ChatMessages): Promise<ChatMessages> {
     try {
-      await this.db.insert(messages).values({
-        chat_id: payload.chat_id,
-        sender_id: payload.sender_id,
-        message: payload.message,
-      });
+      const result = await this.db
+        .insert(messages)
+        .values({
+          chat_id: payload.chat_id,
+          sender_id: payload.sender_id,
+          message: payload.message,
+        })
+        .returning();
       console.log('Message saved');
+
+      const sender = await this.getAnyUserFromDataBase(payload.sender_id);
+      if (!sender) throw Error('Failed to fetch User!');
+      const field: ChatMessages = {
+        message_id: result[0].message_id,
+        chat_id: result[0].chat_id,
+        sender_id: result[0].sender_id,
+        sender_name: sender.nick_name ?? sender.user_name,
+        sender_image_url: sender.image,
+        message: result[0].message,
+        sent_at: result[0].sent_at,
+      };
+      return field;
     } catch (error) {
       console.error('Error saving message:', error);
+      return null;
     }
   }
 
@@ -721,7 +755,7 @@ export class DbService {
       } else {
         console.log('Error: ', error);
       }
-    }
+    }// date from yesterday
     try {
       await this.db.insert(users).values({
         intra_user_id: 77718,
