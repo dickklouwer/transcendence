@@ -446,7 +446,10 @@ export class DbService {
     }
   }
 
-  async setChatPassword(chat_id: number, password: string): Promise<boolean> {
+  async setChatPassword(
+    chat_id: number,
+    password: string | null,
+  ): Promise<boolean> {
     try {
       const chat = await this.db
         .select()
@@ -454,6 +457,16 @@ export class DbService {
         .where(eq(chats.chat_id, chat_id));
 
       if (!chat) throw Error('Failed to fetch Chat!');
+
+      if (!password) {
+        await this.db
+          .update(chats)
+          .set({ password: null })
+          .where(eq(chats.chat_id, chat_id));
+
+        console.log('Chat Password Removed!');
+        return true;
+      }
 
       if (!process.env.SALT_ROUNDS) {
         console.log('Env SALT_ROUNDS is undefined');
@@ -803,6 +816,7 @@ export class DbService {
         console.log('Error: ', error);
       }
     }
+    // set password
     this.setChatPassword(1, '123');
     try {
       await this.db.insert(chats).values({

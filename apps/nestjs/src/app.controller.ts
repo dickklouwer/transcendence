@@ -124,7 +124,7 @@ export class AppController {
   @Post('setChatPassword')
   async setChatPassword(
     @Body('chat_id') chat_id: number,
-    @Body('password') password: string,
+    @Body('password') password: string | null,
     @Res() res: Response,
   ) {
     const response = await this.dbservice.setChatPassword(chat_id, password);
