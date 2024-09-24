@@ -7,6 +7,8 @@ import {User, Messages, ChatMessages, ExternalUser} from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
+const checkPassword: boolean = false;
+
 function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
@@ -192,7 +194,7 @@ export default function DC() {
         }
     };
 
-    if (hasPassword && 0) {
+    if (hasPassword && checkPassword) {
         return (
             <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                 <h2 className="text-2xl font-bold text-center">Password Protected Chat</h2>
