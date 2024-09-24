@@ -637,10 +637,66 @@ export class DbService {
     const result: InvitedChats[] = [];
 
     try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const dbChatID = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(chatsUsers.joined, false),
+          ),
+        );
+
+      const dbNotDirectChats = await this.db
+        .select()
+        .from(chats)
+        .where(
+          and(
+            eq(chats.is_direct, false),
+            not(eq(chats.chat_id, dbChatID[0].chat_id)),
+          ),
+        );
+
+      for (let i = 0; i < dbNotDirectChats.length; i++) {
+        const field: InvitedChats = {
+          chatid: dbNotDirectChats[i].chat_id,
+          title: dbNotDirectChats[i].title,
+          image: dbNotDirectChats[i].image,
+        };
+        result.push(field);
+      }
+
+      console.log('result: ', result);
       return result;
     } catch (error) {
       console.log('userMessages:', error);
       return null;
+    }
+  }
+
+  async joinChat(jwtToken: string, chat_id: number): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db
+        .update(chatsUsers)
+        .set({ joined: true })
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+          ),
+        );
+
+      console.log('Joined Chat!');
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
     }
   }
 

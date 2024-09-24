@@ -1,11 +1,12 @@
 "use client";
 
-import {fetchGet } from '@/app/fetch_functions';
+import {fetchGet, fetchPost } from '@/app/fetch_functions';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-import {UserChats} from '@repo/db';
+import {InvitedChats, UserChats} from '@repo/db';
+import { join } from 'path';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -49,9 +50,35 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     );
 }
 
+function InvitedChatField({ chatField }: { chatField: InvitedChats }) {
+    const userImage = chatField.image ? chatField.image : defaultUserImage;
+
+    return (
+        <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
+            <div className="flex items-center space-x-4 p-4 justify-between">
+                <button onClick={() => alert('Showing image of ' + chatField.title + ' groep')}>
+                    <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                </button>
+                <div className="flex-grow">
+                    <div className="flex justify-between w-full">
+                        <div>
+                            <h3 className="font-bold text-left">{chatField.title}</h3>
+                        </div>
+                        <div className="text-right px-4">
+                            <button className="text-blue-500" onClick={() => fetchPost('api/joinChat', { chat_id: chatField.chatid })}>
+                                Join
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Chats() {
     const [userChats, setUserChats] = useState<UserChats[]>();
-    const [invitedChats, setInvitedChats] = useState<UserChats[]>();
+    const [invitedChats, setInvitedChats] = useState<InvitedChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -82,6 +109,10 @@ export default function Chats() {
         }
     );
 
+    const validInvitedChats = Array.isArray(invitedChats) ? invitedChats : [];
+    const filteredInvitedChatFields = validInvitedChats
+        .filter((chatField) => chatField.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
             <h2 className="text-2xl font-bold text-center">Chats</h2>
@@ -91,6 +122,13 @@ export default function Chats() {
                     <ChatField key={index} chatField={chatField} />
                 ))}
                 { filteredChatFields.length == 0 && <p>No chats found...</p> }
+            </div>
+            <h2 className="text-2xl font-bold text-center">Invited Chats</h2>
+            <div className="h-64 overflow-auto">
+                {filteredInvitedChatFields.map((chatField, index) => (
+                    <InvitedChatField key={index} chatField={chatField} />
+                ))}
+                { filteredInvitedChatFields.length == 0 && <p>No invited chats found...</p> }
             </div>
             <Link className="text-blue-500 mt-4" href={'/menu'}>
                 Back to Menu

@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { User, ExternalUser, UserChats } from '@repo/db';
+import type { User, ExternalUser, UserChats, InvitedChats } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 
@@ -124,7 +124,7 @@ export class AppController {
   @Get('invitedChats')
   async getInvitedChats(
     @Headers('authorization') token: string,
-  ): Promise<UserChats[]> {
+  ): Promise<InvitedChats[]> {
     const invitedChats = await this.dbservice.getInvitedChatsFromDataBase(
       token.split(' ')[1],
     );
@@ -132,6 +132,25 @@ export class AppController {
     if (!invitedChats) throw Error('Failed to fetch user');
 
     return invitedChats;
+  }
+
+  @Post('joinChat')
+  async joinChat(
+    @Headers('authorization') token: string,
+    @Body('chat_id') chat_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.joinChat(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to join chat');
+      return;
+    }
+
+    res.status(200).send(response);
   }
 
   @Post('setChatPassword')
