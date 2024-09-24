@@ -144,8 +144,13 @@ export class DbService {
           losses: users.losses,
         })
         .from(users)
-        .where(and(not(eq(users.wins, 0)), not(eq(users.losses, 0))))
-        .orderBy(sql`(${users.wins} / NULLIF(${users.losses}, 0)) DESC`);
+        .where(or(not(eq(users.wins, 0)), not(eq(users.losses, 0))))
+        .orderBy(sql`
+          CASE 
+            WHEN ${users.losses} = 0 THEN ${users.wins} 
+            ELSE (CAST(${users.wins} AS FLOAT) / ${users.losses}) 
+          END DESC
+        `);
 
       // console.log(sql<number>`sum(${users.wins} / ${users.losses})`);
       return res;

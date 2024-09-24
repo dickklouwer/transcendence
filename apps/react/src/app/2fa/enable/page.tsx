@@ -41,7 +41,7 @@ const Enable2FA = () => {
         return;
       }
 
-      const response = await axios.post(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/verify`, { token }, {
+      await axios.post(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/verify`, { token }, {
         headers: {
           Authorization: `Bearer ${authToken}`
         }

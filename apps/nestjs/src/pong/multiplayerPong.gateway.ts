@@ -405,7 +405,7 @@ export class MultiplayerPongGateway
         player2_score: score2,
       });
 
-      if (score1 > score2) {
+      if (score1 < score2) {
         const swap = player1;
         player1 = player2;
         player2 = swap;
