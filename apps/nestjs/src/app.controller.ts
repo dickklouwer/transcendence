@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { UserChats } from './auth/auth.service';
+import { AuthService, UserChats } from './auth/auth.service';
 import type { User, ExternalUser } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
@@ -21,7 +21,8 @@ export class AppController {
   constructor(
     private appService: AppService,
     private dbservice: DbService,
-  ) {}
+    private authService: AuthService,
+  ) { }
 
   @Get()
   getHello(): string {
@@ -138,13 +139,14 @@ export class AppController {
     @Query('id') id: number,
     @Res() res: Response,
   ): Promise<ExternalUser> {
-    const users = await this.dbservice.getExternalUser(id);
+    const user = await this.dbservice.getExternalUser(id);
 
-    if (!users) {
+    console.log('user: ', user);
+    if (!user) {
       res.status(404).send('No users found');
       return;
     }
-    res.status(200).send(users[0]);
+    res.status(200).send(user[0]);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -186,6 +188,19 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('getApprovedFriendsById')
+  async getApprovedFriendsById(@Query('id') id: number, @Res() res: Response) {
+    const friends = await this.dbservice.getFriendsApprovedFromDataBaseById(id);
+
+    if (!friends) {
+      res.status(404).send('No friends found');
+      return;
+    }
+
+    res.status(200).send(friends);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('getApprovedFriends')
   async getApprovedFriends(
     @Headers('authorization') token: string,
@@ -209,6 +224,10 @@ export class AppController {
     @Headers('authorization') token: string,
     @Res() res: Response,
   ) {
+    /*
+    const data = await this.authService.decryptJWT(token.split(' ')[1]);
+    data.user_id
+    */
     const requests = await this.dbservice.getIncomingFriendRequests(
       token.split(' ')[1],
     );

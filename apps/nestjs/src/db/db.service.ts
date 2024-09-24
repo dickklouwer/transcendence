@@ -45,10 +45,10 @@ export class DbService {
         })
         .from(users)
         .where(eq(users.intra_user_id, id));
-      console.log('ExternalUser: ', user);
+      //      console.log('DB: getExternalUser: ', user);
       return user;
     } catch (error) {
-      console.log('Error: ', error);
+      console.log('DB: getExternalUser Error: ', error);
       return null;
     }
   }
@@ -234,11 +234,8 @@ export class DbService {
     }
   }
 
-  async getFriendsApprovedFromDataBase(jwtToken: string) {
+  async getFriendsApprovedFromDataBaseById(intra_id: number) {
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-
       const friendList = await this.db
         .select({
           intra_user_id: users.intra_user_id,
@@ -260,15 +257,28 @@ export class DbService {
         .where(
           and(
             eq(friends.is_approved, true),
-            not(eq(users.intra_user_id, user.intra_user_id)),
+            not(eq(users.intra_user_id, intra_id)),
             or(
-              eq(friends.user_id_send, user.intra_user_id),
-              eq(friends.user_id_receive, user.intra_user_id),
+              eq(friends.user_id_send, intra_id),
+              eq(friends.user_id_receive, intra_id),
             ),
           ),
         );
 
+      //      console.log('DB: friendList', friendList);
       return friendList;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getFriendsApprovedFromDataBase(jwtToken: string) {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      return await this.getFriendsApprovedFromDataBaseById(user.intra_user_id);
     } catch (error) {
       console.log('Error: ', error);
       return null;

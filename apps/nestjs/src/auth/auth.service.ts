@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import type { User } from '@repo/db';
@@ -17,11 +21,16 @@ export type UserChats = {
   unreadMessages: number;
 };
 
+export type JwtData = {
+  userEmail: string;
+  user_id: number;
+};
+
 export interface FortyTwoUser {
   intra_user_id: number;
   user_name: string;
   email: string;
-  state: "Online" | "Offline" | "In-Game";
+  state: 'Online' | 'Offline' | 'In-Game';
   image: string;
   token: string | null;
 }
@@ -32,13 +41,13 @@ export class AuthService {
     private jwtService: JwtService,
     private twoFactorAuthenticationService: TwoFactorAuthenticationService,
     private dbService: DbService,
-  ) {}
+  ) { }
 
   async createTemporaryToken(user: FortyTwoUser): Promise<string> {
     const payload = {
       sub: user.intra_user_id,
       username: user.user_name,
-      type: 'temporary'
+      type: 'temporary',
     };
 
     // Create a token that expires in 5 minutes
@@ -48,13 +57,13 @@ export class AuthService {
   async getUserFromTemporaryToken(tempToken: string): Promise<User> {
     try {
       const payload = await this.jwtService.verify(tempToken);
-      
+
       if (payload.type !== 'temporary') {
         throw new UnauthorizedException('Invalid token type');
       }
 
       const user = await this.dbService.getUserById(payload.sub);
-      
+
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
@@ -200,11 +209,16 @@ export class AuthService {
       token: null,
     };
   }
+
   async CreateJWT(user: FortyTwoUser): Promise<string> {
-    const jwt_arguments = {
+    const jwt_arguments: JwtData = {
       userEmail: user.email,
       user_id: user.intra_user_id,
     };
     return this.jwtService.sign(jwt_arguments);
+  }
+
+  async decryptJWT(token: string): Promise<JwtData> {
+    return await this.jwtService.verify(token);
   }
 }

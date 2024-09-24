@@ -17,7 +17,7 @@ export const ExternalFriendsList = ({ userId }: { userId: number }) => {
 
   useEffect(() => {
     try {
-      fetchGet<ExternalUser[]>("/api/getApprovedFriends")
+      fetchGet<ExternalUser[]>(`/api/getApprovedFriendsById?id=${userId}`)
         .then((data) => {
           setFriendsList(data);
         });
@@ -33,7 +33,7 @@ export const ExternalFriendsList = ({ userId }: { userId: number }) => {
     return () => {
       userSocket.off('statusChange');
     };
-  }, [reload]);
+  }, [reload, userId])
 
   return (
     <div className="container mx-auto">
@@ -41,7 +41,7 @@ export const ExternalFriendsList = ({ userId }: { userId: number }) => {
         {friendsList.length === 0 && <p className="text-center text-1xl whitespace-nowrap">No friends :(</p>}
         {friendsList.map((user) => (
           <div key={user.intra_user_id} className="">
-            <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded-md">
+            <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded ">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Image
