@@ -1,11 +1,11 @@
 .PHONY: up
 up:
 	cp ~/Desktop/.env .env
-	docker-compose up 
+	HOST_NAME="${shell hostname}" docker-compose up
 .PHONY: build
 build:
 	cp ~/Desktop/.env .env
-	docker-compose up --build --remove-orphans
+	HOST_NAME="${shell hostname}" docker-compose up --build --remove-orphans
 
 .PHONY: down
 down:

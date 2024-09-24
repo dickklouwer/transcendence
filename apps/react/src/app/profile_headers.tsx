@@ -8,14 +8,12 @@ import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
 
-export const userSocket = io('http://localhost:4433/user', { path: "/ws/socket.io/user" });
-
+export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();
   const [reload, setReload] = useState<boolean>(false);
   const [numberOfRequests, setNumberOfRequests] = useState<number>(0);
-
 
   useEffect(() => {
     fetchGet<ExternalUser[]>('api/incomingFriendRequests')
@@ -47,20 +45,14 @@ function FriendsInbox() {
   }
   
   const acceptFriendRequest = (friend_id: number) => {
-    fetchPost<{friend_id : number}, boolean>('api/acceptFriendRequest', { friend_id: friend_id })
-    .then((res) => {
-      console.log(res);
-      setReload(prev => !prev);
-    })
-  }
+    userSocket.emit('FriendRequestAcceptedNotification', friend_id);
+    setReload(prev => !prev);
+    }
   
   const declineFriendRequest = (friend_id: number) => {
-    fetchDelete(`api/declineFriendRequest/?friend_id=${friend_id}`)
-    .then((res) => {
-      console.log(res);
-      setReload(prev => !prev);
-    })
-  }
+    userSocket.emit('FriendRequestDeclinedNotification', friend_id);
+    setReload(prev => !prev);
+    }
   
   return (
     <div className='relative inline-block'>
@@ -110,7 +102,20 @@ function MatchHistory() {
     )
 }
 
-
+function MessageInbox() {
+  const [numberOfMessages, setNumberOfMessages] = useState<number>(2);
+  return (
+    <div className='relative inline-block'>
+      <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
+        <svg className="w-8 h-8 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+          <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd"/>
+          <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd"/>
+        </svg>
+        {numberOfMessages > 0 && <span className="absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{numberOfMessages}</span>}
+      </Link>
+    </div>
+  );
+}
 
 export default function LoadProfile({ setNickname }: { setNickname: Dispatch<SetStateAction<string | undefined>> }) {
   const [user, setUser] = useState<User>();
@@ -152,7 +157,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
         console.log('Error: ', error);
         Router.push('/login', { scroll: false });
       });
-  }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams]);
+  }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams, nicknameProps.reload]);
 
   const handleVerificationComplete = (newToken: string) => {
     localStorage.setItem('token', newToken);
@@ -169,9 +174,10 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
 
   return (
     <div className='flex space-x-2'>
+      <MessageInbox />
       <MatchHistory />
       <FriendsInbox />
-      <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
+      <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-full hover:nm-inset-blue-600 nm-flat-blue-500-xs transition duration-500">
         <Image className="rounded-full h-8 w-8 object-cover" src={user.image} alt="Profile Picture" width={100} height={100} />
         {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
       </Link>

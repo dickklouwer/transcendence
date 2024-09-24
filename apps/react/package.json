@@ -13,13 +13,14 @@
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.1",
     "i": "^0.3.7",
-    "next": "^14.2.7",
+    "next": "latest",
     "next-auth": "^4.24.7",
     "react": "latest",
     "react-dom": "latest",
     "socket.io": "^1.7.4",
     "socket.io-client": "^1.7.4",
     "socketio": "^1.0.0",
+    "tw-neumorphism": "^0.2.0",
     "websockets": "^0.2.0"
   },
   "devDependencies": {

@@ -8,16 +8,8 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import {
-  users,
-  messages,
-  groupChats,
-  createQueryClient,
-  createDrizzleClient,
-  games,
-} from '@repo/db';
-import type { User } from '@repo/db';
-import { eq, or, sql } from 'drizzle-orm';
+import { users, createQueryClient, createDrizzleClient, games } from '@repo/db';
+import { eq, sql } from 'drizzle-orm';
 
 const gameWidth = 400;
 const gameHeight = 400;
@@ -47,7 +39,7 @@ interface Player {
 }
 
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:2424' },
+  cors: { origin: `http://${process.env.HOST_NAME}:2424` },
   namespace: 'multiplayer',
   credentials: true,
   allowEIO3: true,
@@ -74,7 +66,7 @@ export class MultiplayerPongGateway
     return { x: 200, y: 200, vx: 2, vy: 0 };
   }
 
-  afterInit(server: Server) {
+  afterInit() {
     this.logger.log('WebSocket MultiplayerPongGateway initialized');
   }
 
@@ -290,7 +282,7 @@ export class MultiplayerPongGateway
   }
 
   @SubscribeMessage('stop')
-  handleStop(client: Socket): void {
+  handleStop(): void {
     if (this.gameInterval) {
       this.logger.log('Stopping game loop');
       clearInterval(this.gameInterval);
@@ -385,7 +377,8 @@ export class MultiplayerPongGateway
 
     // Emit updated state to clients
     this.server.to(room.roomID).emit('ball', room.ball);
-    if (room.players[1] !== undefined) // How can this be undefined?
+    // How can this be undefined?
+    if (room.players[1] !== undefined)
       this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
     this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
   }
@@ -412,7 +405,7 @@ export class MultiplayerPongGateway
         player2_score: score2,
       });
 
-      if (score1 > score2) {
+      if (score1 < score2) {
         const swap = player1;
         player1 = player2;
         player2 = swap;

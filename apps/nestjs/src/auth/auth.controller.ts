@@ -46,7 +46,7 @@ export class AuthController {
         // If 2FA is enabled, create a temporary token
         const tempToken = await this.authService.createTemporaryToken(dbUser);
         return res.redirect(
-          `http://localhost:4433/2fa/verify_2fa?tempToken=${tempToken}`,
+          `http://${process.env.HOST_NAME}:4433/2fa/verify_2fa?tempToken=${tempToken}`,
         );
       } else {
         // If 2FA is not enabled, create and return the JWT
@@ -54,7 +54,9 @@ export class AuthController {
         console.log('JWT::', jwt);
         dbUser.token = jwt;
         await this.dbservice.upsertUserInDataBase(dbUser);
-        return res.redirect(`http://localhost:4433/?token=${dbUser.token}`);
+        return res.redirect(
+          `http://${process.env.HOST_NAME}:4433/?token=${dbUser.token}`,
+        );
       }
     } catch (error) {
       console.log(error);
@@ -131,7 +133,9 @@ export class AuthController {
         token: dbUser.token,
       });
 
-      return res.redirect(`http://localhost:4433/?token=${dbUser.token}`);
+      return res.redirect(
+        `http://${process.env.HOST_NAME}:4433/?token=${dbUser.token}`,
+      );
     } catch (error) {
       console.error('Error in dev validation:', error);
       return res.status(500).send('User creation or update failed');

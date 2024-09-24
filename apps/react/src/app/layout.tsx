@@ -10,23 +10,28 @@ export const NicknameContext = createContext<NicknameFormProps | undefined>(unde
 export type NicknameFormProps = {
   nickname: string | undefined; 
   setNickname: Dispatch<SetStateAction<string | undefined>>;
+  reload: boolean;
+  setReload: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   
   const [nickname, setNickname] = useState<string>();
+  const [reload, setReload] = useState<boolean>(false);
   
   return (
     <html lang="en">
         <head>
+          
           <title>ft_transcendence42</title>
         </head>
         <body className='relative flex-grow flex-col min-h-screen w-full'>
-          <NicknameContext.Provider value={{nickname, setNickname}}>    
+          <NicknameContext.Provider value={{nickname, setNickname, reload, setReload }}>    
             <header className="text-white flex p-2  justify-between">
               <Link href="/menu">
                 <h1 className="inline-block text-3xl">PONG!</h1>
               </Link>
+              {/* <MessageInbox/> */}
               <LoadProfile setNickname={setNickname} />
             </header>
           <main className="flex-grow flex items-center justify-center min-h-[100vh]">

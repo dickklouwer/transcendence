@@ -7,6 +7,8 @@ services:
       dockerfile: ./apps/nestjs/Dockerfile
     container_name: nestjs
     env_file: .env
+    environment:
+      - HOST_NAME=${HOST_NAME}
     init: true  # Ensures quick shutdown by sending SIGTERM to child processes
     restart: on-failure
     ports:
@@ -25,12 +27,15 @@ services:
     env_file: .env
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - HOST_NAME=${HOST_NAME}
+      - NEXT_PUBLIC_HOST_NAME=${HOST_NAME}
     init: true
     restart: on-failure
     ports:
       - "2424:2424"
     volumes:
       - shared_src:/usr/src/app
+    stdin_open: true
 
   nginx:
     image: nginx:latest
@@ -39,10 +44,14 @@ services:
     ports:
       - "4433:80"
     volumes:
-      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./apps/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
+    environment:
+      - HOST_NAME=${HOST_NAME}
     depends_on:
       - nestjs
       - react
+    entrypoint: /bin/bash \-c "envsubst '$$HOST\_NAME' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
+    
   db:
     image: postgres
     restart: always

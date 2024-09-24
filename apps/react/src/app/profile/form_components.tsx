@@ -109,10 +109,26 @@ export const AddFriendsForm = () => {
     const [friendsList, setFriendsList] = useState<Friends[]>([]);
     const [incomingFriendRequests, setIncomingFriendRequests] = useState<ExternalUser[]>([]);
     const [isSend, setIsSend] = useState(false);
+    const [reload, setReload] = useState<boolean>(false);
 
     useEffect(() => {
       fetchData();
-    }, []);
+      userSocket.on('sendFriendRequestAccepted', () => {
+        setReload(prev => !prev);
+      });
+
+      userSocket.on('sendFriendRequestDeclined', () => {
+        setReload(prev => !prev);
+      });
+    
+      // Cleanup the previous event listener on unmount or re-render
+      // This is to prevent multiple event listeners from being created
+      return () => {
+        userSocket.off('sendFriendRequestAccepted');
+        userSocket.off('sendFriendRequestDeclined');
+      };
+      
+    }, [reload]);
 
     useEffect(() => {
       const delayDebounceFn = setTimeout(() => {
@@ -240,7 +256,11 @@ export const FriendsList = () => {
             });
             
             userSocket.on('statusChange', () => {
-                setReload(prev => !prev);
+              setReload(prev => !prev);
+            });
+
+            userSocket.on('sendFriendRequestAccepted', () => {
+              setReload(prev => !prev);
             });
 
         } catch (error) {
@@ -249,6 +269,7 @@ export const FriendsList = () => {
 
         return () => {
             userSocket.off('statusChange');
+            userSocket.off('sendFriendRequestAccepted');
         };
        }, [reload]);
 

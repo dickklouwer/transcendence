@@ -9,7 +9,6 @@ import type { User } from '@repo/db';
 import { DbService } from '../db/db.service';
 import { TwoFactorAuthenticationService } from './2fa.service';
 import * as speakeasy from 'speakeasy';
-import * as crypto from 'crypto';
 
 export type UserChats = {
   messageId: number;
@@ -26,14 +25,14 @@ export type JwtData = {
   user_id: number;
 };
 
-export interface FortyTwoUser {
+export type FortyTwoUser = {
   intra_user_id: number;
   user_name: string;
   email: string;
   state: 'Online' | 'Offline' | 'In-Game';
   image: string;
   token: string | null;
-}
+};
 
 @Injectable()
 export class AuthService {
@@ -41,7 +40,7 @@ export class AuthService {
     private jwtService: JwtService,
     private twoFactorAuthenticationService: TwoFactorAuthenticationService,
     private dbService: DbService,
-  ) { }
+  ) {}
 
   async createTemporaryToken(user: FortyTwoUser): Promise<string> {
     const payload = {
@@ -74,31 +73,6 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired temporary token');
     }
   }
-
-  private verifyToken(token: string, secret: string): string | null {
-    const timeStep = 30;
-    const currentTime = Math.floor(Date.now() / 1000 / timeStep);
-
-    for (let i = -1; i <= 1; i++) {
-      const expectedToken = this.generateToken(secret, currentTime + i);
-      if (token === expectedToken) {
-        return expectedToken;
-      }
-    }
-
-    return null;
-  }
-
-  private generateToken(secret: string, time: number): string {
-    const hmac = crypto.createHmac('sha1', secret);
-    const timeHex = Buffer.alloc(8);
-    timeHex.writeBigInt64BE(BigInt(time), 0);
-    hmac.update(timeHex);
-    const hmacResult = hmac.digest();
-    const offset = hmacResult[hmacResult.length - 1] & 0xf;
-    const code = hmacResult.readUInt32BE(offset) & 0x7fffffff;
-    return (code % 1000000).toString().padStart(6, '0');
-  }
   /**
    * This Method is used to validate the access code.
    * first creating an url with the access code and other required parameters
@@ -107,8 +81,9 @@ export class AuthService {
   async validateCode(accessCode: string): Promise<string> {
     const clientId = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_ID;
     const clientSecret = process.env.NEXT_PUBLIC_FORTY_TWO_CLIENT_SECRET;
+    const redirectUri = process.env.HOST_NAME;
 
-    if (!clientId || !clientSecret) {
+    if (!clientId || !clientSecret || !redirectUri) {
       throw new InternalServerErrorException(
         'Client ID or Secret is not defined',
       );
@@ -119,7 +94,7 @@ export class AuthService {
       client_id: clientId,
       client_secret: clientSecret,
       code: accessCode,
-      redirect_uri: 'http://127.0.0.1:4242/auth/validate',
+      redirect_uri: `http://${redirectUri}:4242/auth/validate`,
       grant_type: 'authorization_code',
     });
 
@@ -190,7 +165,7 @@ export class AuthService {
 
   /**
    * This Method is used to validate the access token.
-   * @returns {Promise<any>} - Returns the user profile
+   * @returns {Promise<FortyTwoUser>} - Returns the user profile
    */
   async validateToken(accessToken: string): Promise<FortyTwoUser> {
     const response = await axios.get('https://api.intra.42.fr/v2/me', {

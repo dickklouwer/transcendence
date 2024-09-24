@@ -1,0 +1,103 @@
+user nginx;
+
+worker_processes auto;
+
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    default_type application/octet-stream;
+    sendfile on;
+    keepalive_timeout 3000;
+    access_log off;
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+
+    upstream frontend {
+        server react:2424;
+    }
+
+    upstream backend {
+        server nestjs:4242;
+    }
+
+    server {
+        set $domain ${HOST_NAME};
+        listen 80;
+        server_name $domain;
+
+        location / {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+            proxy_pass http://frontend;
+        }
+        location /api/ {
+		    proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+            proxy_pass http://backend;
+        }
+
+        location /api/auth/ {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+            proxy_pass http://frontend;
+        }
+
+        location /auth/ {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+            proxy_pass http://backend;
+        }
+
+        location /ws/ {
+            proxy_http_version 1.1;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $host;
+            proxy_pass http://nestjs:4242/;
+
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+        }
+
+        # https://github.com/RubenNijhuis/Transcendence/blob/main/nginx/conf/nginx.conf
+        # This is a reverse proxy to make sure that we have no CORS issues
+        # location / {
+        #     proxy_http_version 1.1;
+        #     proxy_set_header Upgrade $http_upgrade;
+        #     proxy_set_header Connection "Upgrade";
+        #     proxy_set_header Host $host;
+        #     proxy_pass http://react;
+        # }
+
+        # location /ws/chat/ {
+
+        #     proxy_http_version 1.1;
+        #     proxy_set_header Upgrade $http_upgrade;
+        #     proxy_set_header Connection "Upgrade";
+        #     proxy_set_header Host $host;
+        #     proxy_pass http://nestjs_chat_ws/socket.io/;
+        # }
+
+        # location /ws/event/ {
+        #     proxy_http_version 1.1;
+        #     proxy_set_header Upgrade $http_upgrade;
+        #     proxy_set_header Connection "Upgrade";
+        #     proxy_set_header Host $host;
+        #     proxy_pass http://nestjs_event_ws/socket.io/;
+        # }
+    }
+}

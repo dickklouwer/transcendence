@@ -2,12 +2,26 @@
 
 // import { signIn } from 'next-auth/react';
 import { signIn } from 'next-auth/react';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { userSocket } from '../profile_headers';
+import { fetchGet } from '../fetch_functions'
+import { User } from '@repo/db'
 
 
 export default function Login() {
+
+    const router = useRouter();
+
+    useEffect(() => {
+        fetchGet<User>('/api/profile')
+        .then((user) => {
+            if (user) {
+               router.push('/menu'); 
+            }
+        })
+        
+}, [router]);
 
     if (userSocket.connected)
         userSocket.disconnect();
@@ -83,6 +97,7 @@ export function SignInDevUser() {
                     value={tempUsername}
                     onChange={handleChange}
                     placeholder="Enter your Username"
+                    autoFocus={true}
                     onKeyUp={(e) => {e.code == "Enter" && devSignIn(tempUsername)}}
                     className={'w-full text-black py-2 px-4 border rounded '}
                     maxLength={15}

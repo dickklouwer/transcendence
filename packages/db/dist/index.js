@@ -29,11 +29,12 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.ts
 var src_exports = {};
 __export(src_exports, {
+  chats: () => chats,
+  chatsUsers: () => chatsUsers,
   createDrizzleClient: () => createDrizzleClient,
   createQueryClient: () => createQueryClient,
   friends: () => friends,
   games: () => games,
-  groupChats: () => groupChats,
   messages: () => messages,
   users: () => users
 });
@@ -75,18 +76,20 @@ var games = mySchema.table("games", {
   player1_score: (0, import_pg_core.integer)("player1_score"),
   player2_score: (0, import_pg_core.integer)("player2_score")
 });
-var groupChats = mySchema.table("group_chats", {
-  group_chat_id: (0, import_pg_core.serial)("group_chat_id").primaryKey(),
-  group_name: (0, import_pg_core.text)("group_name").notNull(),
-  group_is_public: (0, import_pg_core.boolean)("group_is_public").default(false),
-  group_password: (0, import_pg_core.text)("group_password"),
-  group_image: (0, import_pg_core.text)("group_image"),
+var chats = mySchema.table("chats", {
+  chat_id: (0, import_pg_core.serial)("chat_id").primaryKey().notNull(),
+  is_direct: (0, import_pg_core.boolean)("is_direct").default(false),
+  title: (0, import_pg_core.text)("title").default(""),
+  is_public: (0, import_pg_core.boolean)("is_public").default(false),
+  password: (0, import_pg_core.text)("password"),
+  image: (0, import_pg_core.text)("image"),
   created_at: (0, import_pg_core.timestamp)("created_at").defaultNow()
 });
-var groupChatsUsers = mySchema.table("group_chats_users", {
-  group_chat_user_id: (0, import_pg_core.serial)("group_chat_user_id").primaryKey(),
-  group_chat_id: (0, import_pg_core.integer)("group_chat_id").references(
-    () => groupChats.group_chat_id
+var chatsUsers = mySchema.table("chatsUsers", {
+  chat_user_id: (0, import_pg_core.serial)("chat_user_id").primaryKey(),
+  // Unique ID for this 
+  chat_id: (0, import_pg_core.integer)("chat_id").references(
+    () => chats.chat_id
   ),
   intra_user_id: (0, import_pg_core.integer)("intra_user_id").references(() => users.intra_user_id),
   is_owner: (0, import_pg_core.boolean)("is_owner").notNull().default(false),
@@ -97,15 +100,14 @@ var groupChatsUsers = mySchema.table("group_chats_users", {
 });
 var messages = mySchema.table("messages", {
   message_id: (0, import_pg_core.serial)("message_id").primaryKey(),
-  sender_id: (0, import_pg_core.integer)("sender_id").references(() => users.intra_user_id),
-  receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id),
-  group_chat_id: (0, import_pg_core.integer)("group_chat_id").references(
-    () => groupChats.group_chat_id
+  sender_id: (0, import_pg_core.integer)("sender_id").notNull().references(() => users.intra_user_id),
+  chat_id: (0, import_pg_core.integer)("chat_id").notNull().references(
+    () => chats.chat_id
   ),
   message: (0, import_pg_core.text)("message").notNull(),
   sent_at: (0, import_pg_core.timestamp)("sent_at").defaultNow().notNull()
 });
-var messageStatus = mySchema.table("message_status", {
+var messageStatus = mySchema.table("messageStatus", {
   message_status_id: (0, import_pg_core.serial)("message_status_id").primaryKey(),
   message_id: (0, import_pg_core.integer)("message_id").references(() => messages.message_id).notNull(),
   receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id).notNull(),
@@ -115,7 +117,9 @@ var messageStatus = mySchema.table("message_status", {
 var userInsert = (0, import_drizzle_zod.createInsertSchema)(users);
 var userSelect = (0, import_drizzle_zod.createSelectSchema)(users);
 var friendsSelect = (0, import_drizzle_zod.createSelectSchema)(friends);
-var messagesInsert = (0, import_drizzle_zod.createInsertSchema)(messages);
+var messagesInsert = (0, import_drizzle_zod.createSelectSchema)(messages);
+var chatSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
+var chatsUsersSelect = (0, import_drizzle_zod.createSelectSchema)(chatsUsers);
 
 // src/index.ts
 var import_postgres_js = require("drizzle-orm/postgres-js");
@@ -124,11 +128,12 @@ var createQueryClient = (input) => (0, import_postgres.default)(input);
 var createDrizzleClient = (client) => (0, import_postgres_js.drizzle)(client);
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  chats,
+  chatsUsers,
   createDrizzleClient,
   createQueryClient,
   friends,
   games,
-  groupChats,
   messages,
   users
 });

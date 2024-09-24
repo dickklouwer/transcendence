@@ -7,27 +7,21 @@ import {
   Post,
   Body,
   Res,
-  Delete,
+  UploadedFile,
+  ParseFilePipe,
+  UseInterceptors,
+  FileTypeValidator,
 } from '@nestjs/common';
-import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { AuthService, UserChats } from './auth/auth.service';
-import type { User, ExternalUser } from '@repo/db';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { User, ExternalUser, UserChats } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 
+@UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(
-    private appService: AppService,
-    private dbservice: DbService,
-    private authService: AuthService,
-  ) { }
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
+  constructor(private dbservice: DbService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -46,7 +40,6 @@ export class AppController {
     return user;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('checkNickname')
   async checkNickname(@Query('nickname') nickname: string): Promise<boolean> {
     const isUnique = await this.dbservice.CheckNicknameIsUnque(nickname);
@@ -54,7 +47,33 @@ export class AppController {
     return isUnique;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Post('uploadImage')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 1000000 } }))
+  async uploadImage(
+    @Headers('authorization') token: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new FileTypeValidator({ fileType: /image\/.*/ })],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    try {
+      const response = await this.dbservice.getUserFromDataBase(
+        token.split(' ')[1],
+      );
+
+      await this.dbservice.updateImage(
+        response.intra_user_id,
+        'data:image/png;base64,' + file.buffer.toString('base64'),
+      );
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
   @Post('setNickname')
   async setNickname(
     @Headers('authorization') token: string,
@@ -74,10 +93,9 @@ export class AppController {
     res.status(200).send(response);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('user')
   async getUser(
-    @Headers('authorization') intra_user_id: number,
+    @Query('intra_user_id') intra_user_id: number,
     @Res() res: Response,
   ): Promise<User> {
     const user = await this.dbservice.getAnyUserFromDataBase(intra_user_id);
@@ -90,7 +108,6 @@ export class AppController {
     return user;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('chats')
   async getChats(
     @Headers('authorization') token: string,
@@ -104,21 +121,57 @@ export class AppController {
     return userChats;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('chatHasPassword')
+  async chatHasPassword(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ): Promise<boolean> {
+    const hasPassword = await this.dbservice.chatHasPassword(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return hasPassword;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('isValidChatPassword')
+  async isValidChatPassword(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+    @Query('password') password: string,
+    @Res() res: Response,
+  ) {
+    const isValid = await this.dbservice.isValidChatPassword(
+      token.split(' ')[1],
+      chat_id,
+      password,
+    );
+    res.status(200).send(isValid);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('messages')
+  async getMessages(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ) {
+    console.log(`messages?chat_id=${chat_id}`);
+    const messages = await this.dbservice.getMessagesFromDataBase(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return messages;
+  }
+
   @Post('createMockData')
   async mockData(): Promise<boolean> {
-    const hardcoddedIntraId = 77718;
-    const response = await this.dbservice.mockData(hardcoddedIntraId);
+    const response = await this.dbservice.mockData();
     return response;
   }
 
-  // not working yet
-  // @Post('createMockData')
-  // async mockData(token: string): Promise<boolean> {
-  //   const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
-  //   const response = await this.dbservice.mockData(user.intra_user_id);
-  //   return response;
-  // }
-  @UseGuards(JwtAuthGuard)
   @Get('getExternalUsers')
   async searchUser(
     @Headers('authorization') token: string,
@@ -169,7 +222,6 @@ export class AppController {
     res.status(200).send(response);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('getFriendsNotApproved')
   async getFriends(
     @Headers('authorization') token: string,
@@ -201,6 +253,17 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('getLeaderboard')
+  async getLeaderboard() {
+    const leaderboard = await this.dbservice.getLeaderboardFromDataBase();
+
+    if (!leaderboard) {
+      throw Error('Failed to fetch leaderboard');
+    }
+
+    return leaderboard;
+  }
+
   @Get('getApprovedFriends')
   async getApprovedFriends(
     @Headers('authorization') token: string,
@@ -218,7 +281,6 @@ export class AppController {
     res.status(200).send(friends);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('incomingFriendRequests')
   async getIncomingFriendRequests(
     @Headers('authorization') token: string,
@@ -240,47 +302,6 @@ export class AppController {
     res.status(200).send(requests);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('acceptFriendRequest')
-  async acceptFriendRequest(
-    @Headers('authorization') token: string,
-    @Body('friend_id') friend_id: number,
-    @Res() res: Response,
-  ) {
-    const response = await this.dbservice.acceptFriendRequest(
-      token.split(' ')[1],
-      friend_id,
-    );
-
-    if (!response) {
-      res.status(422).send('Failed to accept friend request');
-      return;
-    }
-
-    res.status(200).send(response);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete('declineFriendRequest')
-  async declineFriendRequest(
-    @Headers('authorization') token: string,
-    @Query('friend_id') friend_id: number,
-    @Res() res: Response,
-  ) {
-    const response = await this.dbservice.declineFriendRequest(
-      token.split(' ')[1],
-      friend_id,
-    );
-
-    if (!response) {
-      res.status(422).send('Failed to decline friend request');
-      return;
-    }
-
-    res.status(200).send(response);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('getYourGames')
   async getYourGames(
     @Headers('authorization') token: string,
