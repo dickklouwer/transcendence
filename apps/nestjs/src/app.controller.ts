@@ -157,7 +157,6 @@ export class AppController {
     @Headers('authorization') token: string,
     @Query('chat_id') chat_id: number,
   ) {
-    console.log(`messages?chat_id=${chat_id}`);
     const messages = await this.dbservice.getMessagesFromDataBase(
       token.split(' ')[1],
       chat_id,

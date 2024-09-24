@@ -123,7 +123,6 @@ export class DbService {
         .from(users)
         .where(eq(users.intra_user_id, intra_user_id));
 
-      console.log('User from id: ', user);
       return user[0];
     } catch (error) {
       console.log('Error: ', error);
@@ -610,7 +609,6 @@ export class DbService {
     jwtToken: string,
     chat_id: number,
   ): Promise<ChatMessages[] | null> {
-    console.log('chat_id: ', chat_id);
     const user = await this.getUserFromDataBase(jwtToken);
     /* Check if user is in the chat */
     try {
@@ -637,8 +635,6 @@ export class DbService {
         .select()
         .from(messages)
         .where(eq(messages.chat_id, chat_id));
-
-      console.log('Messages: ', dbMessages);
 
       // set dbMessages to ChatMessages
       const chatMessages: ChatMessages[] = [];

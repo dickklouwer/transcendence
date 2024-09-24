@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
-import {User, Messages, ChatMessages, ExternalUser} from '@repo/db';
+import { User, Messages, ChatMessages, ExternalUser } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
@@ -13,28 +13,16 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
-    // useEffect(() => {
-    //     fetchGet<ExternalUser>(`api/user?intra_user_id=${message.sender_id}`)
-    //     .then((user) => {
-    //         if (!user) setNickname('Unknown');
-    //         else if (user.nick_name) setNickname(user.nick_name);
-    //         else setNickname(user.user_name);
-    //     })
-    // }, []);
-
-    const renderMessageWithLineBreaks = (text:string) => {
+    const renderMessageWithLineBreaks = (text: string) => {
         return (<div>{text}</div>);
-        // return text.split('\n').map((line, index) => (
-        //     <div key={index}>{line}</div>
-        // ));
     };
 
     function renderDate(date: Date) {
-        if (!date) 
+        if (!date)
             return 'no date';
         if (!(date instanceof Date))
             return 'not a date';
-        return date ? date.toString().slice(16,21) : '';
+        return date ? date.toString().slice(16, 21) : '';
     }
 
     return (
@@ -62,7 +50,7 @@ function customTransparantToBlack() {
     );
 }
 
-function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>>}) {
+function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
         <div className="relative text-gray-600 focus-within:text-gray-400 w-96 px-3">
             <input
@@ -87,50 +75,63 @@ export default function DC() {
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { 
-        path: "/ws/socket.io", 
-        query: {
-            intra_user_id: user?.intra_user_id
-        }}
-    );
-    
-    const chat_id : number = Number(searchParams?.get('chat_id')) ?? -1;
+    const socketRef = useRef<ReturnType<typeof io> | null>(null);
+
+    const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
     useEffect(() => {
-        // TODO: check if chat has a password, that is stored in the database chats.password
-        fetchGet<boolean>(`api/chatHasPassword?chat_id=${ chat_id }`)
-        .then((res) => {
-            setHasPassword(res);
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
-
         /* Load user info form database and store in const user */
         fetchGet<User>('api/profile')
-        .then((user) => {
-            setUser(user);
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
-        
-        /* Load messages form database form right chat, using query chat_id: number */
-        fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
-        .then((res) => {
-            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
-            const transformedMessages = res.map(message => ({
-                ...message,
-                sent_at: new Date(message.sent_at)
-            }));
-            console.log('Retrieved Messages form db: ', transformedMessages);
-            setMessages(transformedMessages);
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
+            .then((user) => {
+                setUser(user);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+    }, []);
+
+    useEffect(() => {
+        if (!user || !user.intra_user_id) return;
+
+        console.log(`user id: ${user.intra_user_id}`);
+
+        // Initialize socket connection
+        socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
+            path: "/ws/socket.io",
+            query: {
+                intra_user_id: user.intra_user_id.toString(),
+                chat_id: chat_id.toString(),
+            }
         });
 
-        /* Get messages while online */
+        const socket = socketRef.current;
+
+        fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
+            .then((res) => {
+                setHasPassword(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+        });
+
+        /* Load messages form database form right chat, using query chat_id: number */
+        fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
+            .then((res) => {
+                /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+                const transformedMessages = res.map(message => ({
+                    ...message,
+                    sent_at: new Date(message.sent_at)
+                }));
+                console.log('Retrieved Messages form db: ', transformedMessages);
+                setMessages(transformedMessages);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+        });
+
+        /* Join chat */
+        socket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
+
         socket.on('messageFromServer', (message: ChatMessages) => {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             message.sent_at = new Date(message.sent_at);
@@ -139,24 +140,27 @@ export default function DC() {
             /* Auto scroll to last message */
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         });
-    
+
         /* Auto scroll to last message */
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // or instant
-    
+
         return () => {
+            /* Leave chat */
+            socket.emit('leaveChat', chat_id.toString());
             socket.off('messageFromServer');
+            socket.disconnect();
         };
-    }, []);
+    }, [user, chat_id]);
 
     const sendMessage = (message: ChatMessages) => {
         console.log('Sending message: ' + message.message);
-        socket.emit('messageToServer', message);
+        socketRef.current?.emit('messageToServer', message);
         setNewMessage('');
     };
 
     const handleSendMessage = (intra_id: number) => {
         if (newMessage.trim() === '') return;
-        
+
         const message: ChatMessages = {
             message_id: 0,          // generate in the backend with instert returnig
             chat_id: chat_id,
@@ -171,14 +175,14 @@ export default function DC() {
     };
 
     const handlePasswordCheck = () => {
-        fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
-        .then((res) => {
-            if (res) setHasPassword(false);
-            else alert('Wrong password');
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
+        fetchGet<{ chat_id: string, password: string }>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
+            .then((res) => {
+                if (res) setHasPassword(false);
+                else alert('Wrong password');
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
     }
 
     const handleKeyPressPassword = (e: React.KeyboardEvent<HTMLInputElement>) => {
