@@ -1,11 +1,11 @@
 "use client";
 
-import {fetchGet, fetchPost } from '@/app/fetch_functions';
+import { fetchGet, fetchPost } from '@/app/fetch_functions';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-import {InvitedChats, UserChats} from '@repo/db';
+import { InvitedChats, UserChats } from '@repo/db';
 import { join } from 'path';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
@@ -40,7 +40,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
                         </div>
                         <div className="text-right px-4">
-                            <p>{chatField.time.toString().slice(11,16)}</p>
+                            <p>{chatField.time.toString().slice(11, 16)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
                     </div>
@@ -50,8 +50,21 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     );
 }
 
-function InvitedChatField({ chatField }: { chatField: InvitedChats }) {
+function InvitedChatField({ chatField, setInvitedChats }: { 
+    chatField: InvitedChats, 
+    setInvitedChats: React.Dispatch<React.SetStateAction<InvitedChats[] | undefined>> 
+}) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
+
+    const joinChat = (chat_id: number) => {
+        fetchPost('api/joinChat', { chat_id: chat_id })
+            .then(() => {
+                setInvitedChats((prevChats) => (prevChats as InvitedChats[]).filter(chat => chat.chatid !== chat_id));
+            })
+            .catch((error) => {
+                console.log('Error joining chat: ', error);
+            });
+    }
 
     return (
         <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
@@ -65,7 +78,7 @@ function InvitedChatField({ chatField }: { chatField: InvitedChats }) {
                             <h3 className="font-bold text-left">{chatField.title}</h3>
                         </div>
                         <div className="text-right px-4">
-                            <button className="text-blue-500" onClick={() => fetchPost('api/joinChat', { chat_id: chatField.chatid })}>
+                            <button className="text-blue-500" onClick={() => joinChat(chatField.chatid)}>
                                 Join
                             </button>
                         </div>
@@ -83,22 +96,22 @@ export default function Chats() {
 
     useEffect(() => {
         fetchGet<UserChats[]>('api/chats')
-        .then((data) => {
-            console.log('Received Chats Data: ', data);
-            setUserChats(data);
-        })
-        .catch((error) => {
-            console.log('Error fetching Chats: ', error);
-        });
+            .then((data) => {
+                console.log('Received Chats Data: ', data);
+                setUserChats(data);
+            })
+            .catch((error) => {
+                console.log('Error fetching Chats: ', error);
+            });
 
         fetchGet<UserChats[]>('api/invitedChats')
-        .then((data) => {
-            console.log('Received Invited Chats Data: ', data);
-            setInvitedChats(data);
-        })
-        .catch((error) => {
-            console.log('Error fetching Invited Chats: ', error);
-        });
+            .then((data) => {
+                console.log('Received Invited Chats Data: ', data);
+                setInvitedChats(data);
+            })
+            .catch((error) => {
+                console.log('Error fetching Invited Chats: ', error);
+            });
     }, []);
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];
@@ -107,7 +120,7 @@ export default function Chats() {
         .sort((a, b) => {
             return new Date(b.time).getTime() - new Date(a.time).getTime();
         }
-    );
+        );
 
     const validInvitedChats = Array.isArray(invitedChats) ? invitedChats : [];
     const filteredInvitedChatFields = validInvitedChats
@@ -121,14 +134,14 @@ export default function Chats() {
                 {filteredChatFields.map((chatField, index) => (
                     <ChatField key={index} chatField={chatField} />
                 ))}
-                { filteredChatFields.length == 0 && <p>No chats found...</p> }
+                {filteredChatFields.length == 0 && <p>No chats found...</p>}
             </div>
             <h2 className="text-2xl font-bold text-center">Invited Chats</h2>
             <div className="h-64 overflow-auto">
                 {filteredInvitedChatFields.map((chatField, index) => (
-                    <InvitedChatField key={index} chatField={chatField} />
+                    <InvitedChatField key={index} chatField={chatField} setInvitedChats={setInvitedChats} />
                 ))}
-                { filteredInvitedChatFields.length == 0 && <p>No invited chats found...</p> }
+                {filteredInvitedChatFields.length == 0 && <p>No invited chats found...</p>}
             </div>
             <Link className="text-blue-500 mt-4" href={'/menu'}>
                 Back to Menu

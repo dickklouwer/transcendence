@@ -586,7 +586,6 @@ export class DbService {
       if (!dbChatID) throw Error('failed to fetch dbChatID');
 
       for (let i = 0; i < dbChatID.length; i++) {
-        //NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
         const chatinfo: Chats[] = await this.db
           .select()
           .from(chats)
@@ -598,9 +597,6 @@ export class DbService {
           .from(messages)
           .where(eq(messages.chat_id, dbChatID[i].chat_id));
 
-        // console.log('' dbChatID[i]);
-        console.log('chatinfo: created ', chatinfo[0].created_at);
-
         const lastMessage: Messages = idMessages[idMessages.length - 1]
           ? idMessages[idMessages.length - 1]
           : {
@@ -611,7 +607,6 @@ export class DbService {
               sent_at: chatinfo[0].created_at,
             };
 
-        //NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
         const field: UserChats = {
           chatid: dbChatID[i].chat_id,
           title: chatinfo[0].title,
@@ -623,7 +618,7 @@ export class DbService {
 
         result.push(field);
       }
-      console.log('result: ', result);
+
       return result;
     } catch (error) {
       console.log('userMessages:', error);
@@ -640,7 +635,7 @@ export class DbService {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const dbChatID = await this.db
+      const dbChatUsers = await this.db
         .select()
         .from(chatsUsers)
         .where(
@@ -650,29 +645,31 @@ export class DbService {
           ),
         );
 
-      const dbNotDirectChats = await this.db
-        .select()
-        .from(chats)
-        .where(
-          and(
-            eq(chats.is_direct, false),
-            not(eq(chats.chat_id, dbChatID[0].chat_id)),
-          ),
-        );
+      for (let i = 0; i < dbChatUsers.length; i++) {
+        const dbChat = await this.db
+          .select()
+          .from(chats)
+          .where(
+            and(
+              eq(chats.chat_id, dbChatUsers[i].chat_id),
+              eq(chats.is_direct, false),
+            ),
+          );
 
-      for (let i = 0; i < dbNotDirectChats.length; i++) {
+        if (dbChat.length === 0) continue;
+
         const field: InvitedChats = {
-          chatid: dbNotDirectChats[i].chat_id,
-          title: dbNotDirectChats[i].title,
-          image: dbNotDirectChats[i].image,
+          chatid: dbChatUsers[i].chat_id,
+          title: dbChat[0].title,
+          image: dbChat[0].image,
         };
+
         result.push(field);
       }
 
-      console.log('result: ', result);
       return result;
     } catch (error) {
-      console.log('userMessages:', error);
+      console.log('Error: ', error);
       return null;
     }
   }
