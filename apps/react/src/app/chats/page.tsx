@@ -26,9 +26,10 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
+    const commonWidth = "500px";
 
     return (
-        <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
+        <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
                 <button onClick={() => alert('Showing profile of ' + chatField.title)}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
@@ -55,6 +56,7 @@ function InvitedChatField({ chatField, setInvitedChats }: {
     setInvitedChats: React.Dispatch<React.SetStateAction<InvitedChats[] | undefined>> 
 }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
+    const commonWidth = "500px";
 
     const joinChat = (chat_id: number) => {
         fetchPost('api/joinChat', { chat_id: chat_id })
@@ -67,7 +69,7 @@ function InvitedChatField({ chatField, setInvitedChats }: {
     }
 
     return (
-        <div className="border border-gray-300 w-256 rounded-lg overflow-hidden">
+        <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
                 <button onClick={() => alert('Showing image of ' + chatField.title + ' groep')}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
