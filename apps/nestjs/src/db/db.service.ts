@@ -17,6 +17,7 @@ import type {
   InvitedChats,
   ExternalUser,
   ChatMessages,
+  ChatsUsers,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
@@ -772,6 +773,74 @@ export class DbService {
     } catch (error) {
       console.log('Error messags: ', error);
       return null;
+    }
+  }
+
+  async checkIfUserIsMuted(chat_id: number, user_id: number): Promise<boolean> {
+    try {
+      const testSetMute = false;
+      const currentTime = new Date().toLocaleString('en-US', {
+        timeZone: 'Europe/Amsterdam',
+      });
+
+      if (testSetMute) {
+        await this.db
+          .update(chatsUsers)
+          .set({
+            mute_untill: new Date(new Date(currentTime).getTime() + 60000), // 1 minute
+          })
+          .where(
+            and(
+              eq(chatsUsers.chat_id, chat_id),
+              eq(chatsUsers.intra_user_id, user_id),
+            ),
+          );
+        return true;
+      }
+
+      const result: ChatsUsers[] = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user_id),
+          ),
+        );
+
+      // console.log('Mute_untill:', result);
+
+      if (result[0].mute_untill === null) {
+        // console.log('user has no mute_untill');
+        return false;
+      }
+
+      // console.log('user has mute_untill');
+
+      const muteUntill = new Date(result[0].mute_untill);
+
+      console.log('currentTime:', new Date(currentTime));
+      console.log('muteUntill: ', muteUntill);
+      if (new Date(currentTime) < muteUntill) {
+        // console.log('User is muted');
+        return true;
+      }
+
+      // console.log('User is not muted');
+      await this.db
+        .update(chatsUsers)
+        .set({ mute_untill: null })
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user_id),
+          ),
+        );
+
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
     }
   }
 

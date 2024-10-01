@@ -60,6 +60,19 @@ export class MessagesGateway
       `Client ${client.id} sent: ${payload.message} to chat_id: ${payload.chat_id}`,
     );
 
+    // check if the user is muted
+    const isMuted = await this.dbService.checkIfUserIsMuted(
+      payload.chat_id,
+      payload.sender_id,
+    );
+
+    if (isMuted) {
+      this.logger.log(
+        `Client ${client.id} is muted in chat_id: ${payload.chat_id}`,
+      );
+      return;
+    }
+
     // Save message to the database
     const fullMessage = await this.dbService.saveMessage(payload);
 
