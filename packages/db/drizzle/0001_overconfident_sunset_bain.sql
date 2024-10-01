@@ -1,1 +1,0 @@
-ALTER TABLE "pong"."chatsUsers" ADD COLUMN "joined" boolean DEFAULT false NOT NULL;
