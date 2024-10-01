@@ -38,7 +38,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
-                            <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage}</p>
+                            <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage ? chatField.lastMessage : <i>No messages yet...</i>}</p>
                         </div>
                         <div className="text-right px-4">
                             <p>{chatField.time.toString().slice(11, 16)}</p>
@@ -51,17 +51,27 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     );
 }
 
-function InvitedChatField({ chatField, setInvitedChats }: { 
+function InvitedChatField({ chatField: invitedChatField, setInvitedChats, setUserChats }: {
     chatField: InvitedChats, 
-    setInvitedChats: React.Dispatch<React.SetStateAction<InvitedChats[] | undefined>> 
+    setUserChats: React.Dispatch<React.SetStateAction<UserChats[] | undefined>> 
+    setInvitedChats: React.Dispatch<React.SetStateAction<InvitedChats[] | undefined>>
+
 }) {
-    const userImage = chatField.image ? chatField.image : defaultUserImage;
+    const userImage = invitedChatField.image ? invitedChatField.image : defaultUserImage;
     const commonWidth = "500px";
 
     const joinChat = (chat_id: number) => {
         fetchPost('api/joinChat', { chat_id: chat_id })
             .then(() => {
                 setInvitedChats((prevChats) => (prevChats as InvitedChats[]).filter(chat => chat.chatid !== chat_id));
+                fetchGet<UserChats[]>('api/chats')
+                    .then((data) => {
+                        console.log('Received Chats Data: ', data);
+                        setUserChats(data);
+                    })
+                    .catch((error) => {
+                        console.log('Error fetching Chats: ', error);
+                    });
             })
             .catch((error) => {
                 console.log('Error joining chat: ', error);
@@ -71,16 +81,16 @@ function InvitedChatField({ chatField, setInvitedChats }: {
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing image of ' + chatField.title + ' groep')}>
+                <button onClick={() => alert('Showing image of ' + invitedChatField.title + ' groep')}>
                     <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
                 </button>
                 <div className="flex-grow">
                     <div className="flex justify-between w-full">
                         <div>
-                            <h3 className="font-bold text-left">{chatField.title}</h3>
+                            <h3 className="font-bold text-left">{invitedChatField.title}</h3>
                         </div>
                         <div className="text-right px-4">
-                            <button className="text-blue-500" onClick={() => joinChat(chatField.chatid)}>
+                            <button className="text-blue-500" onClick={() => joinChat(invitedChatField.chatid)}>
                                 Join
                             </button>
                         </div>
@@ -141,7 +151,7 @@ export default function Chats() {
             <h2 className="text-2xl font-bold text-center">Invited Chats</h2>
             <div className="h-64 overflow-auto">
                 {filteredInvitedChatFields.map((chatField, index) => (
-                    <InvitedChatField key={index} chatField={chatField} setInvitedChats={setInvitedChats} />
+                    <InvitedChatField key={index} chatField={chatField} setUserChats={setUserChats} setInvitedChats={setInvitedChats} />
                 ))}
                 {filteredInvitedChatFields.length == 0 && <p>No invited chats found...</p>}
             </div>

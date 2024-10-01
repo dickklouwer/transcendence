@@ -16,8 +16,6 @@ import type {
   UserChats,
   InvitedChats,
   ExternalUser,
-  Messages,
-  Chats,
   ChatMessages,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql } from 'drizzle-orm';
@@ -577,47 +575,50 @@ export class DbService {
     const result: UserChats[] = [];
 
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-      const dbChatID = await this.db
-        .select()
+      const chat_ids = await this.db
+        .select({ chatid: chatsUsers.chat_id })
         .from(chatsUsers)
-        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
-      if (!dbChatID) throw Error('failed to fetch dbChatID');
+        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
+        .where(
+          or(
+            and(eq(users.token, jwtToken), eq(chats.is_direct, true)),
+            and(eq(users.token, jwtToken), and(eq(chatsUsers.joined, true))),
+          ),
+        );
 
-      for (let i = 0; i < dbChatID.length; i++) {
-        const chatinfo: Chats[] = await this.db
-          .select()
+      // console.log('chat_ids:', chat_ids);
+
+      for (let i = 0; i < chat_ids.length; i++) {
+        const chatsInfo = await this.db
+          .select({
+            lastMessage: messages.message,
+            time_sent: messages.sent_at,
+            time_created: chats.created_at,
+            title: chats.title,
+            image: chats.image,
+          })
           .from(chats)
-          .where(eq(chats.chat_id, dbChatID[i].chat_id));
+          .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
+          .where(eq(chats.chat_id, chat_ids[i].chatid))
+          .orderBy(desc(messages.sent_at) ?? desc(chats.created_at))
+          .limit(1);
 
-        // get last message and time form chat_id
-        const idMessages: Messages[] = await this.db
-          .select()
-          .from(messages)
-          .where(eq(messages.chat_id, dbChatID[i].chat_id));
-
-        const lastMessage: Messages = idMessages[idMessages.length - 1]
-          ? idMessages[idMessages.length - 1]
-          : {
-              message_id: 0,
-              chat_id: dbChatID[i].chat_id,
-              sender_id: 0,
-              message: '',
-              sent_at: chatinfo[0].created_at,
-            };
+        // console.log('chatsInfo:', chatsInfo);
 
         const field: UserChats = {
-          chatid: dbChatID[i].chat_id,
-          title: chatinfo[0].title,
-          image: chatinfo[0].image,
-          lastMessage: lastMessage.message,
-          time: lastMessage.sent_at,
+          chatid: chat_ids[i].chatid,
+          title: chatsInfo[0].title,
+          image: chatsInfo[0].image,
+          lastMessage: chatsInfo[0].lastMessage,
+          time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
           unreadMessages: 0,
         };
 
         result.push(field);
       }
+
+      // console.log('userMessages:', result);
 
       return result;
     } catch (error) {
@@ -632,40 +633,38 @@ export class DbService {
     const result: InvitedChats[] = [];
 
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-
-      const dbChatUsers = await this.db
-        .select()
+      const chat_ids = await this.db
+        .select({ chatid: chatsUsers.chat_id })
         .from(chatsUsers)
+        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(
           and(
-            eq(chatsUsers.intra_user_id, user.intra_user_id),
-            eq(chatsUsers.joined, false),
+            eq(users.token, jwtToken),
+            and(eq(chatsUsers.joined, false), eq(chats.is_direct, false)),
           ),
         );
 
-      for (let i = 0; i < dbChatUsers.length; i++) {
-        const dbChat = await this.db
+      // console.log('chat_ids:', chat_ids);
+
+      for (let i = 0; i < chat_ids.length; i++) {
+        const chatsInfo = await this.db
           .select()
           .from(chats)
-          .where(
-            and(
-              eq(chats.chat_id, dbChatUsers[i].chat_id),
-              eq(chats.is_direct, false),
-            ),
-          );
+          .where(eq(chats.chat_id, chat_ids[i].chatid));
 
-        if (dbChat.length === 0) continue;
+        // console.log('chatsInfo:', chatsInfo);
 
         const field: InvitedChats = {
-          chatid: dbChatUsers[i].chat_id,
-          title: dbChat[0].title,
-          image: dbChat[0].image,
+          chatid: chat_ids[i].chatid,
+          title: chatsInfo[0].title,
+          image: chatsInfo[0].image,
         };
 
         result.push(field);
       }
+
+      // console.log('userMessages:', result);
 
       return result;
     } catch (error) {
