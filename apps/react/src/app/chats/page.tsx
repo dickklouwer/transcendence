@@ -61,20 +61,30 @@ function InvitedChatField({ chatField: invitedChatField, setInvitedChats, setUse
     const commonWidth = "500px";
 
     const joinChat = (chat_id: number) => {
-        fetchPost('api/joinChat', { chat_id: chat_id })
-            .then(() => {
-                setInvitedChats((prevChats) => (prevChats as InvitedChats[]).filter(chat => chat.chatid !== chat_id));
-                fetchGet<UserChats[]>('api/chats')
-                    .then((data) => {
-                        console.log('Received Chats Data: ', data);
-                        setUserChats(data);
-                    })
-                    .catch((error) => {
-                        console.log('Error fetching Chats: ', error);
-                    });
+        fetchGet<boolean>(`api/checkIfBanned?chat_id=${chat_id}`)
+            .then((isBanned) => {
+                if (isBanned) {
+                    alert('You are banned from this chat');
+                }
             })
             .catch((error) => {
                 console.log('Error joining chat: ', error);
+            });
+        fetchPost('api/joinChat', { chat_id: chat_id })
+                .then(() => {
+                    setInvitedChats((prevChats) => (prevChats as InvitedChats[]).filter(chat => chat.chatid !== chat_id));
+                    fetchGet<UserChats[]>('api/chats')
+                        .then((data) => {
+                            console.log('Received Chats Data: ', data);
+                            setUserChats(data);
+                        })
+                        .catch((error) => {
+                            console.log('Error fetching Chats: ', error);
+                        });
+            })
+            .catch((error) => {
+                console.log('Error checking if banned: ', error);
+                return;
             });
     }
 

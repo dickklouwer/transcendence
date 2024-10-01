@@ -134,6 +134,19 @@ export class AppController {
     return invitedChats;
   }
 
+  @Get('checkIfBanned')
+  async checkIfBanned(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ): Promise<boolean> {
+    const isBanned = await this.dbservice.checkIfUserIsBanned(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return isBanned;
+  }
+
   @Post('joinChat')
   async joinChat(
     @Headers('authorization') token: string,

@@ -584,11 +584,11 @@ export class DbService {
         .where(
           or(
             and(eq(users.token, jwtToken), eq(chats.is_direct, true)),
-            and(eq(users.token, jwtToken), and(eq(chatsUsers.joined, true))),
+            and(eq(users.token, jwtToken), eq(chatsUsers.joined, true)),
           ),
         );
 
-      // console.log('chat_ids:', chat_ids);
+      console.log('chat_ids:', chat_ids);
 
       for (let i = 0; i < chat_ids.length; i++) {
         const chatsInfo = await this.db
@@ -674,10 +674,47 @@ export class DbService {
     }
   }
 
+  async checkIfUserIsBanned(
+    jwtToken: string,
+    chat_id: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const isBanned = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(chatsUsers.is_banned, true),
+          ),
+        );
+
+      if (isBanned.length > 0) {
+        console.log('User is banned');
+        return true;
+      }
+      console.log('User is not banned');
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async joinChat(jwtToken: string, chat_id: number): Promise<boolean> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
+
+      const isBanned = await this.checkIfUserIsBanned(jwtToken, chat_id);
+      if (isBanned) {
+        console.log('User is banned');
+        return false;
+      }
 
       await this.db
         .update(chatsUsers)
