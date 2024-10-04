@@ -74,11 +74,35 @@ export class MessagesGateway
     }
 
     // Save message to the database
-    const fullMessage = await this.dbService.saveMessage(payload);
+    const fullMessage: ChatMessages = await this.dbService.saveMessage(payload);
 
     // Send to everyone in the chat room, including the sender
     this.server
       .to(fullMessage.chat_id.toString())
       .emit('messageFromServer', fullMessage);
+
+    // // loop through all the clients in the chat room and check if a user is blocked
+    // const room = this.server.sockets.adapter.rooms.get(
+    //   fullMessage.chat_id.toString(),
+    // );
+
+    // if (room) {
+    //   room.forEach((socketId) => {
+    //     const socket = this.server.sockets.sockets.get(socketId);
+    //     if (socket) {
+    //       this.dbService
+    //         .checkIfMessageIsBlocked(fullMessage.chat_id, fullMessage.sender_id)
+    //         .then((isBlocked) => {
+    //           if (!isBlocked) {
+    //             this.server.to(socketId).emit('messageFromServer', fullMessage);
+    //           } else {
+    //             this.logger.log(
+    //               `Client ${client.id} blocked user ${fullMessage.sender_id} in chat_id: ${fullMessage.chat_id}`,
+    //             );
+    //           }
+    //         });
+    //     }
+    //   });
+    // }
   }
 }

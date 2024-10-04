@@ -1,5 +1,5 @@
-import type { User, Friends, ChatsUsers, Chats, Messages } from './schema';
-import { users, friends, chats, chatsUsers, games, messages } from './schema';
+import type { User, Friends, ChatsUsers, Chats, Messages, MessageStatus } from './schema';
+import { users, friends, chats, chatsUsers, games, messages, messageStatus } from './schema';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
@@ -52,5 +52,5 @@ type ChatMessages = {
   sent_at: Date;
 };
 
-export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatsUsers, Chats, Messages };
-export { users, friends, messages, chats, games, chatsUsers};
+export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatsUsers, Chats, Messages, MessageStatus };
+export { users, friends, messages, messageStatus, chats, games, chatsUsers};

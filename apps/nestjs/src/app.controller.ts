@@ -225,6 +225,39 @@ export class AppController {
     return messages;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('messageStatus')
+  async getMessageStatus(
+    @Headers('authorization') token: string,
+    @Query('message_id') message_id: number,
+  ) {
+    const status = await this.dbservice.getMessageStatus(
+      token.split(' ')[1],
+      message_id,
+    );
+
+    return status;
+  }
+
+  @Post('updateUnreadMessages')
+  async updateUnreadMessages(
+    @Body('chat_id') chat_id: number,
+    @Body('intra_user_id') intra_user_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.updateUnreadMessages(
+      chat_id,
+      intra_user_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to update unread messages');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
   @Post('createMockData')
   async mockData(): Promise<boolean> {
     const response = await this.dbservice.mockData();

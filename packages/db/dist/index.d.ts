@@ -717,6 +717,109 @@ declare const messages: drizzle_orm_pg_core.PgTableWithColumns<{
     };
     dialect: "pg";
 }>;
+declare const messageStatus: drizzle_orm_pg_core.PgTableWithColumns<{
+    name: "messageStatus";
+    schema: "pong";
+    columns: {
+        message_status_id: drizzle_orm_pg_core.PgColumn<{
+            name: "message_status_id";
+            tableName: "messageStatus";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        message_id: drizzle_orm_pg_core.PgColumn<{
+            name: "message_id";
+            tableName: "messageStatus";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        chat_id: drizzle_orm_pg_core.PgColumn<{
+            name: "chat_id";
+            tableName: "messageStatus";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        receiver_id: drizzle_orm_pg_core.PgColumn<{
+            name: "receiver_id";
+            tableName: "messageStatus";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        receivet_at: drizzle_orm_pg_core.PgColumn<{
+            name: "receivet_at";
+            tableName: "messageStatus";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        read_at: drizzle_orm_pg_core.PgColumn<{
+            name: "read_at";
+            tableName: "messageStatus";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 declare const userSelect: z.ZodObject<{
     intra_user_id: z.ZodNumber;
     user_name: z.ZodString;
@@ -848,11 +951,34 @@ declare const chatsUsersSelect: z.ZodObject<{
     joined: boolean;
     joined_at: Date | null;
 }>;
+declare const messageStatusInsert: z.ZodObject<{
+    message_status_id: z.ZodNumber;
+    message_id: z.ZodNumber;
+    chat_id: z.ZodNullable<z.ZodNumber>;
+    receiver_id: z.ZodNumber;
+    receivet_at: z.ZodNullable<z.ZodDate>;
+    read_at: z.ZodNullable<z.ZodDate>;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    chat_id: number | null;
+    message_id: number;
+    message_status_id: number;
+    receiver_id: number;
+    receivet_at: Date | null;
+    read_at: Date | null;
+}, {
+    chat_id: number | null;
+    message_id: number;
+    message_status_id: number;
+    receiver_id: number;
+    receivet_at: Date | null;
+    read_at: Date | null;
+}>;
 type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
 type Chats = z.infer<typeof chatSelect>;
 type ChatsUsers = z.infer<typeof chatsUsersSelect>;
 type Messages = z.infer<typeof messagesInsert>;
+type MessageStatus = z.infer<typeof messageStatusInsert>;
 
 declare const createQueryClient: (input: string) => postgres.Sql<{}>;
 declare const createDrizzleClient: (client: ReturnType<typeof createQueryClient>) => drizzle_orm_postgres_js.PostgresJsDatabase<Record<string, never>>;
@@ -898,4 +1024,4 @@ type ChatMessages = {
     sent_at: Date;
 };
 
-export { type ChatMessages, type Chats, type ChatsUsers, type ExternalUser, type Friends, type InvitedChats, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messages, users };
+export { type ChatMessages, type Chats, type ChatsUsers, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };

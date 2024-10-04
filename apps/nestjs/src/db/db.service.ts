@@ -3,6 +3,7 @@ import {
   users,
   friends,
   messages,
+  messageStatus,
   games,
   chats,
   chatsUsers,
@@ -17,9 +18,10 @@ import type {
   InvitedChats,
   ExternalUser,
   ChatMessages,
+  MessageStatus,
   ChatsUsers,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, isNull } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
 
 const dublicated_key = '23505';
@@ -576,6 +578,13 @@ export class DbService {
     const result: UserChats[] = [];
 
     try {
+      await this.db
+        .update(chatsUsers)
+        .set({ joined: false })
+        .where(
+          and(eq(chatsUsers.is_banned, true), eq(chatsUsers.joined, true)),
+        );
+
       const chat_ids = await this.db
         .select({ chatid: chatsUsers.chat_id })
         .from(chatsUsers)
@@ -588,7 +597,7 @@ export class DbService {
           ),
         );
 
-      console.log('chat_ids:', chat_ids);
+      // console.log('chat_ids:', chat_ids);
 
       for (let i = 0; i < chat_ids.length; i++) {
         const chatsInfo = await this.db
@@ -634,6 +643,13 @@ export class DbService {
     const result: InvitedChats[] = [];
 
     try {
+      await this.db
+        .update(chatsUsers)
+        .set({ joined: false })
+        .where(
+          and(eq(chatsUsers.is_banned, true), eq(chatsUsers.joined, true)),
+        );
+
       const chat_ids = await this.db
         .select({ chatid: chatsUsers.chat_id })
         .from(chatsUsers)
@@ -694,10 +710,10 @@ export class DbService {
         );
 
       if (isBanned.length > 0) {
-        console.log('User is banned');
+        // console.log('User is banned');
         return true;
       }
-      console.log('User is not banned');
+      // console.log('User is not banned');
       return false;
     } catch (error) {
       console.log('Error: ', error);
@@ -733,7 +749,7 @@ export class DbService {
       return false;
     }
   }
-
+  innerJoin;
   async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
@@ -813,6 +829,41 @@ export class DbService {
     }
   }
 
+  async getMessageStatus(
+    jwtToken: string,
+    message_id: number,
+  ): Promise<{ receivet_at: Date; read_at: Date } | null> {
+    // TODO: make function
+    return null;
+  }
+
+  async updateUnreadMessages(
+    chat_id: number,
+    user_user_id: number,
+  ): Promise<boolean> {
+    try {
+      const currentTime = new Date().toLocaleString('en-US', {
+        timeZone: 'Europe/Amsterdam',
+      });
+
+      await this.db
+        .update(messageStatus)
+        .set({ read_at: new Date(new Date(currentTime).getTime()) })
+        .where(
+          and(
+            eq(messageStatus.chat_id, chat_id),
+            eq(messageStatus.receiver_id, user_user_id),
+            isNull(messageStatus.read_at),
+          ),
+        );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async checkIfUserIsMuted(chat_id: number, user_id: number): Promise<boolean> {
     try {
       const testSetMute = false;
@@ -881,6 +932,13 @@ export class DbService {
     }
   }
 
+  // async checkIfMessageIsBlocked(
+  //   chat_id: number,
+  //   message_id: number,
+  // ): Promise<boolean> {
+  //   return false;
+  // }
+
   async saveMessage(payload: ChatMessages): Promise<ChatMessages> {
     try {
       const result = await this.db
@@ -891,6 +949,25 @@ export class DbService {
           message: payload.message,
         })
         .returning();
+
+      // get user_receiver_ids
+      const chatUsers = await this.db
+        .select({ user_id: chatsUsers.intra_user_id })
+        .from(chatsUsers)
+        .where(eq(chatsUsers.chat_id, payload.chat_id));
+
+      console.log('chatUsers:', chatUsers);
+
+      for (let i = 0; i < chatUsers.length; i++) {
+        await this.db.insert(messageStatus).values({
+          message_id: result[0].message_id,
+          chat_id: payload.chat_id,
+          receiver_id: chatUsers[i].user_id,
+          receivet_at: null,
+          read_at: null,
+        });
+      }
+
       console.log('Message saved');
 
       const sender = await this.getAnyUserFromDataBase(payload.sender_id);

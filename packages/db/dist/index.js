@@ -35,6 +35,7 @@ __export(src_exports, {
   createQueryClient: () => createQueryClient,
   friends: () => friends,
   games: () => games,
+  messageStatus: () => messageStatus,
   messages: () => messages,
   users: () => users
 });
@@ -111,6 +112,7 @@ var messages = mySchema.table("messages", {
 var messageStatus = mySchema.table("messageStatus", {
   message_status_id: (0, import_pg_core.serial)("message_status_id").primaryKey(),
   message_id: (0, import_pg_core.integer)("message_id").references(() => messages.message_id).notNull(),
+  chat_id: (0, import_pg_core.integer)("chat_id"),
   receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id).notNull(),
   receivet_at: (0, import_pg_core.timestamp)("receivet_at"),
   read_at: (0, import_pg_core.timestamp)("read_at")
@@ -121,6 +123,7 @@ var friendsSelect = (0, import_drizzle_zod.createSelectSchema)(friends);
 var messagesInsert = (0, import_drizzle_zod.createSelectSchema)(messages);
 var chatSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
 var chatsUsersSelect = (0, import_drizzle_zod.createSelectSchema)(chatsUsers);
+var messageStatusInsert = (0, import_drizzle_zod.createSelectSchema)(messageStatus);
 
 // src/index.ts
 var import_postgres_js = require("drizzle-orm/postgres-js");
@@ -135,6 +138,7 @@ var createDrizzleClient = (client) => (0, import_postgres_js.drizzle)(client);
   createQueryClient,
   friends,
   games,
+  messageStatus,
   messages,
   users
 });

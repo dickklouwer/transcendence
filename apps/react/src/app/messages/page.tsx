@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
-import { User, Messages, ChatMessages, ExternalUser } from '@repo/db';
+import { User, Messages, ChatMessages, ExternalUser, MessageStatus } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
-const checkPassword: boolean = true;
+const checkPassword: boolean = false;
 
-function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
+function Message({ message, messageStatus, intra_id }: { message: ChatMessages, messageStatus: MessageStatus, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
 
@@ -18,6 +18,16 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
             <div key={index}>{str}</div>
         ));
     };
+
+    function renderMessageStatus(messageStatus: MessageStatus) {
+        if (!messageStatus)
+            return '';
+        if (messageStatus.read_at)
+            return 'read';
+        if (messageStatus.receivet_at)
+            return 'received';
+        return 'sent';
+    }
 
     function renderDate(date: Date) {
         if (!date)
@@ -33,6 +43,7 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
                 {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
                 <div>{renderMessageWithLineBreaks(message.message)}</div>
                 <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
+                <div className="text-xs text-right text-gray-600">{renderMessageStatus(messageStatus)}</div>
             </div>
         </div>
     );
@@ -73,6 +84,7 @@ export default function DC() {
     const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState<ChatMessages[]>([]);
+    const [messageStatus, setMessageStatus] = useState<MessageStatus[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
@@ -95,6 +107,14 @@ export default function DC() {
     useEffect(() => {
         if (!user || !user.intra_user_id) return;
 
+        fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
+            .then((res) => {
+                setHasPassword(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+        });
+
         // Initialize socket connection
         socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
             path: "/ws/socket.io",
@@ -106,18 +126,10 @@ export default function DC() {
 
         const socket = socketRef.current;
 
-        fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
-            .then((res) => {
-                setHasPassword(res);
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-        });
-
         /* Load messages form database form right chat, using query chat_id: number */
         fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
-            .then((res) => {
-                /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+        .then((res) => {
+            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
                 const transformedMessages = res.map(message => ({
                     ...message,
                     sent_at: new Date(message.sent_at)
@@ -127,8 +139,9 @@ export default function DC() {
             })
             .catch((error) => {
                 console.log('Error: ', error);
-        });
-
+            });
+        updateUnreadMessages();
+            
         /* Join chat */
         socket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
 
@@ -137,6 +150,7 @@ export default function DC() {
             message.sent_at = new Date(message.sent_at);
             console.log('Received message: ' + message.message);
             setMessages((prevMessages) => [...prevMessages, message]);
+            updateUnreadMessages();
         });
 
         return () => {
@@ -152,6 +166,16 @@ export default function DC() {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages]);
+
+    const updateUnreadMessages = () => {
+        fetchPost('api/updateUnreadMessages', { chat_id: chat_id, intra_user_id: user?.intra_user_id ?? 0 })
+            .then(() => {
+                console.log('Updated unread messages');
+            })
+            .catch((error) => {
+                console.log('Error updating unread messages: ', error);
+            });
+    }
 
     const sendMessage = (message: ChatMessages) => {
         console.log('Sending message: ' + message.message);
@@ -248,8 +272,13 @@ export default function DC() {
                 {customTransparantToBlack()}
                 <div className="overflow-auto h-full">
                     <div className="h-10"></div> {/* making sure you can see the first message */}
+                    {/* {user && messages.map((message, index) => (
+                        <Message key={index} message={message} messageStatus={messageStatus} intra_id={user.intra_user_id} />
+                    ))} */}
                     {user && messages.map((message, index) => (
-                        <Message key={index} message={message} intra_id={user.intra_user_id} />
+                        console.log('Message: ', message),
+                        console.log('MessageStatus: ', messageStatus[index]),
+                        <Message key={index} message={message} messageStatus={messageStatus[index]} intra_id={user.intra_user_id} />
                     ))}
                     <div ref={messagesEndRef} /> {/* Used for auto scroll to last message */}
                 </div>
