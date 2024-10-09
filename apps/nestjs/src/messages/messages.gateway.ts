@@ -10,6 +10,7 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ChatMessages } from '@repo/db';
 import { DbService } from '../db/db.service';
+import { log } from 'console';
 
 @WebSocketGateway({
   cors: { origin: `http://${process.env.HOST_NAME}:2424` },
@@ -80,6 +81,12 @@ export class MessagesGateway
     this.server
       .to(fullMessage.chat_id.toString())
       .emit('messageFromServer', fullMessage);
+
+    // Send update to the inbox chat
+    log('Sending newMessage to inbox');
+    this.server.to('inbox').emit('newMessage');
+
+    // this code below is not working yet
 
     // // loop through all the clients in the chat room and check if a user is blocked
     // const room = this.server.sockets.adapter.rooms.get(

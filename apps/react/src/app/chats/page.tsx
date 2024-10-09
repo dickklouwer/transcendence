@@ -1,12 +1,12 @@
 "use client";
 
 import { fetchGet, fetchPost } from '@/app/fetch_functions';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { InvitedChats, UserChats } from '@repo/db';
-import { join } from 'path';
+import io from 'socket.io-client';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -115,8 +115,10 @@ export default function Chats() {
     const [userChats, setUserChats] = useState<UserChats[]>();
     const [invitedChats, setInvitedChats] = useState<InvitedChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
+    const [reload, setReload] = useState<boolean>(false);
+    const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
-    useEffect(() => {
+    function loadChats() {
         fetchGet<UserChats[]>('api/chats')
             .then((data) => {
                 console.log('Received Chats Data: ', data);
@@ -134,6 +136,15 @@ export default function Chats() {
             .catch((error) => {
                 console.log('Error fetching Invited Chats: ', error);
             });
+    }
+
+
+    useEffect(() => {
+        loadChats();
+        // userSocket.on('sendFriendRequestAccepted', () => {
+        //     setReload(prev => !prev);
+        //   });
+        
     }, []);
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];

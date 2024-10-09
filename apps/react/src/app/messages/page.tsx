@@ -8,6 +8,8 @@ import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
 const checkPassword: boolean = false;
+// export const messagesSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { path: "/ws/socket.io/messages" });
+
 
 function Message({ message, messageStatus, intra_id }: { message: ChatMessages, messageStatus: MessageStatus, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
@@ -118,10 +120,6 @@ export default function DC() {
         // Initialize socket connection
         socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
             path: "/ws/socket.io",
-            query: {
-                intra_user_id: user.intra_user_id.toString(),
-                chat_id: chat_id.toString(),
-            }
         });
 
         const socket = socketRef.current;
