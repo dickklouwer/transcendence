@@ -183,19 +183,19 @@ export default function Chats() {
     else
         console.log('User Chats: ', userChats);
 
-    const filteredChatFields = userChats?.filter((chatField) => {
-        return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
-    }) ?? [];
+    // const filteredChatFields = userChats?.filter((chatField) => {
+    //     return chatField.title.toLowerCase().includes(searchTerm.toLowerCase());
+    // }) ?? [];
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
             <h2 className="text-2xl font-bold text-center">Chats</h2>
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="h-64 overflow-auto">
-                {filteredChatFields.map((chatField, index) => (
+                {/* {filteredChatFields.map((chatField, index) => (
                     <ChatField key={index} chatField={chatField} />
                 ))}
-                { filteredChatFields.length == 0 && <p>No chats found...</p> }
+                { filteredChatFields.length == 0 && <p>No chats found...</p> } */}
             </div>
             <Link className="text-blue-500 mt-4" href={'/menu'}>
                 Back to Menu

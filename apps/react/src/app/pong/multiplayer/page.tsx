@@ -8,6 +8,7 @@ import { GameManager } from './gameManager';
 import Countdown from '../../game_elements/countdown';
 import { fetchGet } from '../../fetch_functions';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 const socket = io(`http://localhost:4433/multiplayer`, { path: "/ws/socket.io"});
 
@@ -45,14 +46,17 @@ export default function PongGame() {
 	const [Gamestate, SetGameState] = useState("AwaitingPlayer");
 
 	const gamestateRef = useRef(Gamestate);
+	const searchParams = useSearchParams();
 	gamestateRef.current = Gamestate; // Always keep the ref updated
+	const player_id: number = Number(searchParams?.get('player_id')) ?? -1;
+	const nick_name: string = searchParams?.get('nick_name') ?? '';
 
 
 	useEffect(() => {
 		fetchGet<User>('/api/profile')
 			.then((res) => {
 				if (res.intra_user_id !== null && res.user_name !== null) {
-					socket.emit('registerUser', { intra_id: res.intra_user_id, user_name: res.user_name });
+					socket.emit('registerUsers', { intra_id: res.intra_user_id, user_name: res.user_name,  opp_id: player_id, opp_nn: nick_name });
 				} else {
 					console.error('Error fetching user profile:');
 				}

@@ -127,6 +127,18 @@ function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearch
     );
 }
 
+function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
+    return (
+        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+            <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
+                <button className="py-2 px-4 text-blue-500 font-bold">
+                    Invite for a game
+                </button>
+            </Link>
+        </div>
+    );
+}
+
 export default function DC() {
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState(databaseMessages);
@@ -194,6 +206,7 @@ export default function DC() {
                     </button>
                 </div>
             </div>
+            {<InviteForGame intra_user_id={43} nick_name="John Doe" />}
         </div>
     );
 }
