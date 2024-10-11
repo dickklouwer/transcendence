@@ -7,7 +7,7 @@ import { User, Messages, ChatMessages, ExternalUser, MessageStatus, DmInfo } fro
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
-const checkPassword: boolean = false;
+const checkPassword: boolean = true;
 // export const messagesSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { path: "/ws/socket.io/messages" });
 
 
@@ -102,7 +102,7 @@ export default function DC() {
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
-    const [dmInfo, setDmInfo] = useState<DmInfo>({ isDm: true, intraId: null, nickName: null });
+    const [dmInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null });
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<ReturnType<typeof io> | null>(null);
 

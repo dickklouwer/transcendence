@@ -843,23 +843,38 @@ export class DbService {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const info = await this.db
-        .select()
+      const chatInfo = await this.db
+        .select({
+          intra_id: chatsUsers.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+        })
         .from(chatsUsers)
         .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
         .where(eq(chatsUsers.chat_id, chat_id));
 
-      console.log('chatInfo:', info);
+      console.log('chatInfo:', chatInfo);
 
-      if (info.length !== 2) {
+      if (chatInfo.length !== 2) {
         console.log('Chat is not a DM');
         return { isDm: false, intraId: null, nickName: null };
       }
 
+      for (let i = 0; i < chatInfo.length; i++) {
+        if (chatInfo[i].intra_id !== user.intra_user_id) {
+          console.log('Chat is a DM');
+          return {
+            isDm: true,
+            intraId: chatInfo[i].intra_id,
+            nickName: chatInfo[i].nick_name ?? chatInfo[i].user_name,
+          };
+        }
+      }
     } catch (error) {
       console.log('Error: ', error);
       return { isDm: false, intraId: null, nickName: null };
     }
+    return { isDm: false, intraId: null, nickName: null };
   }
 
   async updateUnreadMessages(
