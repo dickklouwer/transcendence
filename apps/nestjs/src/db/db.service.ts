@@ -22,9 +22,8 @@ import type {
   ChatsUsers,
   DmInfo,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql, isNull } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
-import { count } from 'console';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -844,12 +843,19 @@ export class DbService {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      const chatInfo = await this.db
+      const info = await this.db
         .select()
         .from(chatsUsers)
+        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
         .where(eq(chatsUsers.chat_id, chat_id));
 
-      console.log('chatInfo:', chatInfo);
+      console.log('chatInfo:', info);
+
+      if (info.length !== 2) {
+        console.log('Chat is not a DM');
+        return { isDm: false, intraId: null, nickName: null };
+      }
+
     } catch (error) {
       console.log('Error: ', error);
       return { isDm: false, intraId: null, nickName: null };
