@@ -239,6 +239,17 @@ export class AppController {
     return status;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('getDmInfo')
+  async getDmInfo(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ) {
+    const dmInfo = await this.dbservice.getDmInfo(token.split(' ')[1], chat_id);
+
+    return dmInfo;
+  }
+
   @Post('updateUnreadMessages')
   async updateUnreadMessages(
     @Body('chat_id') chat_id: number,

@@ -52,5 +52,11 @@ type ChatMessages = {
   sent_at: Date;
 };
 
-export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatsUsers, Chats, Messages, MessageStatus };
+type DmInfo = {
+  isDm: boolean;
+  intraId: number | null;
+  nickName: string | null;
+};
+
+export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, DmInfo, ChatsUsers, Chats, Messages, MessageStatus };
 export { users, friends, messages, messageStatus, chats, games, chatsUsers};

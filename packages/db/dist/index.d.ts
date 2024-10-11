@@ -1023,5 +1023,10 @@ type ChatMessages = {
     message: string;
     sent_at: Date;
 };
+type DmInfo = {
+    isDm: boolean;
+    intraId: number | null;
+    nickName: string | null;
+};
 
-export { type ChatMessages, type Chats, type ChatsUsers, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };
+export { type ChatMessages, type Chats, type ChatsUsers, type DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };

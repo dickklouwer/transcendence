@@ -20,9 +20,11 @@ import type {
   ChatMessages,
   MessageStatus,
   ChatsUsers,
+  DmInfo,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
+import { count } from 'console';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -835,6 +837,23 @@ export class DbService {
   ): Promise<{ receivet_at: Date; read_at: Date } | null> {
     // TODO: make function
     return null;
+  }
+
+  async getDmInfo(jwtToken: string, chat_id: number): Promise<DmInfo> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const chatInfo = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(eq(chatsUsers.chat_id, chat_id));
+
+      console.log('chatInfo:', chatInfo);
+    } catch (error) {
+      console.log('Error: ', error);
+      return { isDm: false, intraId: null, nickName: null };
+    }
   }
 
   async updateUnreadMessages(

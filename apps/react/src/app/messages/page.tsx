@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import io from 'socket.io-client';
-import { User, Messages, ChatMessages, ExternalUser, MessageStatus } from '@repo/db';
+import { User, Messages, ChatMessages, ExternalUser, MessageStatus, DmInfo } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 
@@ -81,6 +81,18 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
     );
 }
 
+function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
+    return (
+        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+            <Link className="flex-grow" href={{ pathname: '/multiplayer_pong', query: { player_id: intra_user_id, nick_name: nick_name } }}>
+                <button className="py-2 px-4 text-blue-500 font-bold">
+                    Invite for a game
+                </button>
+            </Link>
+        </div>
+    );
+}
+
 export default function DC() {
     const searchParams = useSearchParams();
     const [user, setUser] = useState<User>();
@@ -90,6 +102,7 @@ export default function DC() {
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
+    const [dmInfo, setDmInfo] = useState<DmInfo>({ isDm: true, intraId: null, nickName: null });
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
@@ -139,6 +152,14 @@ export default function DC() {
                 console.log('Error: ', error);
             });
         updateUnreadMessages();
+
+        fetchGet<DmInfo>(`api/getDmInfo?chat_id=${chat_id}`)
+            .then((res) => {
+                setDmInfo(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
             
         /* Join chat */
         socket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
@@ -302,6 +323,7 @@ export default function DC() {
                         Send
                     </button>
                 </div>
+                {dmInfo.isDm && <InviteForGame intra_user_id={dmInfo.intraId} nick_name={dmInfo.nickName} />}
             </div>
         </div>
     );
