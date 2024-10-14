@@ -160,8 +160,7 @@ export default function DC() {
             .catch((error) => {
                 console.log('Error: ', error);
             });
-            
-        /* Join chat */
+
         socket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
 
         socket.on('messageFromServer', (message: ChatMessages) => {
@@ -291,9 +290,6 @@ export default function DC() {
                 {customTransparantToBlack()}
                 <div className="overflow-auto h-full">
                     <div className="h-10"></div> {/* making sure you can see the first message */}
-                    {/* {user && messages.map((message, index) => (
-                        <Message key={index} message={message} messageStatus={messageStatus} intra_id={user.intra_user_id} />
-                    ))} */}
                     {user && messages.map((message, index) => (
                         console.log('Message: ', message),
                         console.log('MessageStatus: ', messageStatus[index]),
@@ -323,7 +319,7 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {dmInfo.isDm && <InviteForGame intra_user_id={dmInfo.intraId} nick_name={dmInfo.nickName} />}
+                {dmInfo.isDm && dmInfo.intraId  && dmInfo.nickName && <InviteForGame intra_user_id={dmInfo.intraId} nick_name={dmInfo.nickName} />}
             </div>
         </div>
     );
