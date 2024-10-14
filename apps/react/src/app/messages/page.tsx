@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import io from 'socket.io-client';
 import { User, Messages, ChatMessages, ExternalUser, MessageStatus, DmInfo } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
+import { chatSocket } from '../chat_componens';
+
 
 const checkPassword: boolean = true;
 // export const messagesSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { path: "/ws/socket.io/messages" });
@@ -104,7 +105,7 @@ export default function DC() {
     const [password, setPassword] = useState('');
     const [dmInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null });
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const socketRef = useRef<ReturnType<typeof io> | null>(null);
+    // const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
@@ -130,12 +131,12 @@ export default function DC() {
                 console.log('Error: ', error);
         });
 
-        // Initialize socket connection
-        socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
-            path: "/ws/socket.io",
-        });
+        // // Initialize socket connection
+        // socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
+        //     path: "/ws/socket.io",
+        // });
 
-        const socket = socketRef.current;
+        // const socket = socketRef.current;
 
         /* Load messages form database form right chat, using query chat_id: number */
         fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
@@ -161,9 +162,9 @@ export default function DC() {
                 console.log('Error: ', error);
             });
 
-        socket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
+        chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
 
-        socket.on('messageFromServer', (message: ChatMessages) => {
+        chatSocket.on('messageFromServer', (message: ChatMessages) => {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             message.sent_at = new Date(message.sent_at);
             console.log('Received message: ' + message.message);
@@ -173,9 +174,9 @@ export default function DC() {
 
         return () => {
             /* Leave chat */
-            socket.emit('leaveChat', chat_id.toString());
-            socket.off('messageFromServer');
-            socket.disconnect();
+            chatSocket.emit('leaveChat', chat_id.toString());
+            chatSocket.off('messageFromServer');
+            chatSocket.disconnect();
         };
     }, [user, chat_id]);
 
@@ -197,7 +198,7 @@ export default function DC() {
 
     const sendMessage = (message: ChatMessages) => {
         console.log('Sending message: ' + message.message);
-        socketRef.current?.emit('messageToServer', message);
+        chatSocket.emit('messageToServer', message);
         setNewMessage('');
     };
 

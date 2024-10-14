@@ -4,7 +4,7 @@ import { useState } from 'react';
 import io from 'socket.io-client';
 import Link from 'next/link';
 
-// export const chatSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
+export const chatSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { path: "/ws/socket.io/messages" });
 
 export function MessageInbox() {
     const [numberOfMessages, setNumberOfMessages] = useState<number>(2);
