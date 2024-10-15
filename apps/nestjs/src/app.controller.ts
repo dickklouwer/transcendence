@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { User, ExternalUser, UserChats } from '@repo/db';
+import type { User, ExternalUser, UserChats, InvitedChats } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
 
@@ -121,7 +121,67 @@ export class AppController {
     return userChats;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Get('invitedChats')
+  async getInvitedChats(
+    @Headers('authorization') token: string,
+  ): Promise<InvitedChats[]> {
+    const invitedChats = await this.dbservice.getInvitedChatsFromDataBase(
+      token.split(' ')[1],
+    );
+
+    if (!invitedChats) throw Error('Failed to fetch user');
+
+    return invitedChats;
+  }
+
+  @Get('checkIfBanned')
+  async checkIfBanned(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ): Promise<boolean> {
+    const isBanned = await this.dbservice.checkIfUserIsBanned(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    return isBanned;
+  }
+
+  @Post('joinChat')
+  async joinChat(
+    @Headers('authorization') token: string,
+    @Body('chat_id') chat_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.joinChat(
+      token.split(' ')[1],
+      chat_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to join chat');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
+  @Post('setChatPassword')
+  async setChatPassword(
+    @Body('chat_id') chat_id: number,
+    @Body('password') password: string | null,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.setChatPassword(chat_id, password);
+
+    if (!response) {
+      res.status(422).send('Failed to set password');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
   @Get('chatHasPassword')
   async chatHasPassword(
     @Headers('authorization') token: string,
@@ -157,13 +217,56 @@ export class AppController {
     @Headers('authorization') token: string,
     @Query('chat_id') chat_id: number,
   ) {
-    console.log(`messages?chat_id=${chat_id}`);
     const messages = await this.dbservice.getMessagesFromDataBase(
       token.split(' ')[1],
       chat_id,
     );
 
     return messages;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('messageStatus')
+  async getMessageStatus(
+    @Headers('authorization') token: string,
+    @Query('message_id') message_id: number,
+  ) {
+    const status = await this.dbservice.getMessageStatus(
+      token.split(' ')[1],
+      message_id,
+    );
+
+    return status;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getDmInfo')
+  async getDmInfo(
+    @Headers('authorization') token: string,
+    @Query('chat_id') chat_id: number,
+  ) {
+    const dmInfo = await this.dbservice.getDmInfo(token.split(' ')[1], chat_id);
+
+    return dmInfo;
+  }
+
+  @Post('updateUnreadMessages')
+  async updateUnreadMessages(
+    @Body('chat_id') chat_id: number,
+    @Body('intra_user_id') intra_user_id: number,
+    @Res() res: Response,
+  ) {
+    const response = await this.dbservice.updateUnreadMessages(
+      chat_id,
+      intra_user_id,
+    );
+
+    if (!response) {
+      res.status(422).send('Failed to update unread messages');
+      return;
+    }
+
+    res.status(200).send(response);
   }
 
   @Post('createMockData')

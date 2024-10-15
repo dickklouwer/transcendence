@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS "pong"."chatsUsers" (
 	"is_admin" boolean DEFAULT false NOT NULL,
 	"is_banned" boolean DEFAULT false NOT NULL,
 	"mute_untill" timestamp,
+	"joined" boolean DEFAULT false NOT NULL,
 	"joined_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint

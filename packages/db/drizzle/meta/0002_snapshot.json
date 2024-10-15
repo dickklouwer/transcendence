@@ -1,6 +1,6 @@
 {
-  "id": "306a16b3-f52b-45e9-83bc-4bfdce275289",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "72273f0f-0383-4ae3-b382-404072b19a6d",
+  "prevId": "9963abc6-3d59-4932-82b2-1b0ba6f81d85",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -306,6 +306,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "chat_id": {
+          "name": "chat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "receiver_id": {
           "name": "receiver_id",

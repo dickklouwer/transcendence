@@ -75,7 +75,6 @@ export class UserGateway
   @SubscribeMessage('registerUserId')
   handleRegisterUser(client: Socket, intra_user_id: number) {
     this.clients.set(intra_user_id, client);
-    console.log(intra_user_id);
     this.setUserState({ intra_user_id, state: 'Online' });
     this.logger.log(`Client registered: ${client.id}`);
   }

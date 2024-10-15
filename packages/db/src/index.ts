@@ -1,5 +1,5 @@
-import type { User, Friends, ChatsUsers, Chats, Messages } from './schema';
-import { users, friends, chats, chatsUsers, games, messages } from './schema';
+import type { User, Friends, ChatsUsers, Chats, Messages, MessageStatus } from './schema';
+import { users, friends, chats, chatsUsers, games, messages, messageStatus } from './schema';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
@@ -13,6 +13,12 @@ type UserChats = {
 	lastMessage: string;
 	time: Date;
 	unreadMessages: number;
+};
+
+type InvitedChats = {
+  chatid: number;
+  title: string;
+  image: string;
 };
 
 type ExternalUser = {
@@ -36,8 +42,21 @@ type MultiplayerMatches = {
   image: string;
 };
 
+type ChatMessages = {
+  message_id: number;
+  chat_id: number;
+  sender_id: number;
+  sender_name: string;
+  sender_image_url: string;
+  message: string;
+  sent_at: Date;
+};
 
+type DmInfo = {
+  isDm: boolean;
+  intraId: number | null;
+  nickName: string | null;
+};
 
-
-export type { User, UserChats, ExternalUser, Friends, MultiplayerMatches, ChatsUsers, Chats, Messages };
-export { users, friends, messages, chats, games, chatsUsers};
+export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, DmInfo, ChatsUsers, Chats, Messages, MessageStatus };
+export { users, friends, messages, messageStatus, chats, games, chatsUsers};

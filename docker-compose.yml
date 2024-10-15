@@ -53,7 +53,7 @@ services:
     entrypoint: /bin/bash \-c "envsubst '$$HOST\_NAME' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
     
   db:
-    image: postgres
+    image: postgres:16
     restart: always
     environment:
       - POSTGRES_PASSWORD=postgres

@@ -61,6 +61,7 @@ var chatsUsers = mySchema.table("chatsUsers", {
   is_admin: boolean("is_admin").notNull().default(false),
   is_banned: boolean("is_banned").notNull().default(false),
   mute_untill: timestamp("mute_untill"),
+  joined: boolean("joined").notNull().default(false),
   joined_at: timestamp("joined_at").defaultNow()
 });
 var messages = mySchema.table("messages", {
@@ -75,6 +76,7 @@ var messages = mySchema.table("messages", {
 var messageStatus = mySchema.table("messageStatus", {
   message_status_id: serial("message_status_id").primaryKey(),
   message_id: integer("message_id").references(() => messages.message_id).notNull(),
+  chat_id: integer("chat_id"),
   receiver_id: integer("receiver_id").references(() => users.intra_user_id).notNull(),
   receivet_at: timestamp("receivet_at"),
   read_at: timestamp("read_at")
@@ -85,6 +87,7 @@ var friendsSelect = createSelectSchema(friends);
 var messagesInsert = createSelectSchema(messages);
 var chatSelect = createSelectSchema(chats);
 var chatsUsersSelect = createSelectSchema(chatsUsers);
+var messageStatusInsert = createSelectSchema(messageStatus);
 
 // src/index.ts
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -98,6 +101,7 @@ export {
   createQueryClient,
   friends,
   games,
+  messageStatus,
   messages,
   users
 };

@@ -2,47 +2,51 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import io from 'socket.io-client';
-import {User, Messages, ExternalUser} from '@repo/db';
+import { User, Messages, ChatMessages, ExternalUser, MessageStatus, DmInfo } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
+import { chatSocket } from '../chat_componens';
 
-function Message({ message, intra_id }: { message: Messages, intra_id: number }) {
+
+const checkPassword: boolean = true;
+// export const messagesSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { path: "/ws/socket.io/messages" });
+
+
+function Message({ message, messageStatus, intra_id }: { message: ChatMessages, messageStatus: MessageStatus, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
-    const [nickName, setNickname] = useState('');
 
-    useEffect(() => {
-        fetchGet<ExternalUser>(`api/user?intra_user_id=${message.sender_id}`)
-        .then((user) => {
-            if (!user) setNickname('Unknown');
-            else if (user.nick_name) setNickname(user.nick_name);
-            else setNickname(user.user_name);
-        }
-        )
-    }, []);
-
-    const renderMessageWithLineBreaks = (text:string) => {
-        return (<div>{text}</div>);
-        // return text.split('\n').map((line, index) => (
-        //     <div key={index}>{line}</div>
-        // ));
+    const renderMessageWithLineBreaks = (text: string) => {
+        return text.split('\n').map((str, index) => (
+            <div key={index}>{str}</div>
+        ));
     };
 
+    function renderMessageStatus(messageStatus: MessageStatus) {
+        if (!messageStatus)
+            return '';
+        if (messageStatus.read_at)
+            return 'read';
+        if (messageStatus.receivet_at)
+            return 'received';
+        return 'sent';
+    }
+
     function renderDate(date: Date) {
-        if (!date) 
+        if (!date)
             return 'no date';
         if (!(date instanceof Date))
             return 'not a date';
-        return date ? date.toString().slice(16,21) : '';
+        return date ? date.toString().slice(16, 21) : '';
     }
 
     return (
         <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
-                {!isMyMessage && <div className="text-xs text-gray-600">{nickName}</div>}
+                {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
                 <div>{renderMessageWithLineBreaks(message.message)}</div>
                 <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
+                <div className="text-xs text-right text-gray-600">{renderMessageStatus(messageStatus)}</div>
             </div>
         </div>
     );
@@ -62,7 +66,7 @@ function customTransparantToBlack() {
     );
 }
 
-function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>>}) {
+function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
         <div className="relative text-gray-600 focus-within:text-gray-400 w-96 px-3">
             <input
@@ -78,110 +82,151 @@ function SearchBar({ searchTerm, setSearchTerm }: {searchTerm: string, setSearch
     );
 }
 
+function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
+    return (
+        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+            <Link className="flex-grow" href={{ pathname: '/multiplayer_pong', query: { player_id: intra_user_id, nick_name: nick_name } }}>
+                <button className="py-2 px-4 text-blue-500 font-bold">
+                    Invite for a game
+                </button>
+            </Link>
+        </div>
+    );
+}
+
 export default function DC() {
     const searchParams = useSearchParams();
     const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
-    const [messages, setMessages] = useState<Messages[]>([]);
+    const [messages, setMessages] = useState<ChatMessages[]>([]);
+    const [messageStatus, setMessageStatus] = useState<MessageStatus[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
+    const [dmInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null });
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { 
-        path: "/ws/socket.io", 
-        query: {
-            intra_user_id: user?.intra_user_id
-        }}
-    );
-    
-    const chat_id = searchParams?.get('chat_id') ?? '-1';
+    // const socketRef = useRef<ReturnType<typeof io> | null>(null);
+
+    const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
     useEffect(() => {
-        // TODO: check if chat has a password, that is stored in the database chats.password
-        fetchGet<boolean>(`api/chatHasPassword?chat_id=${ chat_id }`)
-        .then((res) => {
-            setHasPassword(res);
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
-
         /* Load user info form database and store in const user */
         fetchGet<User>('api/profile')
-        .then((user) => {
-            setUser(user);
-            console.log('intra_id', user.intra_user_id);
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
-        
-        /* Load messages form database form right chat, using query chat_id: number */
-        fetchGet<Messages[]>(`api/messages?chat_id=${chat_id}`)
-        .then((res) => {
-            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
-            const transformedMessages = res.map(message => ({
-                ...message,
-                sent_at: new Date(message.sent_at)
-            }));
-            console.log('Retrieved Messages: ', transformedMessages);
-            setMessages(transformedMessages);
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
+            .then((user) => {
+                setUser(user);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+    }, []);
+
+    useEffect(() => {
+        if (!user || !user.intra_user_id) return;
+
+        fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
+            .then((res) => {
+                setHasPassword(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
         });
 
-        /* Get messages while online */
-        socket.on('serverToClient', (message: Messages) => {
+        // // Initialize socket connection
+        // socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
+        //     path: "/ws/socket.io",
+        // });
+
+        // const socket = socketRef.current;
+
+        /* Load messages form database form right chat, using query chat_id: number */
+        fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
+        .then((res) => {
+            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+                const transformedMessages = res.map(message => ({
+                    ...message,
+                    sent_at: new Date(message.sent_at)
+                }));
+                console.log('Retrieved Messages form db: ', transformedMessages);
+                setMessages(transformedMessages);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+        updateUnreadMessages();
+
+        fetchGet<DmInfo>(`api/getDmInfo?chat_id=${chat_id}`)
+            .then((res) => {
+                setDmInfo(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+
+        chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
+
+        chatSocket.on('messageFromServer', (message: ChatMessages) => {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             message.sent_at = new Date(message.sent_at);
             console.log('Received message: ' + message.message);
             setMessages((prevMessages) => [...prevMessages, message]);
-            /* Auto scroll to last message */
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            updateUnreadMessages();
         });
-    
-        /* Auto scroll to last message */
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // or instant
-    
+
         return () => {
-            socket.off('serverToClient');
+            /* Leave chat */
+            chatSocket.emit('leaveChat', chat_id.toString());
+            chatSocket.off('messageFromServer');
+            chatSocket.disconnect();
         };
-    }, []);
+    }, [user, chat_id]);
 
-    console.log('chat_id', chat_id);
-    console.log('hasPassword', hasPassword);
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
-    const sendMessage = (message: Messages) => {
+    const updateUnreadMessages = () => {
+        fetchPost('api/updateUnreadMessages', { chat_id: chat_id, intra_user_id: user?.intra_user_id ?? 0 })
+            .then(() => {
+                console.log('Updated unread messages');
+            })
+            .catch((error) => {
+                console.log('Error updating unread messages: ', error);
+            });
+    }
+
+    const sendMessage = (message: ChatMessages) => {
         console.log('Sending message: ' + message.message);
-        socket.emit('clientToServer', message);
+        chatSocket.emit('messageToServer', message);
         setNewMessage('');
     };
 
     const handleSendMessage = (intra_id: number) => {
         if (newMessage.trim() === '') return;
-        
-        const message = {
-            message_id: (messages[messages.length - 1]?.message_id ?? 0) + 1,
+
+        const message: ChatMessages = {
+            message_id: 0,          // auto generate in database
+            chat_id: chat_id,
             sender_id: intra_id,
-            chat_id: 1,
+            sender_name: '',        // get from user database
+            sender_image_url: '',   // get from user database
             message: newMessage,
-            sent_at: new Date()
+            sent_at: new Date()     // generate in the backend with instert returnig
         };
-        
-        // setMessages([...messages, message]);
+
         sendMessage(message);
     };
 
     const handlePasswordCheck = () => {
-        fetchGet<{chat_id: string, password: string}>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
-        .then((res) => {
-            if (res) setHasPassword(false);
-            else alert('Wrong password');
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
+        fetchGet<{ chat_id: string, password: string }>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
+            .then((res) => {
+                if (res) setHasPassword(false);
+                else alert('Wrong password');
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
     }
 
     const handleKeyPressPassword = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -197,7 +242,7 @@ export default function DC() {
         }
     };
 
-    if (hasPassword) {
+    if (hasPassword && checkPassword) {
         return (
             <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                 <h2 className="text-2xl font-bold text-center">Password Protected Chat</h2>
@@ -225,7 +270,7 @@ export default function DC() {
         );
     }
 
-    if (chat_id === '-1') {
+    if (chat_id === -1) {
         /* no chat found */
         return (
             <div className="flex flex-col items-center justify-center flex-grow space-y-4">
@@ -247,7 +292,9 @@ export default function DC() {
                 <div className="overflow-auto h-full">
                     <div className="h-10"></div> {/* making sure you can see the first message */}
                     {user && messages.map((message, index) => (
-                        <Message key={index} message={message} intra_id={user.intra_user_id} />
+                        console.log('Message: ', message),
+                        console.log('MessageStatus: ', messageStatus[index]),
+                        <Message key={index} message={message} messageStatus={messageStatus[index]} intra_id={user.intra_user_id} />
                     ))}
                     <div ref={messagesEndRef} /> {/* Used for auto scroll to last message */}
                 </div>
@@ -273,6 +320,7 @@ export default function DC() {
                         Send
                     </button>
                 </div>
+                {dmInfo.isDm && dmInfo.intraId  && dmInfo.nickName && <InviteForGame intra_user_id={dmInfo.intraId} nick_name={dmInfo.nickName} />}
             </div>
         </div>
     );

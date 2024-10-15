@@ -7,7 +7,7 @@ import {
 	boolean,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import type { z } from 'zod';
+import { string, type z } from 'zod';
 
 
 export const mySchema = pgSchema('pong');
@@ -68,6 +68,7 @@ export const chatsUsers = mySchema.table('chatsUsers', {
 	is_admin: boolean('is_admin').notNull().default(false),
 	is_banned: boolean('is_banned').notNull().default(false),
 	mute_untill: timestamp('mute_untill'),
+	joined: boolean('joined').notNull().default(false),
 	joined_at: timestamp('joined_at').defaultNow(),
 });
 
@@ -86,6 +87,7 @@ export const messageStatus = mySchema.table('messageStatus', {
 	message_id: integer('message_id')
 		.references(() => messages.message_id)
 		.notNull(),
+	chat_id: integer('chat_id'),
 	receiver_id: integer('receiver_id')
 		.references(() => users.intra_user_id)
 		.notNull(),
@@ -99,9 +101,11 @@ export const friendsSelect = createSelectSchema(friends);
 export const messagesInsert = createSelectSchema(messages);
 export const chatSelect = createSelectSchema(chats);
 export const chatsUsersSelect = createSelectSchema(chatsUsers);
+export const messageStatusInsert = createSelectSchema(messageStatus);
 
 export type User = z.infer<typeof userSelect>;
 export type Friends = z.infer<typeof friendsSelect>;
 export type Chats = z.infer<typeof chatSelect>;
 export type ChatsUsers = z.infer<typeof chatsUsersSelect>;
 export type Messages = z.infer<typeof messagesInsert>;
+export type MessageStatus = z.infer<typeof messageStatusInsert>;

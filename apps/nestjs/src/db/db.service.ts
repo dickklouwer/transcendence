@@ -3,6 +3,7 @@ import {
   users,
   friends,
   messages,
+  messageStatus,
   games,
   chats,
   chatsUsers,
@@ -14,11 +15,15 @@ import type {
   MultiplayerMatches,
   User,
   UserChats,
+  InvitedChats,
   ExternalUser,
-  Messages,
-  Chats,
+  ChatMessages,
+  MessageStatus,
+  ChatsUsers,
+  DmInfo,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
+import * as bycrypt from 'bcrypt';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -143,7 +148,6 @@ export class DbService {
         .from(users)
         .where(eq(users.intra_user_id, intra_user_id));
 
-      console.log('User from id: ', user);
       return user[0];
     } catch (error) {
       console.log('Error: ', error);
@@ -476,6 +480,50 @@ export class DbService {
     }
   }
 
+  async setChatPassword(
+    chat_id: number,
+    password: string | null,
+  ): Promise<boolean> {
+    try {
+      const chat = await this.db
+        .select()
+        .from(chats)
+        .where(eq(chats.chat_id, chat_id));
+
+      if (!chat) throw Error('Failed to fetch Chat!');
+
+      if (!password) {
+        await this.db
+          .update(chats)
+          .set({ password: null })
+          .where(eq(chats.chat_id, chat_id));
+
+        console.log('Chat Password Removed!');
+        return true;
+      }
+
+      if (!process.env.SALT_ROUNDS) {
+        console.log('Env SALT_ROUNDS is undefined');
+        console.log('Chat Password Not Set!');
+        return false;
+      }
+
+      const saltRounds = parseInt(process.env.SALT_ROUNDS);
+
+      await this.db
+        .update(chats)
+        .set({ password: bycrypt.hashSync(password, saltRounds) })
+        .where(eq(chats.chat_id, chat_id));
+
+      console.log('Chat Password Set!');
+
+      return true;
+    } catch (error) {
+      console.log('Error set chat password: ', error);
+      return false;
+    }
+  }
+
   async chatHasPassword(jwtToken: string, chat_id: number): Promise<boolean> {
     try {
       const chat = await this.db
@@ -509,11 +557,7 @@ export class DbService {
         return true;
       }
 
-      if (chat[0].password === password) {
-        console.log('Password is correct!');
-        return true;
-      }
-      console.log('Password is incorrect!');
+      if (bycrypt.compareSync(password, chat[0].password)) return true;
       return false;
     } catch (error) {
       console.log('Error: ', error);
@@ -566,53 +610,58 @@ export class DbService {
     const result: UserChats[] = [];
 
     try {
-      const user = await this.getUserFromDataBase(jwtToken);
-      if (!user) throw Error('Failed to fetch User!');
-      const dbChatID = await this.db
-        .select()
+      await this.db
+        .update(chatsUsers)
+        .set({ joined: false })
+        .where(
+          and(eq(chatsUsers.is_banned, true), eq(chatsUsers.joined, true)),
+        );
+
+      const chat_ids = await this.db
+        .select({ chatid: chatsUsers.chat_id })
         .from(chatsUsers)
-        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
-      if (!dbChatID) throw Error('failed to fetch dbChatID');
+        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
+        .where(
+          or(
+            and(eq(users.token, jwtToken), eq(chats.is_direct, true)),
+            and(eq(users.token, jwtToken), eq(chatsUsers.joined, true)),
+          ),
+        );
 
-      for (let i = 0; i < dbChatID.length; i++) {
-        //NOTE: Can't get Chats type to be propperly used. something wrong with index.ts @bprovos
-        const chatinfo: Chats[] = await this.db
-          .select()
+      // console.log('chat_ids:', chat_ids);
+
+      for (let i = 0; i < chat_ids.length; i++) {
+        const chatsInfo = await this.db
+          .select({
+            lastMessage: messages.message,
+            time_sent: messages.sent_at,
+            time_created: chats.created_at,
+            title: chats.title,
+            image: chats.image,
+          })
           .from(chats)
-          .where(eq(chats.chat_id, dbChatID[i].chat_id));
+          .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
+          .where(eq(chats.chat_id, chat_ids[i].chatid))
+          .orderBy(desc(messages.sent_at) ?? desc(chats.created_at))
+          .limit(1);
 
-        // get last message and time form chat_id
-        const idMessages: Messages[] = await this.db
-          .select()
-          .from(messages)
-          .where(eq(messages.chat_id, dbChatID[i].chat_id));
+        // console.log('chatsInfo:', chatsInfo);
 
-        // console.log('' dbChatID[i]);
-        console.log('chatinfo: created ', chatinfo[0].created_at);
-
-        const lastMessage: Messages = idMessages[idMessages.length - 1]
-          ? idMessages[idMessages.length - 1]
-          : {
-              message_id: 0,
-              chat_id: dbChatID[i].chat_id,
-              sender_id: 0,
-              message: '',
-              sent_at: chatinfo[0].created_at,
-            };
-
-        //NOTE: @bprovos Should we do new request into DB to get this info, is it smart?
         const field: UserChats = {
-          chatid: dbChatID[i].chat_id,
-          title: chatinfo[0].title,
-          image: chatinfo[0].image,
-          lastMessage: lastMessage.message,
-          time: lastMessage.sent_at,
+          chatid: chat_ids[i].chatid,
+          title: chatsInfo[0].title,
+          image: chatsInfo[0].image,
+          lastMessage: chatsInfo[0].lastMessage,
+          time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
           unreadMessages: 0,
         };
 
         result.push(field);
       }
-      console.log('result: ', result);
+
+      // console.log('userMessages:', result);
+
       return result;
     } catch (error) {
       console.log('userMessages:', error);
@@ -620,6 +669,119 @@ export class DbService {
     }
   }
 
+  async getInvitedChatsFromDataBase(
+    jwtToken: string,
+  ): Promise<InvitedChats[] | null> {
+    const result: InvitedChats[] = [];
+
+    try {
+      await this.db
+        .update(chatsUsers)
+        .set({ joined: false })
+        .where(
+          and(eq(chatsUsers.is_banned, true), eq(chatsUsers.joined, true)),
+        );
+
+      const chat_ids = await this.db
+        .select({ chatid: chatsUsers.chat_id })
+        .from(chatsUsers)
+        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
+        .where(
+          and(
+            eq(users.token, jwtToken),
+            and(eq(chatsUsers.joined, false), eq(chats.is_direct, false)),
+          ),
+        );
+
+      // console.log('chat_ids:', chat_ids);
+
+      for (let i = 0; i < chat_ids.length; i++) {
+        const chatsInfo = await this.db
+          .select()
+          .from(chats)
+          .where(eq(chats.chat_id, chat_ids[i].chatid));
+
+        // console.log('chatsInfo:', chatsInfo);
+
+        const field: InvitedChats = {
+          chatid: chat_ids[i].chatid,
+          title: chatsInfo[0].title,
+          image: chatsInfo[0].image,
+        };
+
+        result.push(field);
+      }
+
+      // console.log('userMessages:', result);
+
+      return result;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async checkIfUserIsBanned(
+    jwtToken: string,
+    chat_id: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const isBanned = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(chatsUsers.is_banned, true),
+          ),
+        );
+
+      if (isBanned.length > 0) {
+        // console.log('User is banned');
+        return true;
+      }
+      // console.log('User is not banned');
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async joinChat(jwtToken: string, chat_id: number): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const isBanned = await this.checkIfUserIsBanned(jwtToken, chat_id);
+      if (isBanned) {
+        console.log('User is banned');
+        return false;
+      }
+
+      await this.db
+        .update(chatsUsers)
+        .set({ joined: true })
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+          ),
+        );
+
+      console.log('Joined Chat!');
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+  innerJoin;
   async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
@@ -644,8 +806,7 @@ export class DbService {
   async getMessagesFromDataBase(
     jwtToken: string,
     chat_id: number,
-  ): Promise<Messages[] | null> {
-    console.log('chat_id: ', chat_id);
+  ): Promise<ChatMessages[] | null> {
     const user = await this.getUserFromDataBase(jwtToken);
     /* Check if user is in the chat */
     try {
@@ -668,15 +829,232 @@ export class DbService {
     }
     /* Get the messages */
     try {
-      const res = await this.db
+      const dbMessages = await this.db
         .select()
         .from(messages)
         .where(eq(messages.chat_id, chat_id));
 
-      console.log('Messages: ', res);
-      return res;
+      // set dbMessages to ChatMessages
+      const chatMessages: ChatMessages[] = [];
+      for (let i = 0; i < dbMessages.length; i++) {
+        const sender = await this.getAnyUserFromDataBase(
+          dbMessages[i].sender_id,
+        );
+        if (!sender) throw Error('Failed to fetch User!');
+
+        const field: ChatMessages = {
+          message_id: dbMessages[i].message_id,
+          chat_id: dbMessages[i].chat_id,
+          sender_id: dbMessages[i].sender_id,
+          sender_name: sender.nick_name ?? sender.user_name,
+          sender_image_url: sender.image,
+          message: dbMessages[i].message,
+          sent_at: dbMessages[i].sent_at,
+        };
+        chatMessages.push(field);
+      }
+
+      return chatMessages;
     } catch (error) {
       console.log('Error messags: ', error);
+      return null;
+    }
+  }
+
+  async getMessageStatus(
+    jwtToken: string,
+    message_id: number,
+  ): Promise<{ receivet_at: Date; read_at: Date } | null> {
+    // TODO: make function
+    return null;
+  }
+
+  async getDmInfo(jwtToken: string, chat_id: number): Promise<DmInfo> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const chatInfo = await this.db
+        .select({
+          intra_id: chatsUsers.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+        })
+        .from(chatsUsers)
+        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .where(eq(chatsUsers.chat_id, chat_id));
+
+      console.log('chatInfo:', chatInfo);
+
+      if (chatInfo.length !== 2) {
+        console.log('Chat is not a DM');
+        return { isDm: false, intraId: null, nickName: null };
+      }
+
+      for (let i = 0; i < chatInfo.length; i++) {
+        if (chatInfo[i].intra_id !== user.intra_user_id) {
+          console.log('Chat is a DM');
+          return {
+            isDm: true,
+            intraId: chatInfo[i].intra_id,
+            nickName: chatInfo[i].nick_name ?? chatInfo[i].user_name,
+          };
+        }
+      }
+    } catch (error) {
+      console.log('Error: ', error);
+      return { isDm: false, intraId: null, nickName: null };
+    }
+    return { isDm: false, intraId: null, nickName: null };
+  }
+
+  async updateUnreadMessages(
+    chat_id: number,
+    user_user_id: number,
+  ): Promise<boolean> {
+    try {
+      const currentTime = new Date().toLocaleString('en-US', {
+        timeZone: 'Europe/Amsterdam',
+      });
+
+      await this.db
+        .update(messageStatus)
+        .set({ read_at: new Date(new Date(currentTime).getTime()) })
+        .where(
+          and(
+            eq(messageStatus.chat_id, chat_id),
+            eq(messageStatus.receiver_id, user_user_id),
+            isNull(messageStatus.read_at),
+          ),
+        );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async checkIfUserIsMuted(chat_id: number, user_id: number): Promise<boolean> {
+    try {
+      const testSetMute = false;
+      const currentTime = new Date().toLocaleString('en-US', {
+        timeZone: 'Europe/Amsterdam',
+      });
+
+      if (testSetMute) {
+        await this.db
+          .update(chatsUsers)
+          .set({
+            mute_untill: new Date(new Date(currentTime).getTime() + 60000), // 1 minute
+          })
+          .where(
+            and(
+              eq(chatsUsers.chat_id, chat_id),
+              eq(chatsUsers.intra_user_id, user_id),
+            ),
+          );
+        return true;
+      }
+
+      const result: ChatsUsers[] = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user_id),
+          ),
+        );
+
+      // console.log('Mute_untill:', result);
+
+      if (result[0].mute_untill === null) {
+        // console.log('user has no mute_untill');
+        return false;
+      }
+
+      // console.log('user has mute_untill');
+
+      const muteUntill = new Date(result[0].mute_untill);
+
+      console.log('currentTime:', new Date(currentTime));
+      console.log('muteUntill: ', muteUntill);
+      if (new Date(currentTime) < muteUntill) {
+        // console.log('User is muted');
+        return true;
+      }
+
+      // console.log('User is not muted');
+      await this.db
+        .update(chatsUsers)
+        .set({ mute_untill: null })
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chat_id),
+            eq(chatsUsers.intra_user_id, user_id),
+          ),
+        );
+
+      return false;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  // async checkIfMessageIsBlocked(
+  //   chat_id: number,
+  //   message_id: number,
+  // ): Promise<boolean> {
+  //   return false;
+  // }
+
+  async saveMessage(payload: ChatMessages): Promise<ChatMessages> {
+    try {
+      const result = await this.db
+        .insert(messages)
+        .values({
+          chat_id: payload.chat_id,
+          sender_id: payload.sender_id,
+          message: payload.message,
+        })
+        .returning();
+
+      // get user_receiver_ids
+      const chatUsers = await this.db
+        .select({ user_id: chatsUsers.intra_user_id })
+        .from(chatsUsers)
+        .where(eq(chatsUsers.chat_id, payload.chat_id));
+
+      console.log('chatUsers:', chatUsers);
+
+      for (let i = 0; i < chatUsers.length; i++) {
+        await this.db.insert(messageStatus).values({
+          message_id: result[0].message_id,
+          chat_id: payload.chat_id,
+          receiver_id: chatUsers[i].user_id,
+          receivet_at: null,
+          read_at: null,
+        });
+      }
+
+      console.log('Message saved');
+
+      const sender = await this.getAnyUserFromDataBase(payload.sender_id);
+      if (!sender) throw Error('Failed to fetch User!');
+      const field: ChatMessages = {
+        message_id: result[0].message_id,
+        chat_id: result[0].chat_id,
+        sender_id: result[0].sender_id,
+        sender_name: sender.nick_name ?? sender.user_name,
+        sender_image_url: sender.image,
+        message: result[0].message,
+        sent_at: result[0].sent_at,
+      };
+      return field;
+    } catch (error) {
+      console.error('Error saving message:', error);
       return null;
     }
   }
@@ -727,6 +1105,7 @@ export class DbService {
         console.log('Error: ', error);
       }
     }
+    // date from yesterday
     try {
       await this.db.insert(users).values({
         intra_user_id: 77718,
@@ -746,9 +1125,8 @@ export class DbService {
     try {
       await this.db.insert(chats).values({
         chat_id: 1,
-        title: 'Group Chat 1',
+        title: 'Pass 123',
         image: '',
-        password: '123',
       });
       console.log('Group Chat Created!');
     } catch (error) {
@@ -758,6 +1136,8 @@ export class DbService {
         console.log('Error: ', error);
       }
     }
+    // set password
+    this.setChatPassword(1, '123');
     try {
       await this.db.insert(chats).values({
         chat_id: 2,
@@ -865,7 +1245,6 @@ export class DbService {
     // add messages
     try {
       await this.db.insert(messages).values({
-        message_id: 1,
         chat_id: 1,
         sender_id: 278,
         message: 'Hello from Bas',
@@ -881,7 +1260,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 2,
         chat_id: 1,
         sender_id: 372,
         message: 'Hello from Daan',
@@ -897,7 +1275,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 3,
         chat_id: 1,
         sender_id: 392,
         message: 'Hello from Kees',
@@ -913,7 +1290,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 4,
         chat_id: 1,
         sender_id: 77718,
         message: 'Hello from Bram',
@@ -929,7 +1305,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 5,
         chat_id: 2,
         sender_id: 278,
         message: 'Hello from Bas',
@@ -945,7 +1320,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 6,
         chat_id: 2,
         sender_id: 77718,
         message: 'Hello from Bram',
@@ -961,7 +1335,6 @@ export class DbService {
     }
     try {
       await this.db.insert(messages).values({
-        message_id: 7,
         chat_id: 2,
         sender_id: 278,
         message: 'Hi Bram',
