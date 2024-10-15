@@ -28,6 +28,15 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
     const commonWidth = "500px";
 
+    function renderDate(date: Date) {
+        console.log('Date: ', date);
+        if (!date)
+            return 'no date';
+        if (!(date instanceof Date))
+            return 'not a date';
+        return date ? date.toString().slice(16, 21) : '';
+    }
+
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
@@ -41,7 +50,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                             <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage ? chatField.lastMessage : <i>No messages yet...</i>}</p>
                         </div>
                         <div className="text-right px-4">
-                            <p>{chatField.time.toString().slice(11, 16)}</p>
+                            <p>{renderDate(chatField.time)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
                     </div>
@@ -75,8 +84,13 @@ function InvitedChatField({ chatField: invitedChatField, setInvitedChats, setUse
                     setInvitedChats((prevChats) => (prevChats as InvitedChats[]).filter(chat => chat.chatid !== chat_id));
                     fetchGet<UserChats[]>('api/chats')
                         .then((data) => {
-                            console.log('Received Chats Data: ', data);
-                            setUserChats(data);
+                            const transformedMessages = data.map((chat) => {
+                                return {
+                                    ...chat,
+                                    time: new Date(chat.time),
+                                }
+                            });
+                            setUserChats(transformedMessages);
                         })
                         .catch((error) => {
                             console.log('Error fetching Chats: ', error);
@@ -121,8 +135,13 @@ export default function Chats() {
         console.log('Fetching Chats...');
         fetchGet<UserChats[]>('api/chats')
             .then((data) => {
-                console.log('Received Chats Data: ', data);
-                setUserChats(data);
+                const transformedMessages = data.map((chat) => {
+                    return {
+                        ...chat,
+                        time: new Date(chat.time),
+                    }
+                });
+                setUserChats(transformedMessages);
             })
             .catch((error) => {
                 console.log('Error fetching Chats: ', error);

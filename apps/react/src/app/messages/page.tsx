@@ -32,6 +32,7 @@ function Message({ message, messageStatus, intra_id }: { message: ChatMessages, 
     }
 
     function renderDate(date: Date) {
+        console.log('Date: ', date);
         if (!date)
             return 'no date';
         if (!(date instanceof Date))
