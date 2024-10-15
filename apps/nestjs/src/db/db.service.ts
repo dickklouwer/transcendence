@@ -24,6 +24,7 @@ import type {
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
+import { title } from 'process';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -848,16 +849,24 @@ export class DbService {
           intra_id: chatsUsers.intra_user_id,
           user_name: users.user_name,
           nick_name: users.nick_name,
+          title: chats.title,
         })
         .from(chatsUsers)
         .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(eq(chatsUsers.chat_id, chat_id));
 
       console.log('chatInfo:', chatInfo);
 
       if (chatInfo.length !== 2) {
         console.log('Chat is not a DM');
-        return { isDm: false, intraId: null, nickName: null };
+        return {
+          isDm: false,
+          intraId: null,
+          nickName: null,
+          chatId: chat_id,
+          title: chatInfo[0].title,
+        };
       }
 
       for (let i = 0; i < chatInfo.length; i++) {
@@ -867,14 +876,28 @@ export class DbService {
             isDm: true,
             intraId: chatInfo[i].intra_id,
             nickName: chatInfo[i].nick_name ?? chatInfo[i].user_name,
+            chatId: chat_id,
+            title: chatInfo[i].title,
           };
         }
       }
     } catch (error) {
       console.log('Error: ', error);
-      return { isDm: false, intraId: null, nickName: null };
+      return {
+        isDm: false,
+        intraId: null,
+        nickName: null,
+        chatId: null,
+        title: null,
+      };
     }
-    return { isDm: false, intraId: null, nickName: null };
+    return {
+      isDm: false,
+      intraId: null,
+      nickName: null,
+      chatId: null,
+      title: null,
+    };
   }
 
   async updateUnreadMessages(

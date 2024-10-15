@@ -7,10 +7,7 @@ import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 import { chatSocket } from '../chat_componens';
 
-
 const checkPassword: boolean = true;
-// export const messagesSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, { path: "/ws/socket.io/messages" });
-
 
 function Message({ message, messageStatus, intra_id }: { message: ChatMessages, messageStatus: MessageStatus, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
@@ -103,9 +100,8 @@ export default function DC() {
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
-    const [dmInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null });
+    const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null });
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    // const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
@@ -131,17 +127,9 @@ export default function DC() {
                 console.log('Error: ', error);
         });
 
-        // // Initialize socket connection
-        // socketRef.current = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/messages`, {
-        //     path: "/ws/socket.io",
-        // });
-
-        // const socket = socketRef.current;
-
-        /* Load messages form database form right chat, using query chat_id: number */
         fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
         .then((res) => {
-            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+                /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
                 const transformedMessages = res.map(message => ({
                     ...message,
                     sent_at: new Date(message.sent_at)
@@ -173,7 +161,6 @@ export default function DC() {
         });
 
         return () => {
-            /* Leave chat */
             chatSocket.emit('leaveChat', chat_id.toString());
             chatSocket.off('messageFromServer');
         };
@@ -270,7 +257,6 @@ export default function DC() {
     }
 
     if (chat_id === -1) {
-        /* no chat found */
         return (
             <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                 <h2 className="text-2xl font-bold text-center">Chat not found</h2>
@@ -285,6 +271,16 @@ export default function DC() {
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+            {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
+                <button className="py-2 px-4 text-blue-500 font-bold">
+                    {chatInfo.nickName}
+                </button>
+            </Link>}
+            {!chatInfo.isDm && chatInfo.chatId && chatInfo.title && <Link href={{ pathname: '/group_view', query: { id: chatInfo.chatId } }}>
+                <button className="py-2 px-4 text-blue-500 font-bold">
+                    {chatInfo.title}
+                </button>
+            </Link>}
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 {customTransparantToBlack()}
@@ -319,7 +315,7 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {dmInfo.isDm && dmInfo.intraId  && dmInfo.nickName && <InviteForGame intra_user_id={dmInfo.intraId} nick_name={dmInfo.nickName} />}
+                {chatInfo.isDm && chatInfo.intraId  && chatInfo.nickName && <InviteForGame intra_user_id={chatInfo.intraId} nick_name={chatInfo.nickName} />}
             </div>
         </div>
     );

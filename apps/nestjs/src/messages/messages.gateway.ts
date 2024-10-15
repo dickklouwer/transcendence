@@ -11,7 +11,6 @@ import { Server, Socket } from 'socket.io';
 import { ChatMessages } from '@repo/db';
 import { DbService } from '../db/db.service';
 import { log } from 'console';
-import { subscribe } from 'diagnostics_channel';
 
 @WebSocketGateway({
   cors: { origin: `http://${process.env.HOST_NAME}:2424` },
@@ -85,34 +84,8 @@ export class MessagesGateway
       .to(fullMessage.chat_id.toString())
       .emit('messageFromServer', fullMessage);
 
-    // Send update to the inbox chat
+    // Send update to inbox
     log('Sending newMessage to inbox');
     this.server.to('inbox').emit('listenToInbox');
-
-    // this code below is not working yet
-
-    // // loop through all the clients in the chat room and check if a user is blocked
-    // const room = this.server.sockets.adapter.rooms.get(
-    //   fullMessage.chat_id.toString(),
-    // );
-
-    // if (room) {
-    //   room.forEach((socketId) => {
-    //     const socket = this.server.sockets.sockets.get(socketId);
-    //     if (socket) {
-    //       this.dbService
-    //         .checkIfMessageIsBlocked(fullMessage.chat_id, fullMessage.sender_id)
-    //         .then((isBlocked) => {
-    //           if (!isBlocked) {
-    //             this.server.to(socketId).emit('messageFromServer', fullMessage);
-    //           } else {
-    //             this.logger.log(
-    //               `Client ${client.id} blocked user ${fullMessage.sender_id} in chat_id: ${fullMessage.chat_id}`,
-    //             );
-    //           }
-    //         });
-    //     }
-    //   });
-    // }
   }
 }
