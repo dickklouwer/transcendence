@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-import { InvitedChats, UserChats } from '@repo/db';
+import { DmInfo, InvitedChats, UserChats } from '@repo/db';
 import { chatSocket } from '@/app/chat_componens';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
@@ -27,6 +27,17 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
     const commonWidth = "500px";
+    const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
+
+    useEffect(() => {
+        fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chatField.chatid}`)
+        .then((res) => {
+            setDmInfo(res);
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    } , []);
 
     function renderDate(date: Date) {
         console.log('Date: ', date);
@@ -40,9 +51,14 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing profile of ' + chatField.title)}>
-                    <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
-                </button>
+                {chatInfo.isDm ?
+                    <Link href={{ pathname: '/profile_view', query: { user_id: chatInfo.intraId } }}>
+                        <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                    </Link> :
+                    <Link href={{ pathname: '/group_view', query: { chat_id: chatField.chatid } }}>
+                        <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                    </Link>
+                }
                 <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
                     <div className="flex justify-between w-full">
                         <div>
