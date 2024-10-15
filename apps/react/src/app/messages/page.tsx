@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { User, Messages, ChatMessages, ExternalUser, MessageStatus, DmInfo } from '@repo/db';
+import Image from 'next/image';
+import { User, ChatMessages, MessageStatus, DmInfo } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 import { chatSocket } from '../chat_componens';
+import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 
 const checkPassword: boolean = true;
 
@@ -100,7 +102,7 @@ export default function DC() {
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
-    const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null });
+    const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
@@ -142,7 +144,7 @@ export default function DC() {
             });
         updateUnreadMessages();
 
-        fetchGet<DmInfo>(`api/getDmInfo?chat_id=${chat_id}`)
+        fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chat_id}`)
             .then((res) => {
                 setDmInfo(res);
             })
@@ -269,18 +271,30 @@ export default function DC() {
         );
     }
 
+    const image = chatInfo.image ? chatInfo.image : defaultUserImage;
+
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-            {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
-                <button className="py-2 px-4 text-blue-500 font-bold">
-                    {chatInfo.nickName}
-                </button>
-            </Link>}
-            {!chatInfo.isDm && chatInfo.chatId && chatInfo.title && <Link href={{ pathname: '/group_view', query: { id: chatInfo.chatId } }}>
-                <button className="py-2 px-4 text-blue-500 font-bold">
-                    {chatInfo.title}
-                </button>
-            </Link>}
+            {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
+                <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
+                    <div className="flex items-center">
+                        <Image src={image} alt="User" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <button className="py-2 px-4 text-blue-500 font-bold">
+                            {chatInfo.nickName}
+                        </button>
+                    </div>
+                </Link>
+            )}
+            {!chatInfo.isDm && chatInfo.chatId && chatInfo.title && (
+                <Link href={{ pathname: '/group_view', query: { id: chatInfo.chatId } }}>
+                    <div className="flex items-center">
+                        <Image src={image} alt="Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <button className="py-2 px-4 text-blue-500 font-bold">
+                            {chatInfo.title}
+                        </button>
+                    </div>
+                </Link>
+            )}
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 {customTransparantToBlack()}

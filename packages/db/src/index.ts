@@ -58,6 +58,7 @@ type ChatInfo = {
   nickName: string | null;
   chatId: number | null;
   title: string | null;
+  image: string | null;
 };
 
 export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatInfo as DmInfo, ChatsUsers, Chats, Messages, MessageStatus };

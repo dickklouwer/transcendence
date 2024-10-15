@@ -60,7 +60,7 @@ var users = mySchema.table("users", {
   two_factor_secret: (0, import_pg_core.text)("two_factor_secret"),
   is_two_factor_enabled: (0, import_pg_core.boolean)("is_two_factor_enabled").default(false),
   state: user_state("state").notNull().default("Online"),
-  image: (0, import_pg_core.text)("image_url").notNull(),
+  image_url: (0, import_pg_core.text)("image_url").notNull(),
   wins: (0, import_pg_core.integer)("wins").default(0).notNull(),
   losses: (0, import_pg_core.integer)("losses").default(0).notNull()
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { fetchGet, fetchPost } from '@/app/fetch_functions';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';

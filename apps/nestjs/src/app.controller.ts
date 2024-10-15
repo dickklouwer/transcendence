@@ -240,12 +240,15 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getDmInfo')
+  @Get('getChatInfo')
   async getDmInfo(
     @Headers('authorization') token: string,
     @Query('chat_id') chat_id: number,
   ) {
-    const dmInfo = await this.dbservice.getDmInfo(token.split(' ')[1], chat_id);
+    const dmInfo = await this.dbservice.getChatInfo(
+      token.split(' ')[1],
+      chat_id,
+    );
 
     return dmInfo;
   }

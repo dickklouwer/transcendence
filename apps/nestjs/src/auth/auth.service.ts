@@ -25,7 +25,7 @@ export type FortyTwoUser = {
   user_name: string;
   email: string;
   state: 'Online' | 'Offline' | 'In-Game';
-  image: string;
+  image_url: string;
   token: string | null;
 };
 
@@ -175,7 +175,7 @@ export class AuthService {
       user_name: profile.login as string,
       email: profile.email as string,
       state: 'Online',
-      image: profile.image.link as string,
+      image_url: profile.image.link as string,
       token: null,
     };
   }
