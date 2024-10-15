@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { ChatMessages } from '@repo/db';
 import { DbService } from '../db/db.service';
 import { log } from 'console';
+import { subscribe } from 'diagnostics_channel';
 
 @WebSocketGateway({
   cors: { origin: `http://${process.env.HOST_NAME}:2424` },
@@ -31,11 +32,13 @@ export class MessagesGateway
   }
 
   handleConnection(client: Socket) {
-    this.logger.log('Client connected:', client.id);
+    this.logger.log('Client connected and joined inbox:', client.id);
+    client.join('inbox');
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected and leaved inbox: ${client.id}`);
+    client.leave('inbox');
   }
 
   @SubscribeMessage('joinChat')
@@ -84,7 +87,7 @@ export class MessagesGateway
 
     // Send update to the inbox chat
     log('Sending newMessage to inbox');
-    this.server.to('inbox').emit('newMessage');
+    this.server.to('inbox').emit('listenToInbox');
 
     // this code below is not working yet
 

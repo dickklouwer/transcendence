@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
-import { MessageInbox } from './chat_componens';
+import { chatSocket, MessageInbox } from './chat_componens';
 
 export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
@@ -136,8 +136,10 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
         setUser(res);
         if (res.nick_name !== nicknameProps.nickname && res.nick_name !== null)
           setNickname(res.nick_name);
-        if (userSocket.disconnected)
+        if (userSocket.disconnected) {
           userSocket.connect();
+          chatSocket.connect();
+        }
         userSocket.emit('registerUserId', res.intra_user_id);
       })
       .catch((error) => {

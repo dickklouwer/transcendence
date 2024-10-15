@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { InvitedChats, UserChats } from '@repo/db';
-import io from 'socket.io-client';
+import { chatSocket } from '@/app/chat_componens';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -116,9 +116,9 @@ export default function Chats() {
     const [invitedChats, setInvitedChats] = useState<InvitedChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
     const [reload, setReload] = useState<boolean>(false);
-    const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
     function loadChats() {
+        console.log('Fetching Chats...');
         fetchGet<UserChats[]>('api/chats')
             .then((data) => {
                 console.log('Received Chats Data: ', data);
@@ -141,11 +141,15 @@ export default function Chats() {
 
     useEffect(() => {
         loadChats();
-        // userSocket.on('sendFriendRequestAccepted', () => {
-        //     setReload(prev => !prev);
-        //   });
-        
-    }, []);
+
+        chatSocket.on('listenToInbox', () => {
+            setReload(prev => !prev);
+        });
+
+        return () => {
+            chatSocket.off('listenToInbox');
+        }
+    }, [reload]);
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];
     const filteredChatFields = validUserChats

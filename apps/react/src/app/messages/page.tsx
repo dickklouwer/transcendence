@@ -176,7 +176,6 @@ export default function DC() {
             /* Leave chat */
             chatSocket.emit('leaveChat', chat_id.toString());
             chatSocket.off('messageFromServer');
-            chatSocket.disconnect();
         };
     }, [user, chat_id]);
 

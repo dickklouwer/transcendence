@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { userSocket } from '../profile_headers';
+import { chatSocket } from '../chat_componens';
 
 export default function Menu() {
   
     function Logout() {
       localStorage.removeItem('token');
       userSocket.disconnect();
+      chatSocket.disconnect();
       window.location.replace('/login');
     }
   

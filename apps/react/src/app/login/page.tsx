@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { userSocket } from '../profile_headers';
 import { fetchGet } from '../fetch_functions'
 import { User } from '@repo/db'
+import { chatSocket } from '../chat_componens';
 
 
 export default function Login() {
@@ -23,8 +24,10 @@ export default function Login() {
         
 }, [router]);
 
-    if (userSocket.connected)
+    if (userSocket.connected) {
         userSocket.disconnect();
+        chatSocket.disconnect();
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen">
@@ -41,6 +44,7 @@ const signInFortyTwo = async () => {
     await signIn('FortyTwoProvider')
     .then(() => {
         userSocket.connect();
+        chatSocket.connect();
     });
 }
 
@@ -76,6 +80,7 @@ export function SignInDevUser() {
             if (response.ok)
                 {
                     userSocket.connect();
+                    chatSocket.connect();
                     Router.push(response.url);
                 }
             }
