@@ -32,7 +32,6 @@ function Message({ message, messageStatus, intra_id }: { message: ChatMessages, 
     }
 
     function renderDate(date: Date) {
-        console.log('Date: ', date);
         if (!date)
             return 'no date';
         if (!(date instanceof Date))
@@ -137,7 +136,6 @@ export default function DC() {
                     ...message,
                     sent_at: new Date(message.sent_at)
                 }));
-                console.log('Retrieved Messages form db: ', transformedMessages);
                 setMessages(transformedMessages);
             })
             .catch((error) => {
@@ -158,7 +156,6 @@ export default function DC() {
         chatSocket.on('messageFromServer', (message: ChatMessages) => {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             message.sent_at = new Date(message.sent_at);
-            console.log('Received message: ' + message.message);
             setMessages((prevMessages) => [...prevMessages, message]);
             updateUnreadMessages();
         });
@@ -178,7 +175,6 @@ export default function DC() {
     const updateUnreadMessages = () => {
         fetchPost('api/updateUnreadMessages', { chat_id: chat_id, intra_user_id: user?.intra_user_id ?? 0 })
             .then(() => {
-                console.log('Updated unread messages');
             })
             .catch((error) => {
                 console.log('Error updating unread messages: ', error);
@@ -186,7 +182,6 @@ export default function DC() {
     }
 
     const sendMessage = (message: ChatMessages) => {
-        console.log('Sending message: ' + message.message);
         chatSocket.emit('messageToServer', message);
         setNewMessage('');
     };
@@ -302,8 +297,6 @@ export default function DC() {
                 <div className="overflow-auto h-full">
                     <div className="h-10"></div> {/* making sure you can see the first message */}
                     {user && messages.map((message, index) => (
-                        console.log('Message: ', message),
-                        console.log('MessageStatus: ', messageStatus[index]),
                         <Message key={index} message={message} messageStatus={messageStatus[index]} intra_id={user.intra_user_id} />
                     ))}
                     <div ref={messagesEndRef} /> {/* Used for auto scroll to last message */}

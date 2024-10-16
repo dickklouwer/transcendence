@@ -987,6 +987,7 @@ type UserChats = {
     title: string;
     image: string;
     lastMessage: string;
+    nickName: string;
     time: Date;
     unreadMessages: number;
 };

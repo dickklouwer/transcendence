@@ -11,7 +11,7 @@ export const chatSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/m
     });
 
 export function MessageInbox() {
-    const [numberOfMessages, setNumberOfMessages] = useState<number>(2);
+    const [numberOfMessages, setNumberOfMessages] = useState<number>(0);
     return (
         <div className='relative inline-block'>
         <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">

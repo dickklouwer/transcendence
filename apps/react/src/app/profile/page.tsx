@@ -83,7 +83,7 @@ export default function Profile() {
         <div className="flex items-center space-x-4 w-[35rem]">
           <div className="relative">
             <Image
-              src={user.image}
+              src={user.image_url}
               alt="Profile Image"
               width={100}
               height={100}

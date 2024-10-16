@@ -626,6 +626,18 @@ export class DbService {
             ),
           );
 
+        const lastSenderName = await this.db
+          .select({
+            user_intra_id: users.intra_user_id,
+            user_name: users.user_name,
+            nick_name: users.nick_name,
+          })
+          .from(messages)
+          .innerJoin(users, eq(messages.sender_id, users.intra_user_id))
+          .where(eq(messages.chat_id, chat_ids[i].chat_id))
+          .orderBy(desc(messages.sent_at))
+          .limit(1);
+
         const field: UserChats = {
           chatid: chat_ids[i].chat_id,
           title: chatsInfo[0].isDirect
@@ -639,6 +651,10 @@ export class DbService {
           lastMessage: chatsInfo[0].pass
             ? 'Password protected'
             : chatsInfo[0].lastMessage,
+          nickName:
+            user.intra_user_id === lastSenderName[0].user_intra_id
+              ? 'You'
+              : (lastSenderName[0].nick_name ?? lastSenderName[0].user_name),
           time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
           unreadMessages: 0,
         };

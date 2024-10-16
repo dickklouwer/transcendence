@@ -40,7 +40,6 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     } , []);
 
     function renderDate(date: Date) {
-        console.log('Date: ', date);
         if (!date)
             return 'no date';
         if (!(date instanceof Date))
@@ -51,21 +50,35 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                {chatInfo.isDm ?
+                {chatInfo.isDm ? (
                     <Link href={{ pathname: '/profile_view', query: { user_id: chatInfo.intraId } }}>
-                        <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
-                    </Link> :
-                    <Link href={{ pathname: '/group_view', query: { chat_id: chatField.chatid } }}>
-                        <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <div className="flex justify-center items-center w-12 h-12">
+                            <Image src={userImage} alt="User or Group" width={48} height={48} className="rounded-full" />
+                        </div>
                     </Link>
-                }
+                ) : (
+                    <Link href={{ pathname: '/group_view', query: { chat_id: chatField.chatid } }}>
+                        <div className="flex justify-center items-center w-12 h-12">
+                            <Image src={userImage} alt="User or Group" width={48} height={48} className="rounded-full" />
+                        </div>
+                    </Link>
+                )}
                 <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
-                            <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage ? chatField.lastMessage : <i>No messages yet...</i>}</p>
+                            <p className="max-w-xs overflow-ellipsis overflow-hidden text-gray-500 whitespace-nowrap text-sm">
+                                {chatField.lastMessage ? (
+                                    <>
+                                    <span className="text-white">{chatField.nickName} </span>
+                                    <span className="text-gray-500">{chatField.lastMessage}</span>
+                                    </>
+                                ) : (
+                                    <i className="text-gray-500">No messages yet...</i>
+                                )}
+                            </p>
                         </div>
-                        <div className="text-right px-4">
+                        <div className="flex flex-col items-center">
                             <p>{renderDate(chatField.time)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
@@ -148,7 +161,6 @@ export default function Chats() {
     const [reload, setReload] = useState<boolean>(false);
 
     function loadChats() {
-        console.log('Fetching Chats...');
         fetchGet<UserChats[]>('api/chats')
             .then((data) => {
                 const transformedMessages = data.map((chat) => {
@@ -165,7 +177,6 @@ export default function Chats() {
 
         fetchGet<UserChats[]>('api/invitedChats')
             .then((data) => {
-                console.log('Received Invited Chats Data: ', data);
                 setInvitedChats(data);
             })
             .catch((error) => {
