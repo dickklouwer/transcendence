@@ -73,6 +73,12 @@ export class MessagesGateway
       this.logger.log(
         `Client ${client.id} is muted in chat_id: ${payload.chat_id}`,
       );
+      // Send to the sender only that he is muted
+      client.emit('messageFromServer', {
+        ...payload,
+        message: '',
+        is_muted: true,
+      });
       return;
     }
 

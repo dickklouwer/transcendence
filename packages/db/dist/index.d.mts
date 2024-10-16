@@ -1023,6 +1023,7 @@ type ChatMessages = {
     sender_image_url: string;
     message: string;
     sent_at: Date;
+    is_muted: boolean;
 };
 type ChatInfo = {
     isDm: boolean;

@@ -43,7 +43,10 @@ function Message({ message, messageStatus, intra_id }: { message: ChatMessages, 
         <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                 {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
-                <div>{renderMessageWithLineBreaks(message.message)}</div>
+                {/* <div>{renderMessageWithLineBreaks(message.message)}</div> */}
+                {/* {message.is_muted ? 'You are muted in this chat!' : renderMessageWithLineBreaks(message.message)} */}
+                {/* muted in red */}
+                {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
                 <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
                 <div className="text-xs text-right text-gray-600">{renderMessageStatus(messageStatus)}</div>
             </div>
@@ -196,7 +199,8 @@ export default function DC() {
             sender_name: '',        // get from user database
             sender_image_url: '',   // get from user database
             message: newMessage,
-            sent_at: new Date()     // generate in the backend with instert returnig
+            sent_at: new Date(),     // generate in the backend with instert returnig
+            is_muted: false,
         };
 
         sendMessage(message);
