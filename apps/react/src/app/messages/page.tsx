@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { User, ChatMessages, MessageStatus, DmInfo } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
@@ -98,6 +99,7 @@ function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, n
 
 export default function DC() {
     const searchParams = useSearchParams();
+    const Router = useRouter();
     const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState<ChatMessages[]>([]);
@@ -132,8 +134,16 @@ export default function DC() {
                 console.log('Error: ', error);
         });
 
-        fetchGet<ChatMessages[]>(`api/messages?chat_id=${chat_id}`)
+        fetchGet<ChatMessages[] | boolean>(`api/messages?chat_id=${chat_id}`)
         .then((res) => {
+                if (typeof res === 'boolean' && res === false) {
+                    alert('You are not a member of this chat');
+                    Router.push('/chats')
+                    return;
+                }
+                
+                if (typeof res === 'boolean') return;
+            
                 /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
                 const transformedMessages = res.map(message => ({
                     ...message,

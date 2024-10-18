@@ -812,26 +812,28 @@ export class DbService {
   async getMessagesFromDataBase(
     jwtToken: string,
     chat_id: number,
-  ): Promise<ChatMessages[] | null> {
+  ): Promise<ChatMessages[] | boolean> {
     const user = await this.getUserFromDataBase(jwtToken);
     /* Check if user is in the chat */
     try {
       const isUserInChat = await this.db
         .select()
         .from(chatsUsers)
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(
           and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
             eq(chatsUsers.chat_id, chat_id),
-            eq(chatsUsers.intra_user_id, user?.intra_user_id),
+            or(eq(chats.is_direct, true), eq(chatsUsers.joined, true)),
           ),
         );
       if (isUserInChat.length === 0) {
         console.log('User not in chat');
-        return null;
+        return false;
       }
     } catch (error) {
       console.log('Error: ', error);
-      return null;
+      return false;
     }
     /* Get the messages */
     try {
@@ -840,7 +842,6 @@ export class DbService {
         .from(messages)
         .where(eq(messages.chat_id, chat_id));
 
-      // set dbMessages to ChatMessages
       const chatMessages: ChatMessages[] = [];
       for (let i = 0; i < dbMessages.length; i++) {
         const sender = await this.getAnyUserFromDataBase(
@@ -864,7 +865,7 @@ export class DbService {
       return chatMessages;
     } catch (error) {
       console.log('Error messags: ', error);
-      return null;
+      return false;
     }
   }
 

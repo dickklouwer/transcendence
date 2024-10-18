@@ -92,6 +92,6 @@ export class MessagesGateway
 
     // Send update to inbox
     log('Sending newMessage to inbox');
-    this.server.to('inbox').emit('listenToInbox');
+    this.server.to('inbox').emit('inboxUpdate');
   }
 }

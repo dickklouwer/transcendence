@@ -190,12 +190,12 @@ export default function Chats() {
     useEffect(() => {
         loadChats();
 
-        chatSocket.on('listenToInbox', () => {
+        chatSocket.on('inboxUpdate', () => {
             setReload(prev => !prev);
         });
 
         return () => {
-            chatSocket.off('listenToInbox');
+            chatSocket.off('inboxUpdate');
         }
     }, [reload]);
 
