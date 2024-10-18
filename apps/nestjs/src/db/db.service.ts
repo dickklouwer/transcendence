@@ -591,7 +591,13 @@ export class DbService {
       const chat_ids = await this.db
         .select()
         .from(chatsUsers)
-        .where(eq(chatsUsers.intra_user_id, user.intra_user_id));
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
+        .where(
+          and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            or(eq(chats.is_direct, true), eq(chatsUsers.joined, true)),
+          ),
+        );
 
       for (let i = 0; i < chat_ids.length; i++) {
         const chatsInfo = await this.db
@@ -607,7 +613,7 @@ export class DbService {
           .from(chats)
           .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
           .fullJoin(users, eq(messages.sender_id, users.intra_user_id))
-          .where(eq(chats.chat_id, chat_ids[i].chat_id))
+          .where(eq(chats.chat_id, chat_ids[i].chats.chat_id))
           .orderBy(desc(messages.sent_at) ?? desc(chats.created_at))
           .limit(1);
 
@@ -621,7 +627,7 @@ export class DbService {
           .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
           .where(
             and(
-              eq(chatsUsers.chat_id, chat_ids[i].chat_id),
+              eq(chatsUsers.chat_id, chat_ids[i].chats.chat_id),
               not(eq(users.token, jwtToken)),
             ),
           );
@@ -634,12 +640,12 @@ export class DbService {
           })
           .from(messages)
           .innerJoin(users, eq(messages.sender_id, users.intra_user_id))
-          .where(eq(messages.chat_id, chat_ids[i].chat_id))
+          .where(eq(messages.chat_id, chat_ids[i].chats.chat_id))
           .orderBy(desc(messages.sent_at))
           .limit(1);
 
         const field: UserChats = {
-          chatid: chat_ids[i].chat_id,
+          chatid: chat_ids[i].chats.chat_id,
           title: chatsInfo[0].isDirect
             ? otherUsers[0].nick_name
               ? otherUsers[0].nick_name
@@ -657,6 +663,7 @@ export class DbService {
               : (lastSenderName[0].nick_name ?? lastSenderName[0].user_name),
           time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
           unreadMessages: 0,
+          hasPassword: chatsInfo[0].pass ? true : false,
         };
         result.push(field);
       }
@@ -849,6 +856,7 @@ export class DbService {
           sender_image_url: sender.image_url,
           message: dbMessages[i].message,
           sent_at: dbMessages[i].sent_at,
+          is_muted: false,
         };
         chatMessages.push(field);
       }
@@ -865,6 +873,8 @@ export class DbService {
     message_id: number,
   ): Promise<{ receivet_at: Date; read_at: Date } | null> {
     // TODO: make function
+    jwtToken;
+    message_id;
     return null;
   }
 
@@ -1076,6 +1086,7 @@ export class DbService {
         sender_image_url: sender.image_url,
         message: result[0].message,
         sent_at: result[0].sent_at,
+        is_muted: false,
       };
       return field;
     } catch (error) {

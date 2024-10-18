@@ -14,6 +14,7 @@ type UserChats = {
   nickName: string;
 	time: Date;
 	unreadMessages: number;
+  hasPassword: boolean;
 };
 
 type InvitedChats = {

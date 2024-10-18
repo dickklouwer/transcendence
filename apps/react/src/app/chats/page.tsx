@@ -68,11 +68,13 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
                             <p className="max-w-xs overflow-ellipsis overflow-hidden text-gray-500 whitespace-nowrap text-sm">
-                                {chatField.lastMessage ? (
+                                {chatField.lastMessage && !chatField.hasPassword ? (
                                     <>
                                     <span className="text-white">{chatField.nickName} </span>
                                     <span className="text-gray-500">{chatField.lastMessage}</span>
                                     </>
+                                ) : chatField.hasPassword ? (
+                                    <i className="text-gray-500">Password</i>
                                 ) : (
                                     <i className="text-gray-500">No messages yet...</i>
                                 )}
