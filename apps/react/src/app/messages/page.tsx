@@ -236,6 +236,8 @@ export default function DC() {
     const handleKeyPressMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
+            const newMessage = e.currentTarget.value.replace(/\n/g, ''); // remove new line from message
+            setNewMessage(newMessage);
             handleSendMessage(intra_id);
         }
     };
