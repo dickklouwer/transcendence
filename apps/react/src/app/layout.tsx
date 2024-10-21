@@ -31,7 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/menu">
                 <h1 className="inline-block text-3xl">PONG!</h1>
               </Link>
-              {/* <MessageInbox/> */}
               <LoadProfile setNickname={setNickname} />
             </header>
           <main className="flex-grow flex items-center justify-center min-h-[100vh]">
