@@ -144,7 +144,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
       })
       .catch((error) => {
         console.log('Error: ', error);
-        Router.push('/login', { scroll: false });
+        Router.push(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/login`, { scroll: false });
       });
   }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams, nicknameProps.reload]);
 
