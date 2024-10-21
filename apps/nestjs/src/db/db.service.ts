@@ -658,9 +658,11 @@ export class DbService {
             ? 'Password protected'
             : chatsInfo[0].lastMessage,
           nickName:
-            user.intra_user_id === lastSenderName[0].user_intra_id
-              ? 'You'
-              : (lastSenderName[0].nick_name ?? lastSenderName[0].user_name),
+            lastSenderName.length > 0
+              ? user.intra_user_id === lastSenderName[0].user_intra_id
+                ? 'You'
+                : (lastSenderName[0].nick_name ?? lastSenderName[0].user_name)
+              : '',
           time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
           unreadMessages: 0,
           hasPassword: chatsInfo[0].pass ? true : false,
@@ -849,6 +851,13 @@ export class DbService {
         );
         if (!sender) throw Error('Failed to fetch User!');
 
+        const isBlocked = await this.checkIfUserIsBlocked(
+          dbMessages[i].sender_id,
+          user.intra_user_id,
+        );
+
+        if (isBlocked) continue;
+
         const field: ChatMessages = {
           message_id: dbMessages[i].message_id,
           chat_id: dbMessages[i].chat_id,
@@ -899,7 +908,6 @@ export class DbService {
         .where(eq(chatsUsers.chat_id, chat_id));
 
       if (chatInfo.length !== 2) {
-        console.log('Chat is not a DM');
         return {
           isDm: false,
           intraId: null,
@@ -912,7 +920,6 @@ export class DbService {
 
       for (let i = 0; i < chatInfo.length; i++) {
         if (chatInfo[i].intra_id !== user.intra_user_id) {
-          console.log('Chat is a DM');
           return {
             isDm: true,
             intraId: chatInfo[i].intra_id,
@@ -1039,12 +1046,21 @@ export class DbService {
     }
   }
 
-  // async checkIfMessageIsBlocked(
-  //   chat_id: number,
-  //   message_id: number,
-  // ): Promise<boolean> {
-  //   return false;
-  // }
+  async checkIfUserIsBlocked(
+    senderId: number,
+    receiverId: number,
+  ): Promise<boolean> {
+    try {
+      const result = await this.db.select().from(users);
+      result;
+    } catch (error) {
+      console.log('Error: ', error);
+    }
+    if (senderId === 278 && receiverId === 77718) {
+      return true; // Bas is blocked by Bram
+    }
+    return false;
+  }
 
   async saveMessage(payload: ChatMessages): Promise<ChatMessages> {
     try {
@@ -1063,8 +1079,6 @@ export class DbService {
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, payload.chat_id));
 
-      console.log('chatUsers:', chatUsers);
-
       for (let i = 0; i < chatUsers.length; i++) {
         await this.db.insert(messageStatus).values({
           message_id: result[0].message_id,
@@ -1074,8 +1088,6 @@ export class DbService {
           read_at: null,
         });
       }
-
-      console.log('Message saved');
 
       const sender = await this.getAnyUserFromDataBase(payload.sender_id);
       if (!sender) throw Error('Failed to fetch User!');
