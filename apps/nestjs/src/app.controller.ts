@@ -272,6 +272,17 @@ export class AppController {
     res.status(200).send(response);
   }
 
+  @Get('getNumberOfUnreadChats')
+  async getNumberOfUnreadChats(
+    @Headers('authorization') token: string,
+  ): Promise<number> {
+    const numberOfUnreadChats = await this.dbservice.getNumberOfUnreadChats(
+      token.split(' ')[1],
+    );
+
+    return numberOfUnreadChats;
+  }
+
   @Post('createMockData')
   async mockData(): Promise<boolean> {
     const response = await this.dbservice.mockData();

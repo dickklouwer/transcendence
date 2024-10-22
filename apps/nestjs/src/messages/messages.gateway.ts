@@ -147,6 +147,16 @@ export class MessagesGateway
       });
     }
 
-    this.server.to('inbox').emit('inboxUpdate');
+    this.server.to('inbox').emit('messageUpdate');
+    this.server.to('inbox').emit('chatUpdate');
+  }
+
+  @SubscribeMessage('inboxUpdate')
+  handleInboxUpdate(client: Socket): void {
+    this.logger.log('Received inbox update from client');
+    this.logger.log('Send chatUpdate');
+    client.emit('chatUpdate');
+    this.logger.log('Send messageUpdate');
+    client.emit('messageUpdate');
   }
 }

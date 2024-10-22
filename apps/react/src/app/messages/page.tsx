@@ -173,6 +173,9 @@ export default function DC() {
             updateStatusReceivedMessages(chat_id, user.intra_user_id);
         });
 
+        console.log('send inboxUpdate');
+        chatSocket.emit('inboxUpdate');
+
         return () => {
             chatSocket.emit('leaveChat', chat_id.toString());
             chatSocket.off('messageFromServer');
@@ -197,6 +200,7 @@ export default function DC() {
     const sendMessage = (message: ChatMessages) => {
         chatSocket.emit('messageToServer', message);
         setNewMessage('');
+        chatSocket.emit('inboxUpdate');
     };
 
     const handleSendMessage = (intra_id: number) => {

@@ -651,7 +651,6 @@ export class DbService {
             messageStatus,
             eq(messages.message_id, messageStatus.message_id),
           )
-          // where reat_at is null
           .where(
             and(
               eq(messages.chat_id, chat_ids[i].chats.chat_id),
@@ -805,7 +804,7 @@ export class DbService {
       return false;
     }
   }
-  innerJoin;
+
   async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
@@ -853,7 +852,7 @@ export class DbService {
       console.log('Error: ', error);
       return false;
     }
-    /* Get the messages */
+
     try {
       const dbMessages = await this.db
         .select()
@@ -898,7 +897,7 @@ export class DbService {
     jwtToken: string,
     message_id: number,
   ): Promise<{ receivet_at: Date; read_at: Date } | null> {
-    // TODO: make function
+    // TODO: implement
     return null;
   }
 
@@ -992,6 +991,34 @@ export class DbService {
     }
   }
 
+  async getNumberOfUnreadChats(jwtToken: string): Promise<number> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const result = await this.db
+        .select({ count: count() })
+        .from(chatsUsers)
+        .innerJoin(messages, eq(chatsUsers.chat_id, messages.chat_id))
+        .innerJoin(
+          messageStatus,
+          eq(messages.message_id, messageStatus.message_id),
+        )
+        .where(
+          and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(messageStatus.receiver_id, user.intra_user_id),
+            isNull(messageStatus.read_at),
+          ),
+        );
+
+      return result[0].count;
+    } catch (error) {
+      console.log('Error: ', error);
+      return 0;
+    }
+  }
+
   async checkIfUserIsMuted(chat_id: number, user_id: number): Promise<boolean> {
     try {
       const testSetMute = false;
@@ -1070,9 +1097,10 @@ export class DbService {
     } catch (error) {
       console.log('Error: ', error);
     }
-    if (senderId === 278 && receiverId === 77718) {
-      return true; // Bas is blocked by Bram
-    }
+    // TODO: Implement
+    // if (senderId === 278 && receiverId === 77718) {
+    //   return true; // Bas is blocked by Bram
+    // }
     return false;
   }
 

@@ -186,16 +186,15 @@ export default function Chats() {
             });
     }
 
-
     useEffect(() => {
         loadChats();
 
-        chatSocket.on('inboxUpdate', () => {
+        chatSocket.on('messageUpdate', () => {
             setReload(prev => !prev);
         });
 
         return () => {
-            chatSocket.off('inboxUpdate');
+            chatSocket.off('messageUpdate');
         }
     }, [reload]);
 

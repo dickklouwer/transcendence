@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
-import { chatSocket, MessageInbox } from './chat_componens';
+import MessageInbox, { chatSocket } from './chat_componens';
 
 export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
@@ -163,7 +163,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
 
   return (
     <div className='flex space-x-2'>
-      <MessageInbox />
+      <MessageInbox user_intra_id={user.intra_user_id} />
       <MatchHistory />
       <FriendsInbox />
       <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-full hover:nm-inset-blue-600 nm-flat-blue-500-xs transition duration-500">
