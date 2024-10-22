@@ -154,7 +154,7 @@ export default function DC() {
             .catch((error) => {
                 console.log('Error: ', error);
             });
-        updateUnreadMessages();
+        updateStatusReceivedMessages(chat_id, user.intra_user_id);
 
         fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chat_id}`)
             .then((res) => {
@@ -170,7 +170,7 @@ export default function DC() {
             /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
             message.sent_at = new Date(message.sent_at);
             setMessages((prevMessages) => [...prevMessages, message]);
-            updateUnreadMessages();
+            updateStatusReceivedMessages(chat_id, user.intra_user_id);
         });
 
         return () => {
@@ -183,10 +183,10 @@ export default function DC() {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages]);
+    }, [messages])
 
-    const updateUnreadMessages = () => {
-        fetchPost('api/updateUnreadMessages', { chat_id: chat_id, intra_user_id: user?.intra_user_id ?? 0 })
+    function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
+        fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
             .then(() => {
             })
             .catch((error) => {

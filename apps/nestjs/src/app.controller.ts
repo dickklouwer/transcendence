@@ -253,13 +253,13 @@ export class AppController {
     return dmInfo;
   }
 
-  @Post('updateUnreadMessages')
-  async updateUnreadMessages(
+  @Post('updateStatusReceivedMessages')
+  async updateStatusReceivedMessages(
     @Body('chat_id') chat_id: number,
     @Body('intra_user_id') intra_user_id: number,
     @Res() res: Response,
   ) {
-    const response = await this.dbservice.updateUnreadMessages(
+    const response = await this.dbservice.updateStatusReceivedMessages(
       chat_id,
       intra_user_id,
     );

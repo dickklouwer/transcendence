@@ -21,7 +21,7 @@ import type {
   ChatsUsers,
   DmInfo,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql, isNull } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, isNull, count, is } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
 
 const dublicated_key = '23505';
@@ -644,6 +644,22 @@ export class DbService {
           .orderBy(desc(messages.sent_at))
           .limit(1);
 
+        const unreadMessages = await this.db
+          .select({ count: count() })
+          .from(messages)
+          .innerJoin(
+            messageStatus,
+            eq(messages.message_id, messageStatus.message_id),
+          )
+          // where reat_at is null
+          .where(
+            and(
+              eq(messages.chat_id, chat_ids[i].chats.chat_id),
+              eq(messageStatus.receiver_id, user.intra_user_id),
+              isNull(messageStatus.read_at),
+            ),
+          );
+
         const field: UserChats = {
           chatid: chat_ids[i].chats.chat_id,
           title: chatsInfo[0].isDirect
@@ -664,7 +680,7 @@ export class DbService {
                 : (lastSenderName[0].nick_name ?? lastSenderName[0].user_name)
               : '',
           time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
-          unreadMessages: 0,
+          unreadMessages: unreadMessages[0].count,
           hasPassword: chatsInfo[0].pass ? true : false,
         };
         result.push(field);
@@ -883,8 +899,6 @@ export class DbService {
     message_id: number,
   ): Promise<{ receivet_at: Date; read_at: Date } | null> {
     // TODO: make function
-    jwtToken;
-    message_id;
     return null;
   }
 
@@ -951,7 +965,7 @@ export class DbService {
     };
   }
 
-  async updateUnreadMessages(
+  async updateStatusReceivedMessages(
     chat_id: number,
     user_user_id: number,
   ): Promise<boolean> {
@@ -1073,7 +1087,6 @@ export class DbService {
         })
         .returning();
 
-      // get user_receiver_ids
       const chatUsers = await this.db
         .select({ user_id: chatsUsers.intra_user_id })
         .from(chatsUsers)
