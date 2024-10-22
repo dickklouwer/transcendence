@@ -109,8 +109,6 @@ export class MessagesGateway
 
   @SubscribeMessage('messageToServer')
   async handleMessage(client: Socket, payload: ChatMessages): Promise<void> {
-
-    // check if the user is muted
     const isMuted = await this.dbService.checkIfUserIsMuted(
       payload.chat_id,
       payload.sender_id,
@@ -120,7 +118,6 @@ export class MessagesGateway
       this.logger.log(
         `Client ${client.id} is muted in chat_id: ${payload.chat_id}`,
       );
-      // Send to the sender only that he is muted
       client.emit('messageFromServer', {
         ...payload,
         message: '',
@@ -129,7 +126,6 @@ export class MessagesGateway
       return;
     }
 
-    // Save message to the database
     const fullMessage: ChatMessages = await this.dbService.saveMessage(payload);
 
     const room = this.rooms.get(fullMessage.chat_id);
