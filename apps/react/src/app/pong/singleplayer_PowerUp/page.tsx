@@ -45,7 +45,8 @@ export default function PongGame() {
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
 
-		if (!socket) return;
+		if (!socket) 
+			return;
 		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
 		setGameManager(manager);
 

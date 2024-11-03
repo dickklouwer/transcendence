@@ -68,10 +68,6 @@ export default function PongGame() {
 	}, []);
 
 	useEffect(() => {
-		socket.emit('normal game');
-	}, []);
-
-	useEffect(() => {
 		if (canvasRef.current === null) return;
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
@@ -156,7 +152,8 @@ export default function PongGame() {
 	}
 
 	const leave = () => {
-		socket.emit('disconnect');
+		// socket.disconnect();
+		window.location.replace('/menu');
 	}
 
 	const GameStateComponent = () => (

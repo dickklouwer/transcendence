@@ -1,27 +1,54 @@
 "use client";
 
-import Link from 'next/link';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import io, { Socket } from 'socket.io-client';
 
-export default function Menu() {
+const Menu = () => {
+  const [pSock, setPSock] = useState<Socket | null>(null);
+  const router = useRouter(); // Get the router object
 
-  function renderInitialOptions() {
+  const connectToSocket = (url: string) => {
+    const sock = io(url, {
+      transports: ['websocket'],
+      query: {
+        currentPath: window.location.pathname,
+      },
+      withCredentials: true,
+    });
+    setPSock(sock);
+  };
+
+  const handleSinglePlayerClick = () => {
+    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`;
+    connectToSocket(url);
+    router.push('/pong/singleplayer_PowerUp'); // Navigate to single player page
+  };
+
+  const handleMultiplayerClick = () => {
+    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+    connectToSocket(url);
+    router.push('/pong/multiplayer'); // Navigate to multiplayer page
+  };
+
+  const renderInitialOptions = () => {
     return (
       <>
-        <Link
+        <button
           className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
-          href="/pong/singleplayer_PowerUp"
+          onClick={handleSinglePlayerClick}
         >
           Single Player
-        </Link>
-        <Link
+        </button>
+        <button
           className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
-          href="/pong/multiplayer"
+          onClick={handleMultiplayerClick}
         >
           Multiplayer
-        </Link>
+        </button>
       </>
     );
-  }
+  };
 
   return (
     <div className="static space-y-4 w-full">
@@ -30,10 +57,15 @@ export default function Menu() {
           Choose Your Game Mode
         </h2>
         {renderInitialOptions()}
-        <Link className="text-blue-500 mt-4" href={'/'}>
+        <button
+          className="text-blue-500 mt-4"
+          onClick={() => router.push('/')}
+        >
           Back to Home
-        </Link>
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default Menu;

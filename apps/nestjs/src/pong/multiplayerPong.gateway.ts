@@ -160,6 +160,11 @@ private handleRoomDisconnect(client: Socket, room: any, roomId: string, isPrivat
     client: Socket,
     payload: { intra_id: number; user_name: string; opp_id: number; opp_nn: string },
   ): void {
+    const clientExists = this.clients.some(existingClient => existingClient.id === client.id);
+    if (clientExists) {
+      this.logger.log('Client already exists');
+      return;
+    }
     this.clients.push(client);
     this.logger.log( `opp_id = ${payload.opp_id}`);
     if (payload.opp_id == 0) {
