@@ -33,7 +33,7 @@ export class AppController {
       token.split(' ')[1],
     );
     if (!user) {
-      res.status(404).send("User doesn't exist");
+      res.status(401).send("User doesn't exist");
       return;
     }
     res.status(200).send(user);

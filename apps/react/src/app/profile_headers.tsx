@@ -8,6 +8,7 @@ import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
 import MessageInbox, { chatSocket } from './chat_componens';
+import { getURL } from 'next/dist/shared/lib/utils';
 
 export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
@@ -131,6 +132,10 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
       Router.push('/', { scroll: false });
     }
 
+    if (getURL() === "/login" && localStorage.getItem('token') == null) {
+      return 
+    }
+
     fetchGet<User>('api/profile')
       .then((res) => {
         setUser(res);
@@ -144,7 +149,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
       })
       .catch((error) => {
         console.log('Error: ', error);
-        Router.push(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/login`, { scroll: false });
+        Router.push("/login", { scroll: false });
       });
   }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams, nicknameProps.reload]);
 
@@ -159,7 +164,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
   }
 
   if (!user)
-    return null;
+    return <div></div>;
 
   return (
     <div className='flex space-x-2'>

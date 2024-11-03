@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS "pong"."games" (
 CREATE TABLE IF NOT EXISTS "pong"."messageStatus" (
 	"message_status_id" serial PRIMARY KEY NOT NULL,
 	"message_id" integer NOT NULL,
+	"chat_id" integer,
 	"receiver_id" integer NOT NULL,
 	"receivet_at" timestamp,
 	"read_at" timestamp

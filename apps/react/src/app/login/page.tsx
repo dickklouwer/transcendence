@@ -15,12 +15,14 @@ export default function Login() {
     const router = useRouter();
 
     useEffect(() => {
+        if (localStorage.getItem('token') !== null) {
         fetchGet<User>('/api/profile')
         .then((user) => {
             if (user) {
                router.push('/menu'); 
             }
         })
+    }
         
 }, [router]);
 
