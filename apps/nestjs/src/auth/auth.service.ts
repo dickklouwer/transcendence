@@ -114,6 +114,11 @@ export class AuthService {
         'Error validating code:',
         error.response?.data || error.message,
       );
+
+      if (error.response.status === 401) {
+        throw new UnauthorizedException(error.response);
+      }
+
       throw new InternalServerErrorException('Error validating access code');
     }
   }

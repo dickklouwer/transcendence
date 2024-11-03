@@ -60,6 +60,10 @@ export class AuthController {
       }
     } catch (error) {
       console.log(error);
+      if (error.response) {
+        res.status(error.response?.status).send(error.response.data);
+        return;
+      }
       res.status(500).send('Authentication Failed Please Try again');
     }
   }
