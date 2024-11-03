@@ -162,7 +162,7 @@ private handleRoomDisconnect(client: Socket, room: any, roomId: string, isPrivat
   ): void {
     this.clients.push(client);
     this.logger.log( `opp_id = ${payload.opp_id}`);
-    if (payload.opp_id == -1) {
+    if (payload.opp_id == 0) {
       this.randomMatch(client);
       this.fillRoomdata(client, payload.intra_id, payload.user_name);
     }
