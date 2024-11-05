@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use, Fragment } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -12,9 +12,14 @@ import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 
 const checkPassword: boolean = true;
 
-function Message({ message, messageStatus, intra_id }: { message: ChatMessages, messageStatus: MessageStatus, intra_id: number }) {
+function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
     const isMyMessage = message.sender_id === intra_id;
     const bubbleClass = isMyMessage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black';
+    const [fullStatus, setFullStatus] = useState<MessageStatus[] | null>(null);
+    const [status, setStatus] = useState<String>('sent');
+    const [showStatus, setShowStatus] = useState(false);
+    const [reload, setReload] = useState<boolean>(false);
+    const [nicknames, setNicknames] = useState<{ [key: number]: string }>({});
 
     const renderMessageWithLineBreaks = (text: string) => {
         return text.split('\n').map((str, index) => (
@@ -22,12 +27,74 @@ function Message({ message, messageStatus, intra_id }: { message: ChatMessages, 
         ));
     };
 
-    function renderMessageStatus(messageStatus: MessageStatus) {
+    function updateStatusMessage() {
+        fetchGet<MessageStatus[] | null>(`api/messageStatus?message_id=${message.message_id}`)
+            .then((res) => {
+                if (!res) res = [];
+
+                const transformedStatus = res.map(status => ({
+                    ...status,
+                    receivet_at: status.receivet_at ? new Date(status.receivet_at) : null,
+                    read_at: status.read_at ? new Date(status.read_at) : null,
+                }));
+
+                setFullStatus(transformedStatus);
+                setStatus(renderMessageStatus(transformedStatus));
+                fetchNicknames(transformedStatus);
+                console.log('loadStatus');
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+    }
+
+    function fetchNicknames(statusArray: MessageStatus[]) {
+        const nicknamePromises = statusArray.map(status => getNickname(status.receiver_id));
+        Promise.all(nicknamePromises)
+            .then(nicknamesArray => {
+                const nicknamesMap = statusArray.reduce((acc, status, index) => {
+                    acc[status.receiver_id] = nicknamesArray[index];
+                    return acc;
+                }, {} as { [key: number]: string });
+                setNicknames(nicknamesMap);
+            })
+            .catch(error => {
+                console.log('Error fetching nicknames: ', error);
+            });
+    }
+
+    function getNickname(intra_id: number): Promise<string> {
+        return fetchGet<string>(`api/getNickname?intra_id=${intra_id}`)
+            .then((res) => {
+                return res;
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+                return '-';
+            });
+    }
+
+    useEffect(() => {
+        updateStatusMessage();
+        fetchNicknames(fullStatus ?? []);
+
+        chatSocket.on('statusUpdate', () => {
+            setReload(prev => !prev);
+        });
+        return () => {
+            chatSocket.off('statusUpdate');
+        }
+    }, [reload, fullStatus]);
+
+    function renderMessageStatus(messageStatus: MessageStatus[] | null) {
+        console.log('renderMessageStatus');
         if (!messageStatus)
             return '';
-        if (messageStatus.read_at)
+        const allRead = messageStatus.every((status) => status.read_at);
+        const allReceived = messageStatus.every((status) => status.receivet_at);
+        if (allRead)
             return 'read';
-        if (messageStatus.receivet_at)
+        if (allReceived)
             return 'received';
         return 'sent';
     }
@@ -40,18 +107,31 @@ function Message({ message, messageStatus, intra_id }: { message: ChatMessages, 
         return date ? date.toString().slice(16, 21) : '';
     }
 
+    function fun() {
+        setShowStatus(!showStatus);
+        console.log('show status = ', showStatus);
+        if (showStatus) {
+            console.log('fullStatus = ', fullStatus);
+        }
+    }
+
     return (
-        <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
-            <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
-                {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
-                {/* <div>{renderMessageWithLineBreaks(message.message)}</div> */}
-                {/* {message.is_muted ? 'You are muted in this chat!' : renderMessageWithLineBreaks(message.message)} */}
-                {/* muted in red */}
-                {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
-                <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
-                <div className="text-xs text-right text-gray-600">{renderMessageStatus(messageStatus)}</div>
+        <button className='w-full' onClick={() => fun()}>
+            <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
+                <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
+                    {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
+                    {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
+                    <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
+                    {isMyMessage && <div className="text-xs text-right text-gray-600">{status}</div>}
+                    {isMyMessage && showStatus && fullStatus && fullStatus.map((status, index) => (
+                        <div key={index} className="text-xs text-right text-gray-600">
+                            {/* {nicknames[status.receiver_id]}{status.read_at ? ' read at ' + renderDate(status.read_at) : status.receivet_at ? ' received at ' + renderDate(status.receivet_at) : ' not received'} */}
+                            {status.receiver_id}{status.read_at ? ' read at ' + renderDate(status.read_at) : status.receivet_at ? ' received at ' + renderDate(status.receivet_at) : ' not received'}
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
+        </button>
     );
 }
 
@@ -103,17 +183,16 @@ export default function DC() {
     const [user, setUser] = useState<User>();
     const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState<ChatMessages[]>([]);
-    const [messageStatus, setMessageStatus] = useState<MessageStatus[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
     const [password, setPassword] = useState('');
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
+    const [isLoaded, setIsLoaded] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
     useEffect(() => {
-        /* Load user info form database and store in const user */
         fetchGet<User>('api/profile')
             .then((user) => {
                 setUser(user);
@@ -121,76 +200,91 @@ export default function DC() {
             .catch((error) => {
                 console.log('Error: ', error);
             });
-    }, []);
-
-    useEffect(() => {
-        if (!user || !user.intra_user_id) return;
-
         fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
             .then((res) => {
                 setHasPassword(res);
+                console.log('hasPassword: ', res);
+                setIsLoaded(true);
             })
             .catch((error) => {
                 console.log('Error: ', error);
         });
+    }, [chat_id]);
 
-        fetchGet<ChatMessages[] | boolean>(`api/messages?chat_id=${chat_id}`)
-        .then((res) => {
-                if (typeof res === 'boolean' && res === false) {
-                    alert('You are not a member of this chat');
-                    Router.push('/chats')
-                    return;
-                }
-                
-                if (typeof res === 'boolean') return;
-            
-                /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
-                const transformedMessages = res.map(message => ({
-                    ...message,
-                    sent_at: new Date(message.sent_at)
-                }));
-                setMessages(transformedMessages);
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-            });
-        updateStatusReceivedMessages(chat_id, user.intra_user_id);
+    useEffect(() => {
+        if (!user || !isLoaded) return;
 
-        fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chat_id}`)
+        if (hasPassword === false) {
+            console.log('no password');
+            fetchGet<ChatMessages[] | boolean>(`api/messages?chat_id=${chat_id}`)
             .then((res) => {
-                setDmInfo(res);
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
+                    if (typeof res === 'boolean' && res === false) {
+                        alert('You are not a member of this chat');
+                        Router.push('/chats')
+                        return;
+                    }
+                    
+                    if (typeof res === 'boolean') return;
+                
+                    /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+                    const transformedMessages = res.map(message => ({
+                        ...message,
+                        sent_at: new Date(message.sent_at)
+                    }));
+                    setMessages(transformedMessages);
+                })
+                .catch((error) => {
+                    console.log('Error: ', error);
+                });
+            updateStatusReceivedMessages(chat_id, user.intra_user_id);
+
+            fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chat_id}`)
+                .then((res) => {
+                    setDmInfo(res);
+                })
+                .catch((error) => {
+                    console.log('Error: ', error);
+                });
+
+            chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
+            
+            chatSocket.on('messageFromServer', (message: ChatMessages) => {
+                /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
+                message.sent_at = new Date(message.sent_at);
+                setMessages((prevMessages) => [...prevMessages, message]);
+                updateStatusReceivedMessages(chat_id, user.intra_user_id);
+
             });
 
-        chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
-
-        chatSocket.on('messageFromServer', (message: ChatMessages) => {
-            /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
-            message.sent_at = new Date(message.sent_at);
-            setMessages((prevMessages) => [...prevMessages, message]);
-            updateStatusReceivedMessages(chat_id, user.intra_user_id);
-        });
-
+            chatSocket.on('statusUpdate', () => {
+                console.log('statusUpdate received');
+                setMessages((prevMessages) => [...prevMessages]);
+            });
+        }
         console.log('send inboxUpdate');
         chatSocket.emit('inboxUpdate');
 
         return () => {
             chatSocket.emit('leaveChat', chat_id.toString());
             chatSocket.off('messageFromServer');
+            chatSocket.off('statusUpdate');
         };
-    }, [user, chat_id]);
+    }, [user, chat_id, hasPassword, isLoaded, Router]);
 
-    useEffect(() => {
+    const scrollToBottom = () => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages])
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    } , [messages]);
 
     function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
         fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
             .then(() => {
+                chatSocket.emit('inboxUpdate');
             })
             .catch((error) => {
                 console.log('Error updating unread messages: ', error);
@@ -313,13 +407,15 @@ export default function DC() {
             )}
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
-                {customTransparantToBlack()}
-                <div className="overflow-auto h-full">
-                    <div className="h-10"></div> {/* making sure you can see the first message */}
-                    {user && messages.map((message, index) => (
-                        <Message key={index} message={message} messageStatus={messageStatus[index]} intra_id={user.intra_user_id} />
-                    ))}
-                    <div ref={messagesEndRef} /> {/* Used for auto scroll to last message */}
+                <div className="flex flex-col h-full">
+                    {customTransparantToBlack()}
+                    <div className="flex-1 overflow-y-auto p-4">
+                        <div className='h-6'></div>
+                        {user && messages.map((message, index) => (
+                            <Message key={index} message={message} intra_id={user.intra_user_id} />
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
                 </div>
             </div>
             <div className="flex flex-col space-y-4 px-4 w-96">

@@ -76,7 +76,9 @@ var messages = mySchema.table("messages", {
 var messageStatus = mySchema.table("messageStatus", {
   message_status_id: serial("message_status_id").primaryKey(),
   message_id: integer("message_id").references(() => messages.message_id).notNull(),
-  chat_id: integer("chat_id"),
+  chat_id: integer("chat_id").notNull().references(
+    () => chats.chat_id
+  ),
   receiver_id: integer("receiver_id").references(() => users.intra_user_id).notNull(),
   receivet_at: timestamp("receivet_at"),
   read_at: timestamp("read_at")

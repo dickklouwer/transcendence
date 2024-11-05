@@ -760,7 +760,7 @@ declare const messageStatus: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgInteger";
             data: number;
             driverParam: string | number;
-            notNull: false;
+            notNull: true;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
@@ -954,19 +954,19 @@ declare const chatsUsersSelect: z.ZodObject<{
 declare const messageStatusInsert: z.ZodObject<{
     message_status_id: z.ZodNumber;
     message_id: z.ZodNumber;
-    chat_id: z.ZodNullable<z.ZodNumber>;
+    chat_id: z.ZodNumber;
     receiver_id: z.ZodNumber;
     receivet_at: z.ZodNullable<z.ZodDate>;
     read_at: z.ZodNullable<z.ZodDate>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
-    chat_id: number | null;
+    chat_id: number;
     message_id: number;
     message_status_id: number;
     receiver_id: number;
     receivet_at: Date | null;
     read_at: Date | null;
 }, {
-    chat_id: number | null;
+    chat_id: number;
     message_id: number;
     message_status_id: number;
     receiver_id: number;

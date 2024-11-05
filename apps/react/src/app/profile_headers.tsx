@@ -12,7 +12,6 @@ import { getURL } from 'next/dist/shared/lib/utils';
 
 export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
 
-
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();
   const [reload, setReload] = useState<boolean>(false);

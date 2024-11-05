@@ -26,8 +26,13 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
             });
     }
 
+    const updateMessageStatusReceived = async () => {
+        fetchPost('api/updateMessageStatusReceived', { user_intra_id });
+    }
+
     useEffect(() => {
         getNumberOfUnreadChats();
+        updateMessageStatusReceived();
 
         chatSocket.on('chatUpdate', () => {
             setReload(prev => !prev);

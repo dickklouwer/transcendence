@@ -37,7 +37,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         .catch((error) => {
             console.log('Error: ', error);
         });
-    } , []);
+    } , [chatField.chatid]);
 
     function renderDate(date: Date) {
         if (!date)
