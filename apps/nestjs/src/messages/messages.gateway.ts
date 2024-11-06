@@ -43,7 +43,6 @@ export class MessagesGateway
   handleConnection(client: Socket) {
     this.logger.log('Client connected and joined inbox:', client.id);
     client.join('inbox');
-    
   }
 
   handleDisconnect(client: Socket) {
@@ -153,7 +152,8 @@ export class MessagesGateway
   }
 
   @SubscribeMessage('inboxUpdate')
-  handleInboxUpdate(client: Socket): void {
+  handleInboxUpdate(_client: Socket): void {
+    void _client;
     this.logger.log('Received inbox update from client');
     this.server.to('inbox').emit('chatUpdate');
     this.server.to('inbox').emit('messageUpdate');

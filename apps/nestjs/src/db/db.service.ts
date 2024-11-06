@@ -22,7 +22,7 @@ import type {
   DmInfo,
   MessageStatus,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql, isNull, count, is } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
 
 const dublicated_key = '23505';
@@ -1169,9 +1169,7 @@ export class DbService {
     }
   }
 
-  async updateMessageStatusReceived(
-    user_intra_id: number,
-  ): Promise<boolean> {
+  async updateMessageStatusReceived(user_intra_id: number): Promise<boolean> {
     try {
       await this.db
         .update(messageStatus)

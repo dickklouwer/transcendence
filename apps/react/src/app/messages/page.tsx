@@ -9,6 +9,7 @@ import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 import { chatSocket } from '../chat_componens';
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
+import { renderDate } from '@/app/chat_componens';
 
 const checkPassword: boolean = true;
 
@@ -19,7 +20,7 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
     const [status, setStatus] = useState<String>('sent');
     const [showStatus, setShowStatus] = useState(false);
     const [reload, setReload] = useState<boolean>(false);
-    const [nicknames, setNicknames] = useState<{ [key: number]: string }>({});
+    // const [nicknames, setNicknames] = useState<{ [key: number]: string }>({});
 
     const renderMessageWithLineBreaks = (text: string) => {
         return text.split('\n').map((str, index) => (
@@ -40,7 +41,7 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
 
                 setFullStatus(transformedStatus);
                 setStatus(renderMessageStatus(transformedStatus));
-                fetchNicknames(transformedStatus);
+                // fetchNicknames(transformedStatus);
                 console.log('loadStatus');
             })
             .catch((error) => {
@@ -48,37 +49,39 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
             });
     }
 
-    function fetchNicknames(statusArray: MessageStatus[]) {
-        const nicknamePromises = statusArray.map(status => getNickname(status.receiver_id));
-        Promise.all(nicknamePromises)
-            .then(nicknamesArray => {
-                const nicknamesMap = statusArray.reduce((acc, status, index) => {
-                    acc[status.receiver_id] = nicknamesArray[index];
-                    return acc;
-                }, {} as { [key: number]: string });
-                setNicknames(nicknamesMap);
-            })
-            .catch(error => {
-                console.log('Error fetching nicknames: ', error);
-            });
-    }
+    // function fetchNicknames(statusArray: MessageStatus[]) {
+    //     const nicknamePromises = statusArray.map(status => getNickname(status.receiver_id));
+    //     Promise.all(nicknamePromises)
+    //         .then(nicknamesArray => {
+    //             const nicknamesMap = statusArray.reduce((acc, status, index) => {
+    //                 acc[status.receiver_id] = nicknamesArray[index];
+    //                 return acc;
+    //             }, {} as { [key: number]: string });
+    //             setNicknames(nicknamesMap);
+    //         })
+    //         .catch(error => {
+    //             console.log('Error fetching nicknames: ', error);
+    //         });
+    // }
 
-    function getNickname(intra_id: number): Promise<string> {
-        return fetchGet<string>(`api/getNickname?intra_id=${intra_id}`)
-            .then((res) => {
-                return res;
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-                return '-';
-            });
-    }
+    // function getNickname(intra_id: number): Promise<string> {
+    //     return fetchGet<string>(`api/getNickname?intra_id=${intra_id}`)
+    //         .then((res) => {
+    //             return res;
+    //         })
+    //         .catch((error) => {
+    //             console.log('Error: ', error);
+    //             return '-';
+    //         });
+    // }
 
     useEffect(() => {
-        updateStatusMessage();
-        fetchNicknames(fullStatus ?? []);
+        console.log('useEffect');
+        // updateStatusMessage();
+        // fetchNicknames(fullStatus ?? []);
 
         chatSocket.on('statusUpdate', () => {
+            console.log('statusUpdate received');
             setReload(prev => !prev);
         });
         return () => {
@@ -99,15 +102,7 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
         return 'sent';
     }
 
-    function renderDate(date: Date) {
-        if (!date)
-            return 'no date';
-        if (!(date instanceof Date))
-            return 'not a date';
-        return date ? date.toString().slice(16, 21) : '';
-    }
-
-    function fun() {
+    function showAndHideDetails() {
         setShowStatus(!showStatus);
         console.log('show status = ', showStatus);
         if (showStatus) {
@@ -116,7 +111,7 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
     }
 
     return (
-        <button className='w-full' onClick={() => fun()}>
+        <button className='w-full' onClick={() => showAndHideDetails()}>
             <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                 <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                     {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}

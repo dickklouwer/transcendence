@@ -288,9 +288,8 @@ export class AppController {
     @Body('user_intra_id') user_intra_id: number,
     @Res() res: Response,
   ) {
-    const response = await this.dbservice.updateMessageStatusReceived(
-      user_intra_id
-    );
+    const response =
+      await this.dbservice.updateMessageStatusReceived(user_intra_id);
 
     if (!response) {
       res.status(422).send('Failed to update message status');
