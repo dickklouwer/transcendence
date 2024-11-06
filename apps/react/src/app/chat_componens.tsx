@@ -15,9 +15,9 @@ export function renderDate(date: Date) {
     if (!date) return 'no date';
     if (!(date instanceof Date)) return 'not a date';
 
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
     const today = new Date();
     const dateDay = date.getDate();
     const dateMonth = date.getMonth();
@@ -25,14 +25,14 @@ export function renderDate(date: Date) {
     const todayDay = today.getDate();
     const todayMonth = today.getMonth();
     const todayYear = today.getFullYear();
-
+    
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
 
     if (dateDay === todayDay && dateMonth === todayMonth && dateYear === todayYear)
         return `${hours}:${minutes}`;                                   // today less than 24 hours ago
     if (dateDay === todayDay - 1 && dateMonth === todayMonth && dateYear === todayYear)
-        return `yesterday ${hours}:${minutes}`;                         // yesterday less than 48 hours ago
+        return `Yesterday ${hours}:${minutes}`;                         // yesterday less than 48 hours ago
     if (dateDay >= todayDay - 7 && dateMonth === todayMonth && dateYear === todayYear) 
         return `${days[date.getDay()]} ${hours}:${minutes}`;            // less than 7 days ago
     if (dateYear === todayYear) 
