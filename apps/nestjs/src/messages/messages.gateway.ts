@@ -141,22 +141,22 @@ export class MessagesGateway
         this.logger.log(
           `Chat id: ${fullMessage.chat_id}, Receiver id: ${user.intra_id}, Blocked = ${isBlocked}`,
         );
+        this.dbService.updateMessageStatusReceived(user.intra_id);
         if (!isBlocked) {
           user.socket.emit('messageFromServer', fullMessage);
         }
       });
     }
 
-    this.server.to('inbox').emit('messageUpdate');
-    this.server.to('inbox').emit('chatUpdate');
+    this.handleInboxUpdate(client);
   }
 
   @SubscribeMessage('inboxUpdate')
-  handleInboxUpdate(client: Socket): void {
+  handleInboxUpdate(_client: Socket): void {
+    void _client;
     this.logger.log('Received inbox update from client');
-    this.logger.log('Send chatUpdate');
-    client.emit('chatUpdate');
-    this.logger.log('Send messageUpdate');
-    client.emit('messageUpdate');
+    this.server.to('inbox').emit('chatUpdate');
+    this.server.to('inbox').emit('messageUpdate');
+    this.server.to('inbox').emit('statusUpdate');
   }
 }

@@ -20,8 +20,9 @@ import type {
   ChatMessages,
   ChatsUsers,
   DmInfo,
+  MessageStatus,
 } from '@repo/db';
-import { eq, or, not, and, desc, sql, isNull, count, is } from 'drizzle-orm';
+import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
 
 const dublicated_key = '23505';
@@ -896,9 +897,28 @@ export class DbService {
   async getMessageStatus(
     jwtToken: string,
     message_id: number,
-  ): Promise<{ receivet_at: Date; read_at: Date } | null> {
-    // TODO: implement
-    return null;
+  ): Promise<MessageStatus[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const messageStatusResult = await this.db
+        .select()
+        .from(messageStatus)
+        .where(
+          and(
+            eq(messageStatus.message_id, message_id),
+            not(eq(messageStatus.receiver_id, user.intra_user_id)),
+          ),
+        );
+
+      // console.log('MessageStatus:', messageStatusResult);
+
+      return messageStatusResult;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
   }
 
   async getChatInfo(jwtToken: string, chat_id: number): Promise<DmInfo> {
@@ -1146,6 +1166,20 @@ export class DbService {
     } catch (error) {
       console.error('Error saving message:', error);
       return null;
+    }
+  }
+
+  async updateMessageStatusReceived(user_intra_id: number): Promise<boolean> {
+    try {
+      await this.db
+        .update(messageStatus)
+        .set({ receivet_at: new Date(new Date().getTime()) })
+        .where(eq(messageStatus.receiver_id, user_intra_id));
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
     }
   }
 

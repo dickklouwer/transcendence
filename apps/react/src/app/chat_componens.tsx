@@ -11,6 +11,35 @@ export const chatSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/m
         autoConnect: false,
     });
 
+export function renderDate(date: Date) {
+    if (!date) return 'no date';
+    if (!(date instanceof Date)) return 'not a date';
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const today = new Date();
+    const dateDay = date.getDate();
+    const dateMonth = date.getMonth();
+    const dateYear = date.getFullYear();
+    const todayDay = today.getDate();
+    const todayMonth = today.getMonth();
+    const todayYear = today.getFullYear();
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    if (dateDay === todayDay && dateMonth === todayMonth && dateYear === todayYear)
+        return `${hours}:${minutes}`;                                   // today less than 24 hours ago
+    if (dateDay === todayDay - 1 && dateMonth === todayMonth && dateYear === todayYear)
+        return `Yesterday ${hours}:${minutes}`;                         // yesterday less than 48 hours ago
+    if (dateDay >= todayDay - 7 && dateMonth === todayMonth && dateYear === todayYear) 
+        return `${days[date.getDay()]} ${hours}:${minutes}`;            // less than 7 days ago
+    if (dateYear === todayYear) 
+        return `${months[dateMonth]} ${dateDay} ${hours}:${minutes}`;   // less than 1 year ago
+    return `${dateYear} ${dateMonth} ${dateDay} ${hours}:${minutes}`;   // more than 1 year ago
+}
+
 interface MessageInboxProps {
     user_intra_id: number;
 }
@@ -26,8 +55,13 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
             });
     }
 
+    const updateMessageStatusReceived = async () => {
+        fetchPost('api/updateMessageStatusReceived', { user_intra_id });
+    }
+
     useEffect(() => {
         getNumberOfUnreadChats();
+        updateMessageStatusReceived();
 
         chatSocket.on('chatUpdate', () => {
             setReload(prev => !prev);

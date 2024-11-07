@@ -7,6 +7,7 @@ import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { DmInfo, InvitedChats, UserChats } from '@repo/db';
 import { chatSocket } from '@/app/chat_componens';
+import { renderDate } from '@/app/chat_componens';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -37,15 +38,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         .catch((error) => {
             console.log('Error: ', error);
         });
-    } , []);
-
-    function renderDate(date: Date) {
-        if (!date)
-            return 'no date';
-        if (!(date instanceof Date))
-            return 'not a date';
-        return date ? date.toString().slice(16, 21) : '';
-    }
+    } , [chatField.chatid]);
 
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">

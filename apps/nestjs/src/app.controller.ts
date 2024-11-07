@@ -283,6 +283,22 @@ export class AppController {
     return numberOfUnreadChats;
   }
 
+  @Post('updateMessageStatusReceived')
+  async updateMessageStatusReceived(
+    @Body('user_intra_id') user_intra_id: number,
+    @Res() res: Response,
+  ) {
+    const response =
+      await this.dbservice.updateMessageStatusReceived(user_intra_id);
+
+    if (!response) {
+      res.status(422).send('Failed to update message status');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
   @Post('createMockData')
   async mockData(): Promise<boolean> {
     const response = await this.dbservice.mockData();
