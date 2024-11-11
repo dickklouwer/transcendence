@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 
-const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io" });
+let socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io" });
 
 interface UserNames {
 	left: string;
