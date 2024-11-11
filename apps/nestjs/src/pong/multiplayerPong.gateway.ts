@@ -347,31 +347,6 @@ export class MultiplayerPongGateway
     }
   }
 
-  @SubscribeMessage('rematch')
-  handleRematch(client: Socket, payload: boolean): void {
-    const roomId = this.clientRoomMap.get(client.id);
-    if (roomId) {
-      const room = this.rooms.get(roomId);
-      if (room) {
-        if (payload === true) {
-          if (room.rematch === 2) {
-            room.rematch += 1;
-            this.resetGame(room);
-            this.server.to(room.roomID).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
-            // this.server.to(room.roomID).emit('playersReady');
-            setTimeout(() => {
-              this.startGameLoop(room);
-            }, 3000);
-            // this.startGameLoop(room);
-            room.rematch = 0;
-          }
-        }
-        else if (payload === false)
-          room.rematch = 0;
-      }
-    }
-  }
-
   @SubscribeMessage('disconnect')
   handleDisconnectGame(client: Socket): void {
     this.handleDisconnect(client);

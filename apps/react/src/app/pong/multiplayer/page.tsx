@@ -113,6 +113,15 @@ export default function PongGame() {
 		});
 
 		socket.on('opponent_left', () => {
+			manager.removeListeners();
+			socket.off('rightPaddle');
+			socket.off('leftPaddle');
+			socket.off('ball');
+			socket.off('score');
+			socket.off('gameover');
+			socket.off('awaitPlayer');
+			socket.off('playersReady');
+			socket.emit('disconnect');
 			socket.disconnect();
 			router.push('/pong/opponent_left');
 		});
@@ -148,6 +157,15 @@ export default function PongGame() {
 	};
 
 	const leave = () => {
+		socket.off('rightPaddle');
+		socket.off('leftPaddle');
+		socket.off('ball');
+		socket.off('score');
+		socket.off('gameover');
+		socket.off('awaitPlayer');
+		socket.off('playersReady');
+		setGameManager(null);
+		socket.emit('disconnect');
 		socket.disconnect();
 		router.push('/menu');
 	}
