@@ -11,6 +11,8 @@ import { chatSocket } from '../chat_componens';
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { renderDate } from '@/app/chat_componens';
 
+import io, { Socket } from 'socket.io-client';
+
 const checkPassword: boolean = true;
 
 function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
@@ -160,17 +162,59 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
     );
 }
 
-function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
-    return (
-        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-            <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
-                <button className="py-2 px-4 text-blue-500 font-bold">
-                    Invite for a game
-                </button>
-            </Link>
-        </div>
-    );
-}
+
+// function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
+//     const [pSock, setPSock] = useState<Socket | null>(null);
+//     const [recieveInvite, setRecieveInvite] = useState(false);
+    
+//     const connectToSocket = (url: string) => {
+//         const sock = io(url, {
+//           transports: ['websocket'],
+//           query: {
+//             currentPath: window.location.pathname,
+//           },
+//           withCredentials: true,
+//         });
+//         setPSock(sock);
+//       };
+    
+//     return (
+//         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+//         <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
+//             {!recieveInvite && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
+//                 () => {
+//                     console.log('Invite the other player for a game');
+//                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+//                     connectToSocket(url);
+//                     chatSocket.emit('inviteForGame', { player_id: intra_user_id, nick_name: nick_name });
+//                 }
+//             }>
+//                 Invite for a game
+//             </button>}
+//         </Link>
+//         {recieveInvite && (
+//             <div className="flex flex-col items-center space-y-4">
+//                 <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
+//                 <div className="flex space-x-4">
+//                     <Link href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
+//                         <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+//                             console.log('Invite the other player for a game');
+//                         }}>
+//                             Accept
+//                         </button>
+//                     </Link>
+//                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+//                         console.log('Decline the other player for a game');
+//                         setRecieveInvite(false);
+//                     }}>
+//                         Decline
+//                     </button>
+//                 </div>
+//             </div>
+//         )}
+//     </div>
+//     );
+// }
 
 export default function DC() {
     const searchParams = useSearchParams();
@@ -184,6 +228,9 @@ export default function DC() {
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
     const [isLoaded, setIsLoaded] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const [pSock, setPSock] = useState<Socket | null>(null);
+    const [recieveInvite, setRecieveInvite] = useState(false);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
@@ -205,6 +252,18 @@ export default function DC() {
                 console.log('Error: ', error);
         });
     }, [chat_id]);
+
+    useEffect(() => {
+        chatSocket.on('gameInvite', (data: { sender_id: number, receiver_id: number }) => {
+            console.log('Invite received. sender_id: ', data.sender_id, ' receiver_id: ', data.receiver_id);
+            if (data.receiver_id !== user?.intra_user_id) return;
+            console.log('Invite received for the current user');
+            setRecieveInvite(true);
+        });
+        return () => {
+            chatSocket.off('inviteForGame');
+        }
+    } , [chatInfo.intraId]);
 
     useEffect(() => {
         if (!user || !isLoaded) return;
@@ -376,6 +435,17 @@ export default function DC() {
         );
     }
 
+    const connectToSocket = (url: string) => {
+        const sock = io(url, {
+          transports: ['websocket'],
+          query: {
+            currentPath: window.location.pathname,
+          },
+          withCredentials: true,
+        });
+        setPSock(sock);
+      };
+
     const image = chatInfo.image ? chatInfo.image : defaultUserImage;
 
     return (
@@ -434,7 +504,45 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {chatInfo.isDm && chatInfo.intraId  && chatInfo.nickName && <InviteForGame intra_user_id={chatInfo.intraId} nick_name={chatInfo.nickName} />}
+                {chatInfo.isDm && chatInfo.intraId  && chatInfo.nickName && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                    <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
+                        {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
+                            () => {
+                                console.log('Invite the other player for a game');
+                                const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                connectToSocket(url);
+                                console.log('emit player_id: ', chatInfo.intraId, ' nick_name: ', chatInfo.nickName);
+                                chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId });
+                            }
+                        }>
+                            Invite for a game
+                        </button>}
+                    </Link>
+                    {recieveInvite && (
+                        <div className="flex flex-col items-center space-y-4">
+                            <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
+                            <div className="flex space-x-4">
+                                <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
+                                    <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+                                        console.log('Invite the other player for a game');
+                                        const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                        connectToSocket(url);
+                                    }}>
+                                        Accept
+                                    </button>
+                                </Link>
+                                <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+                                    console.log('Decline the other player for a game');
+                                    setRecieveInvite(false);
+                                }}>
+                                    Decline
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                )}
             </div>
         </div>
     );
