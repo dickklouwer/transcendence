@@ -135,6 +135,7 @@ export default function PongGame() {
 		manager.attachListeners();
 
 		return () => {
+			socket.emit('stop');
 			manager.removeListeners();
 			socket.off('rightPaddle');
 			socket.off('leftPaddle');
@@ -157,6 +158,7 @@ export default function PongGame() {
 	};
 
 	const leave = () => {
+		socket.emit('stop');
 		socket.off('rightPaddle');
 		socket.off('leftPaddle');
 		socket.off('ball');
