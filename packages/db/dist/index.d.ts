@@ -151,7 +151,7 @@ declare const users: drizzle_orm_pg_core.PgTableWithColumns<{
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
-        image: drizzle_orm_pg_core.PgColumn<{
+        image_url: drizzle_orm_pg_core.PgColumn<{
             name: "image_url";
             tableName: "users";
             dataType: "string";
@@ -760,7 +760,7 @@ declare const messageStatus: drizzle_orm_pg_core.PgTableWithColumns<{
             columnType: "PgInteger";
             data: number;
             driverParam: string | number;
-            notNull: false;
+            notNull: true;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
@@ -830,7 +830,7 @@ declare const userSelect: z.ZodObject<{
     two_factor_secret: z.ZodNullable<z.ZodString>;
     is_two_factor_enabled: z.ZodNullable<z.ZodBoolean>;
     state: z.ZodEnum<["Online", "Offline", "In-Game"]>;
-    image: z.ZodString;
+    image_url: z.ZodString;
     wins: z.ZodNumber;
     losses: z.ZodNumber;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
@@ -843,7 +843,7 @@ declare const userSelect: z.ZodObject<{
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game";
-    image: string;
+    image_url: string;
     wins: number;
     losses: number;
 }, {
@@ -856,7 +856,7 @@ declare const userSelect: z.ZodObject<{
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game";
-    image: string;
+    image_url: string;
     wins: number;
     losses: number;
 }>;
@@ -905,19 +905,19 @@ declare const chatSelect: z.ZodObject<{
     created_at: z.ZodNullable<z.ZodDate>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     password: string | null;
-    image: string | null;
     chat_id: number;
     is_direct: boolean | null;
     title: string | null;
     is_public: boolean | null;
+    image: string | null;
     created_at: Date | null;
 }, {
     password: string | null;
-    image: string | null;
     chat_id: number;
     is_direct: boolean | null;
     title: string | null;
     is_public: boolean | null;
+    image: string | null;
     created_at: Date | null;
 }>;
 declare const chatsUsersSelect: z.ZodObject<{
@@ -954,19 +954,19 @@ declare const chatsUsersSelect: z.ZodObject<{
 declare const messageStatusInsert: z.ZodObject<{
     message_status_id: z.ZodNumber;
     message_id: z.ZodNumber;
-    chat_id: z.ZodNullable<z.ZodNumber>;
+    chat_id: z.ZodNumber;
     receiver_id: z.ZodNumber;
     receivet_at: z.ZodNullable<z.ZodDate>;
     read_at: z.ZodNullable<z.ZodDate>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
-    chat_id: number | null;
+    chat_id: number;
     message_id: number;
     message_status_id: number;
     receiver_id: number;
     receivet_at: Date | null;
     read_at: Date | null;
 }, {
-    chat_id: number | null;
+    chat_id: number;
     message_id: number;
     message_status_id: number;
     receiver_id: number;
@@ -987,8 +987,10 @@ type UserChats = {
     title: string;
     image: string;
     lastMessage: string;
+    nickName: string;
     time: Date;
     unreadMessages: number;
+    hasPassword: boolean;
 };
 type InvitedChats = {
     chatid: number;
@@ -1022,11 +1024,15 @@ type ChatMessages = {
     sender_image_url: string;
     message: string;
     sent_at: Date;
+    is_muted: boolean;
 };
-type DmInfo = {
+type ChatInfo = {
     isDm: boolean;
     intraId: number | null;
     nickName: string | null;
+    chatId: number | null;
+    title: string | null;
+    image: string | null;
 };
 
-export { type ChatMessages, type Chats, type ChatsUsers, type DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };
+export { type ChatMessages, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };

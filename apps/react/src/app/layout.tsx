@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, Dispatch, SetStateAction } from 'react';
+import { createContext, useState, Dispatch, SetStateAction, useEffect } from 'react';
 import LoadProfile from './profile_headers';
 import Link from 'next/link';
 import './globals.css';
@@ -15,9 +15,20 @@ export type NicknameFormProps = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  
+
   const [nickname, setNickname] = useState<string>();
   const [reload, setReload] = useState<boolean>(false);
+
+  if (process.env.NEXT_PUBLIC_HOST_NAME === undefined)
+    throw new Error('NEXT_PUBLIC_HOSTNAME is undefined');
+  
+  useEffect(() => {
+    if (window && window.location.hostname !== process.env.NEXT_PUBLIC_HOST_NAME) {
+      window.location.replace("http://" + process.env.NEXT_PUBLIC_HOST_NAME + ":4433")
+    }
+
+    
+  });
   
   return (
     <html lang="en">
@@ -31,7 +42,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/menu">
                 <h1 className="inline-block text-3xl">PONG!</h1>
               </Link>
-              {/* <MessageInbox/> */}
               <LoadProfile setNickname={setNickname} />
             </header>
           <main className="flex-grow flex items-center justify-center min-h-[100vh]">

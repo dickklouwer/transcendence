@@ -60,7 +60,7 @@ var users = mySchema.table("users", {
   two_factor_secret: (0, import_pg_core.text)("two_factor_secret"),
   is_two_factor_enabled: (0, import_pg_core.boolean)("is_two_factor_enabled").default(false),
   state: user_state("state").notNull().default("Online"),
-  image: (0, import_pg_core.text)("image_url").notNull(),
+  image_url: (0, import_pg_core.text)("image_url").notNull(),
   wins: (0, import_pg_core.integer)("wins").default(0).notNull(),
   losses: (0, import_pg_core.integer)("losses").default(0).notNull()
 });
@@ -112,7 +112,9 @@ var messages = mySchema.table("messages", {
 var messageStatus = mySchema.table("messageStatus", {
   message_status_id: (0, import_pg_core.serial)("message_status_id").primaryKey(),
   message_id: (0, import_pg_core.integer)("message_id").references(() => messages.message_id).notNull(),
-  chat_id: (0, import_pg_core.integer)("chat_id"),
+  chat_id: (0, import_pg_core.integer)("chat_id").notNull().references(
+    () => chats.chat_id
+  ),
   receiver_id: (0, import_pg_core.integer)("receiver_id").references(() => users.intra_user_id).notNull(),
   receivet_at: (0, import_pg_core.timestamp)("receivet_at"),
   read_at: (0, import_pg_core.timestamp)("read_at")

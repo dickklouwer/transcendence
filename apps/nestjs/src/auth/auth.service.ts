@@ -30,7 +30,7 @@ export type FortyTwoUser = {
   user_name: string;
   email: string;
   state: 'Online' | 'Offline' | 'In-Game';
-  image: string;
+  image_url: string;
   token: string | null;
 };
 
@@ -119,6 +119,11 @@ export class AuthService {
         'Error validating code:',
         error.response?.data || error.message,
       );
+
+      if (error.response.status === 401) {
+        throw new UnauthorizedException(error.response);
+      }
+
       throw new InternalServerErrorException('Error validating access code');
     }
   }
@@ -180,7 +185,7 @@ export class AuthService {
       user_name: profile.login as string,
       email: profile.email as string,
       state: 'Online',
-      image: profile.image.link as string,
+      image_url: profile.image.link as string,
       token: null,
     };
   }

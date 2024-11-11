@@ -33,7 +33,7 @@ export class AppController {
       token.split(' ')[1],
     );
     if (!user) {
-      res.status(404).send("User doesn't exist");
+      res.status(401).send("User doesn't exist");
       return;
     }
     res.status(200).send(user);
@@ -240,29 +240,59 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getDmInfo')
+  @Get('getChatInfo')
   async getDmInfo(
     @Headers('authorization') token: string,
     @Query('chat_id') chat_id: number,
   ) {
-    const dmInfo = await this.dbservice.getDmInfo(token.split(' ')[1], chat_id);
+    const dmInfo = await this.dbservice.getChatInfo(
+      token.split(' ')[1],
+      chat_id,
+    );
 
     return dmInfo;
   }
 
-  @Post('updateUnreadMessages')
-  async updateUnreadMessages(
+  @Post('updateStatusReceivedMessages')
+  async updateStatusReceivedMessages(
     @Body('chat_id') chat_id: number,
     @Body('intra_user_id') intra_user_id: number,
     @Res() res: Response,
   ) {
-    const response = await this.dbservice.updateUnreadMessages(
+    const response = await this.dbservice.updateStatusReceivedMessages(
       chat_id,
       intra_user_id,
     );
 
     if (!response) {
       res.status(422).send('Failed to update unread messages');
+      return;
+    }
+
+    res.status(200).send(response);
+  }
+
+  @Get('getNumberOfUnreadChats')
+  async getNumberOfUnreadChats(
+    @Headers('authorization') token: string,
+  ): Promise<number> {
+    const numberOfUnreadChats = await this.dbservice.getNumberOfUnreadChats(
+      token.split(' ')[1],
+    );
+
+    return numberOfUnreadChats;
+  }
+
+  @Post('updateMessageStatusReceived')
+  async updateMessageStatusReceived(
+    @Body('user_intra_id') user_intra_id: number,
+    @Res() res: Response,
+  ) {
+    const response =
+      await this.dbservice.updateMessageStatusReceived(user_intra_id);
+
+    if (!response) {
+      res.status(422).send('Failed to update message status');
       return;
     }
 

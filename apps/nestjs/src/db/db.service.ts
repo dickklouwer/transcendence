@@ -18,9 +18,9 @@ import type {
   InvitedChats,
   ExternalUser,
   ChatMessages,
-  MessageStatus,
   ChatsUsers,
   DmInfo,
+  MessageStatus,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
@@ -72,7 +72,7 @@ export class DbService {
     try {
       await this.db
         .update(users)
-        .set({ image: image })
+        .set({ image_url: image })
         .where(eq(users.intra_user_id, id));
       console.log('Image updated');
     } catch (error) {
@@ -113,7 +113,7 @@ export class DbService {
         nick_name: fortyTwoUser.user_name,
         email: fortyTwoUser.email,
         state: fortyTwoUser.state,
-        image: fortyTwoUser.image,
+        image_url: fortyTwoUser.image_url,
         token: fortyTwoUser.token,
       })
       .onConflictDoUpdate({
@@ -164,7 +164,7 @@ export class DbService {
           nick_name: users.nick_name,
           email: users.email,
           state: users.state,
-          image: users.image,
+          image: users.image_url,
           wins: users.wins,
           losses: users.losses,
         })
@@ -244,7 +244,7 @@ export class DbService {
           nick_name: users.nick_name,
           email: users.email,
           state: users.state,
-          image: users.image,
+          image: users.image_url,
           wins: users.wins,
           losses: users.losses,
         })
@@ -290,7 +290,7 @@ export class DbService {
           nick_name: users.nick_name,
           email: users.email,
           state: users.state,
-          image: users.image,
+          image: users.image_url,
           friend_id: friends.friend_id,
         })
         .from(friends)
@@ -341,7 +341,7 @@ export class DbService {
           nick_name: users.nick_name,
           email: users.email,
           state: users.state,
-          image: users.image,
+          image: users.image_url,
         })
         .from(friends)
         .innerJoin(
@@ -381,7 +381,7 @@ export class DbService {
           nick_name: users.nick_name,
           email: users.email,
           state: users.state,
-          image: users.image,
+          image: users.image_url,
         })
         .from(friends)
         .innerJoin(
@@ -578,7 +578,7 @@ export class DbService {
           player2_score: games.player2_score,
           user_name: users.user_name,
           nick_name: users.nick_name,
-          image: users.image,
+          image: users.image_url,
         })
         .from(games)
         .orderBy(desc(games.game_id))
@@ -610,6 +610,9 @@ export class DbService {
     const result: UserChats[] = [];
 
     try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
       await this.db
         .update(chatsUsers)
         .set({ joined: false })
@@ -618,49 +621,101 @@ export class DbService {
         );
 
       const chat_ids = await this.db
-        .select({ chatid: chatsUsers.chat_id })
+        .select()
         .from(chatsUsers)
-        .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
         .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(
-          or(
-            and(eq(users.token, jwtToken), eq(chats.is_direct, true)),
-            and(eq(users.token, jwtToken), eq(chatsUsers.joined, true)),
+          and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            or(eq(chats.is_direct, true), eq(chatsUsers.joined, true)),
           ),
         );
-
-      // console.log('chat_ids:', chat_ids);
 
       for (let i = 0; i < chat_ids.length; i++) {
         const chatsInfo = await this.db
           .select({
+            isDirect: chats.is_direct,
+            pass: chats.password,
             lastMessage: messages.message,
             time_sent: messages.sent_at,
             time_created: chats.created_at,
-            title: chats.title,
-            image: chats.image,
+            groep_title: chats.title,
+            groep_image: chats.image,
           })
           .from(chats)
           .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
-          .where(eq(chats.chat_id, chat_ids[i].chatid))
+          .fullJoin(users, eq(messages.sender_id, users.intra_user_id))
+          .where(eq(chats.chat_id, chat_ids[i].chats.chat_id))
           .orderBy(desc(messages.sent_at) ?? desc(chats.created_at))
           .limit(1);
 
-        // console.log('chatsInfo:', chatsInfo);
+        const otherUsers = await this.db
+          .select({
+            user_name: users.user_name,
+            nick_name: users.nick_name,
+            image: users.image_url,
+          })
+          .from(chatsUsers)
+          .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+          .where(
+            and(
+              eq(chatsUsers.chat_id, chat_ids[i].chats.chat_id),
+              not(eq(users.token, jwtToken)),
+            ),
+          );
+
+        const lastSenderName = await this.db
+          .select({
+            user_intra_id: users.intra_user_id,
+            user_name: users.user_name,
+            nick_name: users.nick_name,
+          })
+          .from(messages)
+          .innerJoin(users, eq(messages.sender_id, users.intra_user_id))
+          .where(eq(messages.chat_id, chat_ids[i].chats.chat_id))
+          .orderBy(desc(messages.sent_at))
+          .limit(1);
+
+        const unreadMessages = await this.db
+          .select({ count: count() })
+          .from(messages)
+          .innerJoin(
+            messageStatus,
+            eq(messages.message_id, messageStatus.message_id),
+          )
+          .where(
+            and(
+              eq(messages.chat_id, chat_ids[i].chats.chat_id),
+              eq(messageStatus.receiver_id, user.intra_user_id),
+              isNull(messageStatus.read_at),
+            ),
+          );
 
         const field: UserChats = {
-          chatid: chat_ids[i].chatid,
-          title: chatsInfo[0].title,
-          image: chatsInfo[0].image,
-          lastMessage: chatsInfo[0].lastMessage,
+          chatid: chat_ids[i].chats.chat_id,
+          title: chatsInfo[0].isDirect
+            ? otherUsers[0].nick_name
+              ? otherUsers[0].nick_name
+              : otherUsers[0].user_name
+            : chatsInfo[0].groep_title,
+          image: chatsInfo[0].isDirect
+            ? otherUsers[0].image
+            : chatsInfo[0].groep_image,
+          lastMessage: chatsInfo[0].pass
+            ? 'Password protected'
+            : chatsInfo[0].lastMessage,
+          nickName:
+            lastSenderName.length > 0
+              ? user.intra_user_id === lastSenderName[0].user_intra_id
+                ? 'You'
+                : (lastSenderName[0].nick_name ?? lastSenderName[0].user_name)
+              : '',
           time: chatsInfo[0].time_sent ?? chatsInfo[0].time_created,
-          unreadMessages: 0,
+          unreadMessages: unreadMessages[0].count,
+          hasPassword: chatsInfo[0].pass ? true : false,
         };
-
         result.push(field);
       }
-
-      // console.log('userMessages:', result);
 
       return result;
     } catch (error) {
@@ -781,7 +836,7 @@ export class DbService {
       return false;
     }
   }
-  innerJoin;
+
   async getChatIdsFromUser(jwtToken: string): Promise<number[] | null> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
@@ -806,35 +861,36 @@ export class DbService {
   async getMessagesFromDataBase(
     jwtToken: string,
     chat_id: number,
-  ): Promise<ChatMessages[] | null> {
+  ): Promise<ChatMessages[] | boolean> {
     const user = await this.getUserFromDataBase(jwtToken);
     /* Check if user is in the chat */
     try {
       const isUserInChat = await this.db
         .select()
         .from(chatsUsers)
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(
           and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
             eq(chatsUsers.chat_id, chat_id),
-            eq(chatsUsers.intra_user_id, user?.intra_user_id),
+            or(eq(chats.is_direct, true), eq(chatsUsers.joined, true)),
           ),
         );
       if (isUserInChat.length === 0) {
         console.log('User not in chat');
-        return null;
+        return false;
       }
     } catch (error) {
       console.log('Error: ', error);
-      return null;
+      return false;
     }
-    /* Get the messages */
+
     try {
       const dbMessages = await this.db
         .select()
         .from(messages)
         .where(eq(messages.chat_id, chat_id));
 
-      // set dbMessages to ChatMessages
       const chatMessages: ChatMessages[] = [];
       for (let i = 0; i < dbMessages.length; i++) {
         const sender = await this.getAnyUserFromDataBase(
@@ -842,14 +898,22 @@ export class DbService {
         );
         if (!sender) throw Error('Failed to fetch User!');
 
+        const isBlocked = await this.checkIfUserIsBlocked(
+          dbMessages[i].sender_id,
+          user.intra_user_id,
+        );
+
+        if (isBlocked) continue;
+
         const field: ChatMessages = {
           message_id: dbMessages[i].message_id,
           chat_id: dbMessages[i].chat_id,
           sender_id: dbMessages[i].sender_id,
           sender_name: sender.nick_name ?? sender.user_name,
-          sender_image_url: sender.image,
+          sender_image_url: sender.image_url,
           message: dbMessages[i].message,
           sent_at: dbMessages[i].sent_at,
+          is_muted: false,
         };
         chatMessages.push(field);
       }
@@ -857,19 +921,38 @@ export class DbService {
       return chatMessages;
     } catch (error) {
       console.log('Error messags: ', error);
-      return null;
+      return false;
     }
   }
 
   async getMessageStatus(
     jwtToken: string,
     message_id: number,
-  ): Promise<{ receivet_at: Date; read_at: Date } | null> {
-    // TODO: make function
-    return null;
+  ): Promise<MessageStatus[] | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const messageStatusResult = await this.db
+        .select()
+        .from(messageStatus)
+        .where(
+          and(
+            eq(messageStatus.message_id, message_id),
+            not(eq(messageStatus.receiver_id, user.intra_user_id)),
+          ),
+        );
+
+      // console.log('MessageStatus:', messageStatusResult);
+
+      return messageStatusResult;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
   }
 
-  async getDmInfo(jwtToken: string, chat_id: number): Promise<DmInfo> {
+  async getChatInfo(jwtToken: string, chat_id: number): Promise<DmInfo> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
@@ -879,36 +962,60 @@ export class DbService {
           intra_id: chatsUsers.intra_user_id,
           user_name: users.user_name,
           nick_name: users.nick_name,
+          title: chats.title,
+          groep_image: chats.image,
+          user_image: users.image_url,
         })
         .from(chatsUsers)
         .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(eq(chatsUsers.chat_id, chat_id));
 
-      console.log('chatInfo:', chatInfo);
-
       if (chatInfo.length !== 2) {
-        console.log('Chat is not a DM');
-        return { isDm: false, intraId: null, nickName: null };
+        return {
+          isDm: false,
+          intraId: null,
+          nickName: null,
+          chatId: chat_id,
+          title: chatInfo[0].title,
+          image: chatInfo[0].groep_image,
+        };
       }
 
       for (let i = 0; i < chatInfo.length; i++) {
         if (chatInfo[i].intra_id !== user.intra_user_id) {
-          console.log('Chat is a DM');
           return {
             isDm: true,
             intraId: chatInfo[i].intra_id,
             nickName: chatInfo[i].nick_name ?? chatInfo[i].user_name,
+            chatId: chat_id,
+            title: chatInfo[i].title,
+            image: chatInfo[i].user_image,
           };
         }
       }
     } catch (error) {
       console.log('Error: ', error);
-      return { isDm: false, intraId: null, nickName: null };
+      return {
+        isDm: false,
+        intraId: null,
+        nickName: null,
+        chatId: null,
+        title: null,
+        image: null,
+      };
     }
-    return { isDm: false, intraId: null, nickName: null };
+    return {
+      isDm: false,
+      intraId: null,
+      nickName: null,
+      chatId: null,
+      title: null,
+      image: null,
+    };
   }
 
-  async updateUnreadMessages(
+  async updateStatusReceivedMessages(
     chat_id: number,
     user_user_id: number,
   ): Promise<boolean> {
@@ -932,6 +1039,34 @@ export class DbService {
     } catch (error) {
       console.log('Error: ', error);
       return false;
+    }
+  }
+
+  async getNumberOfUnreadChats(jwtToken: string): Promise<number> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const result = await this.db
+        .select({ count: count() })
+        .from(chatsUsers)
+        .innerJoin(messages, eq(chatsUsers.chat_id, messages.chat_id))
+        .innerJoin(
+          messageStatus,
+          eq(messages.message_id, messageStatus.message_id),
+        )
+        .where(
+          and(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(messageStatus.receiver_id, user.intra_user_id),
+            isNull(messageStatus.read_at),
+          ),
+        );
+
+      return result[0].count;
+    } catch (error) {
+      console.log('Error: ', error);
+      return 0;
     }
   }
 
@@ -1003,12 +1138,22 @@ export class DbService {
     }
   }
 
-  // async checkIfMessageIsBlocked(
-  //   chat_id: number,
-  //   message_id: number,
-  // ): Promise<boolean> {
-  //   return false;
-  // }
+  async checkIfUserIsBlocked(
+    senderId: number,
+    receiverId: number,
+  ): Promise<boolean> {
+    try {
+      const result = await this.db.select().from(users);
+      result;
+    } catch (error) {
+      console.log('Error: ', error);
+    }
+    // TODO: Implement
+    // if (senderId === 278 && receiverId === 77718) {
+    //   return true; // Bas is blocked by Bram
+    // }
+    return false;
+  }
 
   async saveMessage(payload: ChatMessages): Promise<ChatMessages> {
     try {
@@ -1021,13 +1166,10 @@ export class DbService {
         })
         .returning();
 
-      // get user_receiver_ids
       const chatUsers = await this.db
         .select({ user_id: chatsUsers.intra_user_id })
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, payload.chat_id));
-
-      console.log('chatUsers:', chatUsers);
 
       for (let i = 0; i < chatUsers.length; i++) {
         await this.db.insert(messageStatus).values({
@@ -1039,8 +1181,6 @@ export class DbService {
         });
       }
 
-      console.log('Message saved');
-
       const sender = await this.getAnyUserFromDataBase(payload.sender_id);
       if (!sender) throw Error('Failed to fetch User!');
       const field: ChatMessages = {
@@ -1048,14 +1188,29 @@ export class DbService {
         chat_id: result[0].chat_id,
         sender_id: result[0].sender_id,
         sender_name: sender.nick_name ?? sender.user_name,
-        sender_image_url: sender.image,
+        sender_image_url: sender.image_url,
         message: result[0].message,
         sent_at: result[0].sent_at,
+        is_muted: false,
       };
       return field;
     } catch (error) {
       console.error('Error saving message:', error);
       return null;
+    }
+  }
+
+  async updateMessageStatusReceived(user_intra_id: number): Promise<boolean> {
+    try {
+      await this.db
+        .update(messageStatus)
+        .set({ receivet_at: new Date(new Date().getTime()) })
+        .where(eq(messageStatus.receiver_id, user_intra_id));
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
     }
   }
 
@@ -1066,7 +1221,7 @@ export class DbService {
         intra_user_id: 278,
         user_name: 'Bas_dev',
         email: 'Bas@dev.com',
-        image: defaultUserImage,
+        image_url: defaultUserImage,
       });
       console.log('User 2 Created!');
     } catch (error) {
@@ -1081,7 +1236,7 @@ export class DbService {
         intra_user_id: 372,
         user_name: 'Daan_dev',
         email: 'Daan@dev.com',
-        image: defaultUserImage,
+        image_url: defaultUserImage,
       });
       console.log('User 2 Created!');
     } catch (error) {
@@ -1096,7 +1251,7 @@ export class DbService {
         intra_user_id: 392,
         user_name: 'Kees_dev',
         email: 'Kees@dev.com',
-        image: defaultUserImage,
+        image_url: defaultUserImage,
       });
     } catch (error) {
       if (error.code === dublicated_key) {
@@ -1111,7 +1266,7 @@ export class DbService {
         intra_user_id: 77718,
         user_name: 'Bram',
         email: 'Bram@codam.com',
-        image: defaultUserImage,
+        image_url: defaultUserImage,
       });
       console.log('User Bram Created!');
     } catch (error) {

@@ -7,10 +7,10 @@ import io from 'socket.io-client';
 import { ExternalUser, User } from '@repo/db';
 import { useSearchParams, useRouter} from 'next/navigation';
 import { TwoFactorVerification } from './verify_2fa_component';
-import { MessageInbox } from './chat_componens';
+import MessageInbox, { chatSocket } from './chat_componens';
+import { getURL } from 'next/dist/shared/lib/utils';
 
 export const userSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/user`, { path: "/ws/socket.io/user" });
-
 
 function FriendsInbox() {
   const [friendsRequests, setFriendsRequests] = useState<ExternalUser[]>();
@@ -131,18 +131,24 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
       Router.push('/', { scroll: false });
     }
 
+    if (getURL() === "/login" && localStorage.getItem('token') == null) {
+      return 
+    }
+
     fetchGet<User>('api/profile')
       .then((res) => {
         setUser(res);
         if (res.nick_name !== nicknameProps.nickname && res.nick_name !== null)
           setNickname(res.nick_name);
-        if (userSocket.disconnected)
+        if (userSocket.disconnected) {
           userSocket.connect();
+          chatSocket.connect();
+        }
         userSocket.emit('registerUserId', res.intra_user_id);
       })
       .catch((error) => {
         console.log('Error: ', error);
-        Router.push('/login', { scroll: false });
+        Router.push("/login", { scroll: false });
       });
   }, [Router, setNickname, nicknameProps.nickname, token, tempTokenFromParams, nicknameProps.reload]);
 
@@ -157,15 +163,15 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
   }
 
   if (!user)
-    return null;
+    return <div></div>;
 
   return (
     <div className='flex space-x-2'>
-      <MessageInbox />
+      <MessageInbox user_intra_id={user.intra_user_id} />
       <MatchHistory />
       <FriendsInbox />
       <Link href={'/profile'} className="flex items-center justify-between bg-blue-500 px-2 py-1 rounded-full hover:nm-inset-blue-600 nm-flat-blue-500-xs transition duration-500">
-        <Image className="rounded-full h-8 w-8 object-cover" src={user.image} alt="Profile Picture" width={100} height={100} />
+        <Image className="rounded-full h-8 w-8 object-cover" src={user.image_url} alt="Profile Picture" width={100} height={100} />
         {nicknameProps.nickname === undefined ? <span className=" px-1 text-sm">{user.user_name}</span> : <span className=" px-1 text-sm">{nicknameProps.nickname}</span>}
       </Link>
     </div>

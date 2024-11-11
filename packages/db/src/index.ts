@@ -11,8 +11,10 @@ type UserChats = {
 	title: string;
 	image: string;
 	lastMessage: string;
+  nickName: string;
 	time: Date;
 	unreadMessages: number;
+  hasPassword: boolean;
 };
 
 type InvitedChats = {
@@ -50,13 +52,17 @@ type ChatMessages = {
   sender_image_url: string;
   message: string;
   sent_at: Date;
+  is_muted: boolean;
 };
 
-type DmInfo = {
+type ChatInfo = {
   isDm: boolean;
   intraId: number | null;
   nickName: string | null;
+  chatId: number | null;
+  title: string | null;
+  image: string | null;
 };
 
-export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, DmInfo, ChatsUsers, Chats, Messages, MessageStatus };
+export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatInfo as DmInfo, ChatsUsers, Chats, Messages, MessageStatus };
 export { users, friends, messages, messageStatus, chats, games, chatsUsers};

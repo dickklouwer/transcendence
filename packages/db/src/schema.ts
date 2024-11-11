@@ -28,7 +28,7 @@ export const users = mySchema.table('users', {
   two_factor_secret: text('two_factor_secret'),
   is_two_factor_enabled: boolean('is_two_factor_enabled').default(false),
   state: user_state('state').notNull().default('Online'),
-  image: text('image_url').notNull(),
+  image_url: text('image_url').notNull(),
   wins: integer('wins').default(0).notNull(),
   losses: integer('losses').default(0).notNull(),
 });
@@ -87,7 +87,9 @@ export const messageStatus = mySchema.table('messageStatus', {
 	message_id: integer('message_id')
 		.references(() => messages.message_id)
 		.notNull(),
-	chat_id: integer('chat_id'),
+	chat_id: integer('chat_id').notNull().references(
+		() => chats.chat_id,
+	),
 	receiver_id: integer('receiver_id')
 		.references(() => users.intra_user_id)
 		.notNull(),

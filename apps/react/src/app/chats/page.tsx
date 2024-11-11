@@ -1,12 +1,13 @@
 "use client";
 
 import { fetchGet, fetchPost } from '@/app/fetch_functions';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
-import { InvitedChats, UserChats } from '@repo/db';
-import io from 'socket.io-client';
+import { DmInfo, InvitedChats, UserChats } from '@repo/db';
+import { chatSocket } from '@/app/chat_componens';
+import { renderDate } from '@/app/chat_componens';
 
 function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
     return (
@@ -27,21 +28,53 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
     const commonWidth = "500px";
+    const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
+
+    useEffect(() => {
+        fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chatField.chatid}`)
+        .then((res) => {
+            setDmInfo(res);
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    } , [chatField.chatid]);
 
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
-                <button onClick={() => alert('Showing profile of ' + chatField.title)}>
-                    <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
-                </button>
+                {chatInfo.isDm ? (
+                    <Link href={{ pathname: '/profile_view', query: { user_id: chatInfo.intraId } }}>
+                        <div className="flex justify-center items-center w-12 h-12">
+                            <Image src={userImage} alt="User or Group" width={48} height={48} className="rounded-full" />
+                        </div>
+                    </Link>
+                ) : (
+                    <Link href={{ pathname: '/group_view', query: { chat_id: chatField.chatid } }}>
+                        <div className="flex justify-center items-center w-12 h-12">
+                            <Image src={userImage} alt="User or Group" width={48} height={48} className="rounded-full" />
+                        </div>
+                    </Link>
+                )}
                 <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
-                            <p className="max-w-xs overflow-ellipsis overflow-hidden whitespace-nowrap text-gray-500">{chatField.lastMessage ? chatField.lastMessage : <i>No messages yet...</i>}</p>
+                            <p className="max-w-xs overflow-ellipsis overflow-hidden text-gray-500 whitespace-nowrap text-sm">
+                                {chatField.lastMessage && !chatField.hasPassword ? (
+                                    <>
+                                    <span className="text-white">{chatField.nickName} </span>
+                                    <span className="text-gray-500">{chatField.lastMessage}</span>
+                                    </>
+                                ) : chatField.hasPassword ? (
+                                    <i className="text-gray-500">Password</i>
+                                ) : (
+                                    <i className="text-gray-500">No messages yet...</i>
+                                )}
+                            </p>
                         </div>
-                        <div className="text-right px-4">
-                            <p>{chatField.time.toString().slice(11, 16)}</p>
+                        <div className="flex flex-col items-center">
+                            <p>{renderDate(chatField.time)}</p>
                             {chatField.unreadMessages ? <p className="text-blue-500">{chatField.unreadMessages}</p> : <br />}
                         </div>
                     </div>
@@ -75,8 +108,13 @@ function InvitedChatField({ chatField: invitedChatField, setInvitedChats, setUse
                     setInvitedChats((prevChats) => (prevChats as InvitedChats[]).filter(chat => chat.chatid !== chat_id));
                     fetchGet<UserChats[]>('api/chats')
                         .then((data) => {
-                            console.log('Received Chats Data: ', data);
-                            setUserChats(data);
+                            const transformedMessages = data.map((chat) => {
+                                return {
+                                    ...chat,
+                                    time: new Date(chat.time),
+                                }
+                            });
+                            setUserChats(transformedMessages);
                         })
                         .catch((error) => {
                             console.log('Error fetching Chats: ', error);
@@ -116,13 +154,17 @@ export default function Chats() {
     const [invitedChats, setInvitedChats] = useState<InvitedChats[]>();
     const [searchTerm, setSearchTerm] = useState('');
     const [reload, setReload] = useState<boolean>(false);
-    const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
     function loadChats() {
         fetchGet<UserChats[]>('api/chats')
             .then((data) => {
-                console.log('Received Chats Data: ', data);
-                setUserChats(data);
+                const transformedMessages = data.map((chat) => {
+                    return {
+                        ...chat,
+                        time: new Date(chat.time),
+                    }
+                });
+                setUserChats(transformedMessages);
             })
             .catch((error) => {
                 console.log('Error fetching Chats: ', error);
@@ -130,7 +172,6 @@ export default function Chats() {
 
         fetchGet<UserChats[]>('api/invitedChats')
             .then((data) => {
-                console.log('Received Invited Chats Data: ', data);
                 setInvitedChats(data);
             })
             .catch((error) => {
@@ -138,14 +179,17 @@ export default function Chats() {
             });
     }
 
-
     useEffect(() => {
         loadChats();
-        // userSocket.on('sendFriendRequestAccepted', () => {
-        //     setReload(prev => !prev);
-        //   });
-        
-    }, []);
+
+        chatSocket.on('messageUpdate', () => {
+            setReload(prev => !prev);
+        });
+
+        return () => {
+            chatSocket.off('messageUpdate');
+        }
+    }, [reload]);
 
     const validUserChats = Array.isArray(userChats) ? userChats : [];
     const filteredChatFields = validUserChats

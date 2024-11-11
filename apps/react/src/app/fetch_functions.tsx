@@ -32,12 +32,17 @@ export async function fetchGet<T> (url: string): Promise<T> {
         },
         });
 
-        if (response.status !== 200)
-        throw `Unauthorized ${response.status}`;
+        if (response.status !== 200) {
+            return new Promise<T>((resolve, reject) => {
+                reject('Fetch unauthorized: ');
+            });
+        }
         const data : T = await response.json();
         return data;
     } catch (error) {
-        throw `Fetch Error ${error}`;
+        return new Promise<T>((resolve, reject) => {
+            reject('Fetch Error: ' + error);
+        });
     }
 }
 
