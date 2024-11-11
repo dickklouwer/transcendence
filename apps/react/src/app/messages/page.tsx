@@ -12,6 +12,7 @@ import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { renderDate } from '@/app/chat_componens';
 
 import io, { Socket } from 'socket.io-client';
+import { FlatESLint } from 'eslint/use-at-your-own-risk';
 
 const checkPassword: boolean = true;
 
@@ -389,7 +390,7 @@ export default function DC() {
         );
     }
 
-    const connectToSocket = (url: string) => {
+    const connectToSocket = (url: string, decline: boolean) => {
         const sock = io(url, {
           transports: ['websocket'],
           query: {
@@ -398,6 +399,10 @@ export default function DC() {
           withCredentials: true,
         });
         setPSock(sock);
+        if(decline) {
+            console.log('emit declineGameInvite');
+            sock.emit('declineGameInvite', { sender_id: chatInfo.intraId, receiver_id: chatInfo.intraId });
+        }
       };
 
     const image = chatInfo.image ? chatInfo.image : defaultUserImage;
@@ -467,7 +472,7 @@ export default function DC() {
                             () => {
                                 console.log('Invite the other player for a game');
                                 const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                connectToSocket(url);
+                                connectToSocket(url, false);
                                 console.log('emit player_id: ', chatInfo.intraId, ' nick_name: ', chatInfo.nickName);
                                 chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId });
                                 sendMessage({
@@ -493,7 +498,7 @@ export default function DC() {
                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
                                         console.log('Invite the other player for a game');
                                         const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                        connectToSocket(url);
+                                        connectToSocket(url, false);
                                     }}>
                                         Accept
                                     </button>
@@ -503,11 +508,7 @@ export default function DC() {
                                     setRecieveInvite(false);
                                     console.log('Invite the other player for a game');
                                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                    connectToSocket(url);
-                                    if (!pSock) {
-                                        console.log('No socket for declineGameInvite');
-                                    }
-                                    pSock?.emit('declineGameInvite', { sender_id: chatInfo.intraId, receiver_id: chatInfo.intraId });
+                                    connectToSocket(url, true);
                                 }}>
                                     Decline
                                 </button>
