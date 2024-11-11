@@ -163,7 +163,7 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
 function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
     return (
         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-            <Link className="flex-grow" href={{ pathname: '/multiplayer_pong', query: { player_id: intra_user_id, nick_name: nick_name } }}>
+            <Link className="flex-grow" href={{ pathname: '/pong/multiplayer_pong', query: { player_id: intra_user_id, nick_name: nick_name } }}>
                 <button className="py-2 px-4 text-blue-500 font-bold">
                     Invite for a game
                 </button>
