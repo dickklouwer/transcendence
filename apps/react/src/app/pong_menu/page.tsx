@@ -9,7 +9,8 @@ const Menu = () => {
   const router = useRouter(); // Get the router object
 
   const connectToSocket = (url: string) => {
-    const sock = io(url, {
+    // console.log(`pSock: ${pSock ? pSock.toString() : 'null'}`);
+    let sock = io(url, {
       transports: ['websocket'],
       query: {
         currentPath: window.location.pathname,
@@ -17,6 +18,7 @@ const Menu = () => {
       withCredentials: true,
     });
     setPSock(sock);
+    // console.log(`sock: ${sock.id ? sock.toString() : 'null'}`);
   };
 
   const handleSinglePlayerClick = () => {
