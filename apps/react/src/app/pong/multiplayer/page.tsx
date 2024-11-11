@@ -10,8 +10,9 @@ import Countdown from '../../game_elements/countdown';
 import { fetchGet } from '../../fetch_functions';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
-const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io"});
+const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io" });
 
 interface UserNames {
 	left: string;
@@ -45,6 +46,7 @@ export default function PongGame() {
 	const [score, setScore] = useState<[number, number]>([0, 0]);
 	const [userNames, setUserNames] = useState<UserNames>({ left: '', right: '' });
 	const [Gamestate, SetGameState] = useState("AwaitingPlayer");
+	const router = useRouter(); // Get the router object
 
 	const gamestateRef = useRef(Gamestate);
 	const searchParams = useSearchParams();
@@ -57,7 +59,7 @@ export default function PongGame() {
 		fetchGet<User>('/api/profile')
 			.then((res) => {
 				if (res.intra_user_id !== null && res.user_name !== null) {
-					socket.emit('registerUsers', { intra_id: res.intra_user_id, user_name: res.user_name,  opp_id: player_id, opp_nn: nick_name });
+					socket.emit('registerUsers', { intra_id: res.intra_user_id, user_name: res.user_name, opp_id: player_id, opp_nn: nick_name });
 				} else {
 					console.error('Error fetching user profile:');
 				}
@@ -65,10 +67,6 @@ export default function PongGame() {
 			.catch((error) => {
 				console.error('Error fetching user profile:', error);
 			});
-	}, []);
-
-	useEffect(() => {
-		socket.emit('normal game');
 	}, []);
 
 	useEffect(() => {
@@ -84,9 +82,9 @@ export default function PongGame() {
 			manager.updateBallPosition(x, y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
-			manager.leftPaddle.draw();
-			manager.rightPaddle.draw();
-			manager.ball.draw();
+			// manager.leftPaddle.draw();
+			// manager.rightPaddle.draw();
+			// manager.ball.draw();
 			SetGameState("Countdown");
 			setTimeout(() => {
 				startGame();
@@ -114,10 +112,18 @@ export default function PongGame() {
 			socket.emit('stop');
 		});
 
-		socket.on('awaitPlayer', () => {
-			manager.stopGame();
-			SetGameState("AwaitingPlayer");
-			socket.emit('stop');
+		socket.on('opponent_left', () => {
+			manager.removeListeners();
+			socket.off('rightPaddle');
+			socket.off('leftPaddle');
+			socket.off('ball');
+			socket.off('score');
+			socket.off('gameover');
+			socket.off('awaitPlayer');
+			socket.off('playersReady');
+			socket.emit('disconnect');
+			socket.disconnect();
+			router.push('/pong/opponent_left');
 		});
 
 		socket.on('names', (user: string[]) => setUserNames({ left: user[0], right: user[1] }));
@@ -150,13 +156,18 @@ export default function PongGame() {
 		}
 	};
 
-	const rematch = () => {
-		SetGameState("AwaitingPlayer");
-		socket.emit('rematch', true);
-	}
-
 	const leave = () => {
+		socket.off('rightPaddle');
+		socket.off('leftPaddle');
+		socket.off('ball');
+		socket.off('score');
+		socket.off('gameover');
+		socket.off('awaitPlayer');
+		socket.off('playersReady');
+		setGameManager(null);
 		socket.emit('disconnect');
+		socket.disconnect();
+		router.push('/menu');
 	}
 
 	const GameStateComponent = () => (
@@ -179,15 +190,9 @@ export default function PongGame() {
 					fontSize: '2rem'
 				}}>
 					<div>Game Over!</div>
-					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={rematch}>
-						New Game
+					<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={leave}>
+						Back to Home
 					</button>
-					<Link href={'/'}>
-						<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={leave}>
-							Back to Home
-						</button>
-					</Link>
-
 				</div>
 			)}
 			{Gamestate === "AwaitingPlayer" && (
@@ -227,6 +232,10 @@ export default function PongGame() {
 				/>
 				<div style={{ marginLeft: '20px', fontSize: '1.5rem', color: 'white' }}>{userNames.right}</div>
 			</div>
+			<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={leave}>
+				Back to Home
+			</button>
 		</div>
+
 	);
 }

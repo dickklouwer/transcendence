@@ -39,13 +39,16 @@ export class GameManager {
     updatePaddlePosition = (side: string, position: number) => {
         if (side === 'left') {
             this.leftPaddle.setPosition(position);
+            this.leftPaddle.draw();
         } else {
             this.rightPaddle.setPosition(position);
+            this.rightPaddle.draw();
         }
     };
 
     updateBallPosition = (x: number, y: number) => {
         this.ball.setPosition(x, y);
+        this.ball.draw();
     };
 
     startGame() {
