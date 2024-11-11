@@ -186,6 +186,7 @@ export class MultiplayerPongGateway
         `Room joined: room_${intra_id} with players ${user_name} and ${opp_nn}`,
       );
       secondClient.join(`room_${intra_id}`);
+      this.clientRoomMap.set(secondClient.id, `room_${intra_id}`);
       this.fillRoomdata(client, intra_id, user_name);
       this.server.to(`room_${intra_id}`).emit('startSetup', { x: room.ball.x, y: room.ball.y, leftPaddle: room.players[0].paddle, rightPaddle: room.players[1].paddle });
       // this.server.to(`room_${intra_id}`).emit('playersReady');
@@ -201,6 +202,7 @@ export class MultiplayerPongGateway
       const ball = this.createBall();
       const room = this.createRoom(roomId, players, ball);
       this.privateRooms.set(roomId, room);
+      this.clientRoomMap.set(firstClient.id, roomId);
       this.logger.log(
         `private room created: ${roomId} with players ${user_name} and ${opp_nn}`,
       );
@@ -260,7 +262,10 @@ export class MultiplayerPongGateway
     client.data.user_name = user_name;
     const roomId = this.clientRoomMap.get(client.id);
     this.logger.log(`Room ID: ${roomId}`);
-    const room = this.rooms.get(roomId);
+    let room = this.rooms.get(roomId);
+    if (!room) {
+      room = this.privateRooms.get(`room_${intra_id}`);
+    }
     if (room) {
       const player1 = room.players[0].client.data.user_name;
       const player2 = room.players[1].client.data.user_name;
@@ -270,8 +275,8 @@ export class MultiplayerPongGateway
       this.logger.log(
         `client 1: ${room.players[1].client.id}, username: ${player2}`,
       );
-      console.log('left user: ', player1);
-      console.log('right user: ', player2);
+      this.logger.log('left user: ', player1);
+      this.logger.log('right user: ', player2);
       this.server.to(room.roomID).emit('names', [player1, player2]);
     } else {
       client.emit('leftUser', user_name);
@@ -283,8 +288,12 @@ export class MultiplayerPongGateway
   handleMovement(client: Socket, payload: string): void {
     this.logger.log(`Client id: ${client.id}`);
     const roomId = this.clientRoomMap.get(client.id);
+    this.logger.log(`room id: ${roomId}`);
     if (roomId) {
-      const room = this.rooms.get(roomId);
+      let room = this.rooms.get(roomId);
+      if (!room) {
+        room = this.privateRooms.get(roomId);
+      }
       if (room) {
         if (client.id === room.players[0].client.id) {
           this.logger.log(`Client payload: ${payload}`);
