@@ -162,60 +162,6 @@ function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearc
     );
 }
 
-
-// function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
-//     const [pSock, setPSock] = useState<Socket | null>(null);
-//     const [recieveInvite, setRecieveInvite] = useState(false);
-    
-//     const connectToSocket = (url: string) => {
-//         const sock = io(url, {
-//           transports: ['websocket'],
-//           query: {
-//             currentPath: window.location.pathname,
-//           },
-//           withCredentials: true,
-//         });
-//         setPSock(sock);
-//       };
-    
-//     return (
-//         <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-//         <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
-//             {!recieveInvite && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
-//                 () => {
-//                     console.log('Invite the other player for a game');
-//                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-//                     connectToSocket(url);
-//                     chatSocket.emit('inviteForGame', { player_id: intra_user_id, nick_name: nick_name });
-//                 }
-//             }>
-//                 Invite for a game
-//             </button>}
-//         </Link>
-//         {recieveInvite && (
-//             <div className="flex flex-col items-center space-y-4">
-//                 <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
-//                 <div className="flex space-x-4">
-//                     <Link href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
-//                         <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-//                             console.log('Invite the other player for a game');
-//                         }}>
-//                             Accept
-//                         </button>
-//                     </Link>
-//                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-//                         console.log('Decline the other player for a game');
-//                         setRecieveInvite(false);
-//                     }}>
-//                         Decline
-//                     </button>
-//                 </div>
-//             </div>
-//         )}
-//     </div>
-//     );
-// }
-
 export default function DC() {
     const searchParams = useSearchParams();
     const Router = useRouter();
@@ -353,6 +299,14 @@ export default function DC() {
 
     const handleSendMessage = (intra_id: number) => {
         if (newMessage.trim() === '') return;
+        if (newMessage.length > 1000) {
+            alert('Message is too long');
+            return;
+        }
+        if (newMessage === '#Invite for a game') {
+            alert('You can not send this message');
+            return;
+        }
 
         const message: ChatMessages = {
             message_id: 0,          // auto generate in database
@@ -514,6 +468,16 @@ export default function DC() {
                                 connectToSocket(url);
                                 console.log('emit player_id: ', chatInfo.intraId, ' nick_name: ', chatInfo.nickName);
                                 chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId });
+                                sendMessage({
+                                    message_id: 0,
+                                    chat_id: chat_id,
+                                    sender_id: user.intra_user_id,
+                                    sender_name: '',        // get from user database
+                                    sender_image_url: '',   // get from user database
+                                    message: '#Invite for a game',
+                                    sent_at: new Date(),
+                                    is_muted: false,
+                                });
                             }
                         }>
                             Invite for a game
