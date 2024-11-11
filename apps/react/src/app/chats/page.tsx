@@ -64,7 +64,11 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                                 {chatField.lastMessage && !chatField.hasPassword ? (
                                     <>
                                     <span className="text-white">{chatField.nickName} </span>
-                                    <span className="text-gray-500">{chatField.lastMessage}</span>
+                                    {chatField.lastMessage.startsWith('#') ? (
+                                        <i className="text-blue-500">Game invite</i>
+                                    ) : (
+                                        <span className="text-gray-500">{chatField.lastMessage}</span>
+                                    )}
                                     </>
                                 ) : chatField.hasPassword ? (
                                     <i className="text-gray-500">Password</i>

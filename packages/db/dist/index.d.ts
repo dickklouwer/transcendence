@@ -270,6 +270,22 @@ declare const friends: drizzle_orm_pg_core.PgTableWithColumns<{
             baseColumn: never;
             generated: undefined;
         }, {}, {}>;
+        invite_game: drizzle_orm_pg_core.PgColumn<{
+            name: "invite_game";
+            tableName: "friends";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
     };
     dialect: "pg";
 }>;
@@ -865,16 +881,19 @@ declare const friendsSelect: z.ZodObject<{
     user_id_send: z.ZodNumber;
     user_id_receive: z.ZodNumber;
     is_approved: z.ZodBoolean;
+    invite_game: z.ZodNullable<z.ZodBoolean>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     friend_id: number;
     user_id_send: number;
     user_id_receive: number;
     is_approved: boolean;
+    invite_game: boolean | null;
 }, {
     friend_id: number;
     user_id_send: number;
     user_id_receive: number;
     is_approved: boolean;
+    invite_game: boolean | null;
 }>;
 declare const messagesInsert: z.ZodObject<{
     message_id: z.ZodNumber;

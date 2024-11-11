@@ -458,8 +458,10 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {chatInfo.isDm && chatInfo.intraId  && chatInfo.nickName && (
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                    {/* check if the user is online */}
+                    
                     <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                         {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
                             () => {
@@ -499,6 +501,13 @@ export default function DC() {
                                 <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
                                     console.log('Decline the other player for a game');
                                     setRecieveInvite(false);
+                                    console.log('Invite the other player for a game');
+                                    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                    connectToSocket(url);
+                                    if (!pSock) {
+                                        console.log('No socket for declineGameInvite');
+                                    }
+                                    pSock?.emit('declineGameInvite', { sender_id: chatInfo.intraId, receiver_id: chatInfo.intraId });
                                 }}>
                                     Decline
                                 </button>

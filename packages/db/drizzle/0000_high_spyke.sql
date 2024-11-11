@@ -1,4 +1,4 @@
-CREATE SCHEMA "pong";
+-- CREATE SCHEMA "pong";
 --> statement-breakpoint
 DO $$ BEGIN
  CREATE TYPE "pong"."user_state" AS ENUM('Online', 'Offline', 'In-Game');

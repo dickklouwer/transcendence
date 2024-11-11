@@ -112,6 +112,20 @@ export default function PongGame() {
 			socket.emit('stop');
 		});
 
+		socket.on('opponent_declined', () => {
+			manager.removeListeners();
+			socket.off('rightPaddle');
+			socket.off('leftPaddle');
+			socket.off('ball');
+			socket.off('score');
+			socket.off('gameover');
+			socket.off('awaitPlayer');
+			socket.off('playersReady');
+			socket.emit('disconnect');
+			socket.disconnect();
+			router.push('/pong/opponent_left');
+		});
+
 		socket.on('opponent_left', () => {
 			manager.removeListeners();
 			socket.off('rightPaddle');

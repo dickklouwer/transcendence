@@ -8,6 +8,20 @@
       "when": 1730639316567,
       "tag": "0000_high_spyke",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1731341650276,
+      "tag": "0001_smiling_stardust",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1731342041437,
+      "tag": "0002_dapper_captain_cross",
+      "breakpoints": true
     }
   ]
 }

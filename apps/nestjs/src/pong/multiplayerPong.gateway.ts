@@ -154,6 +154,40 @@ export class MultiplayerPongGateway
     // }
   }
 
+  @SubscribeMessage('declineGameInvite')
+  handleDeclineGameInvite(client: Socket, opp_id: number): void {
+    this.logger.log(`Client declined: ${client.id}`);
+    const roomId = `room_${opp_id}`;
+    const room = this.privateRooms.get(roomId);
+    if (room) {
+      this.logger.log(`Emit declined: ${opp_id}`);
+      room.players[0].client.emit('opponent_declined', 'Your opponent has declined the game');
+      this.privateRooms.delete(roomId);
+    }
+    this.logger.log(`Client disconnected: ${client.id}`);
+
+    // Find the room containing the disconnected client (public or private)
+    const privateRoomId = `room_${client.data.intra_id}`;
+
+    if (this.privateRooms.has(privateRoomId)) {
+      // Handle disconnect from a private room
+      const privateRoom = this.privateRooms.get(privateRoomId);
+      if (privateRoom) {
+        this.handleRoomDisconnect(client, privateRoom, privateRoomId, true);
+      }
+    }
+
+    // Remove the client from the global client list
+    this.clients = this.clients.filter((c) => c.id !== client.id);
+    room.players = room.players.filter(
+      (player) => player.client?.id !== client.id,
+    );
+    this.privateRooms.delete(roomId);
+    this.logger.log(`Room deleted: ${roomId}`);
+
+    // Remove the client from room mappings
+    this.clientRoomMap.delete(client.id);
+  }
 
   @SubscribeMessage('registerUsers')
   handleRegistration(
