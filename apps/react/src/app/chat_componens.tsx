@@ -47,6 +47,7 @@ interface MessageInboxProps {
 const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
     const [numberOfUnreadChats, setNumberOfUnreadChats] = useState<number>(0);
     const [reload, setReload] = useState<boolean>(false);
+    const [invitedForGame, setInvitedForGame] = useState<number>(0);
 
     const getNumberOfUnreadChats = async () => {
         fetchGet<number>('api/getNumberOfUnreadChats')
@@ -59,9 +60,17 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
         fetchPost('api/updateMessageStatusReceived', { user_intra_id });
     }
 
+    const checkIfInvitedForGame = async () => {
+        fetchGet<number>('api/checkIfInvitedForGame')
+            .then((res) => {
+                setInvitedForGame(res);
+            });
+    }
+
     useEffect(() => {
         getNumberOfUnreadChats();
         updateMessageStatusReceived();
+        checkIfInvitedForGame();
 
         chatSocket.on('chatUpdate', () => {
             setReload(prev => !prev);
@@ -72,6 +81,8 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
         }
     }, [reload]);
 
+    const amountColor = invitedForGame > 0 ? 'bg-blue-600' : 'bg-red-600';
+
     return (
         <div className='relative inline-block'>
         <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
@@ -79,7 +90,8 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
             <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd"/>
             <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd"/>
             </svg>
-            {numberOfUnreadChats > 0 && <span className="absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{numberOfUnreadChats}</span>}
+            {numberOfUnreadChats > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none ${amountColor} rounded-full`}>{numberOfUnreadChats}</span>}
+            {numberOfUnreadChats === 0 && invitedForGame > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-600 bg-blue-600 rounded-full`}>{numberOfUnreadChats + invitedForGame}</span>}
         </Link>
         </div>
     );

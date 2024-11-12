@@ -29,6 +29,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
     const commonWidth = "500px";
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
+    const [gameInvite, setGameInvite] = useState<boolean>(false);
 
     useEffect(() => {
         fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chatField.chatid}`)
@@ -38,7 +39,16 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         .catch((error) => {
             console.log('Error: ', error);
         });
-    } , [chatField.chatid]);
+        console.log(`chatInfo.intraId: ${chatInfo.intraId}`);
+
+        // fetchGet<boolean>(`api/invitedForGame?intra_id=${chatInfo.intraId}`)
+        // .then((res) => {
+        //     setGameInvite(res);
+        // })
+        // .catch((error) => {
+        //     console.log('Error: ', error);
+        // });
+    } , [chatField.chatid, chatInfo.intraId]);
 
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
@@ -63,7 +73,11 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                             <p className="max-w-xs overflow-ellipsis overflow-hidden text-gray-500 whitespace-nowrap text-sm">
                                 {chatField.lastMessage && !chatField.hasPassword ? (
                                     <>
-                                    <span className="text-white">{chatField.nickName} </span>
+                                    {gameInvite ? (
+                                        <span className="text-blue-500">{chatField.nickName} </span>
+                                    ) : (
+                                        <span className="text-white">{chatField.nickName} </span>
+                                    )}
                                     {chatField.lastMessage.startsWith('#') ? (
                                         <i className="text-blue-500">Game invite</i>
                                     ) : (

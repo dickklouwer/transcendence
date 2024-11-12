@@ -12,7 +12,6 @@ import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { renderDate } from '@/app/chat_componens';
 
 import io, { Socket } from 'socket.io-client';
-import { FlatESLint } from 'eslint/use-at-your-own-risk';
 
 const checkPassword: boolean = true;
 
@@ -210,7 +209,7 @@ export default function DC() {
         return () => {
             chatSocket.off('inviteForGame');
         }
-    } , [chatInfo.intraId]);
+    }, [user]);
 
     useEffect(() => {
         if (!user || !isLoaded) return;
@@ -246,7 +245,17 @@ export default function DC() {
                 .catch((error) => {
                     console.log('Error: ', error);
                 });
-
+                
+            // console.log(`user.intra_user_id=${user.intra_user_id}`);
+            // fetchGet<boolean>(`api/invitedForGame?other_intra_id=${user.intra_user_id}`)
+            //     .then((res) => {
+            //         if (res) {
+            //             setRecieveInvite(res);
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         console.log('Error: ', error);
+            //     });
             chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
             
             chatSocket.on('messageFromServer', (message: ChatMessages) => {
@@ -261,6 +270,7 @@ export default function DC() {
                 console.log('statusUpdate received');
                 setMessages((prevMessages) => [...prevMessages]);
             });
+
         }
         console.log('send inboxUpdate');
         chatSocket.emit('inboxUpdate');
@@ -281,6 +291,21 @@ export default function DC() {
     useEffect(() => {
         scrollToBottom();
     } , [messages]);
+
+    // useEffect(() => {
+    //     if (!chatInfo.intraId) return;
+    //     console.log('fetch invitedForGame');
+    //     console.log('chatInfo.intraId: ', chatInfo.intraId);
+    //     fetchGet<boolean>(`api/invitedForGame?intra_id=${chatInfo.intraId}`)
+    //     .then((res) => {
+    //         if (res) {
+    //             setRecieveInvite(res);
+    //         }
+    //     })
+    //     .catch((error) => {
+    //         console.log('Error: ', error);
+    //     });
+    // } , );
 
     function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
         fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
@@ -474,17 +499,7 @@ export default function DC() {
                                 const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
                                 connectToSocket(url, false);
                                 console.log('emit player_id: ', chatInfo.intraId, ' nick_name: ', chatInfo.nickName);
-                                chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId });
-                                sendMessage({
-                                    message_id: 0,
-                                    chat_id: chat_id,
-                                    sender_id: user.intra_user_id,
-                                    sender_name: '',        // get from user database
-                                    sender_image_url: '',   // get from user database
-                                    message: '#Invite for a game',
-                                    sent_at: new Date(),
-                                    is_muted: false,
-                                });
+                                chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: true });
                             }
                         }>
                             Invite for a game
