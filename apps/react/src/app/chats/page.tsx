@@ -41,14 +41,17 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         });
         console.log(`chatInfo.intraId: ${chatInfo.intraId}`);
 
-        // fetchGet<boolean>(`api/invitedForGame?intra_id=${chatInfo.intraId}`)
-        // .then((res) => {
-        //     setGameInvite(res);
-        // })
-        // .catch((error) => {
-        //     console.log('Error: ', error);
-        // });
-    } , [chatField.chatid, chatInfo.intraId]);
+        if (chatInfo.isDm) {
+            fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)
+            .then((res) => {
+                setGameInvite(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+        }
+
+    }, [chatField, chatInfo.intraId, chatInfo.isDm]);
 
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">

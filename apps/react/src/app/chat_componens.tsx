@@ -47,7 +47,7 @@ interface MessageInboxProps {
 const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
     const [numberOfUnreadChats, setNumberOfUnreadChats] = useState<number>(0);
     const [reload, setReload] = useState<boolean>(false);
-    const [invitedForGame, setInvitedForGame] = useState<number>(0);
+    const [amountGameInvites, setAmountGameInvites] = useState<number>(0);
 
     const getNumberOfUnreadChats = async () => {
         fetchGet<number>('api/getNumberOfUnreadChats')
@@ -60,17 +60,17 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
         fetchPost('api/updateMessageStatusReceived', { user_intra_id });
     }
 
-    const checkIfInvitedForGame = async () => {
-        fetchGet<number>('api/checkIfInvitedForGame')
+    const getAmountGameInvites = async () => {
+        fetchGet<number>('api/getAmountGameInvites')
             .then((res) => {
-                setInvitedForGame(res);
+                setAmountGameInvites(res);
             });
     }
 
     useEffect(() => {
         getNumberOfUnreadChats();
         updateMessageStatusReceived();
-        checkIfInvitedForGame();
+        getAmountGameInvites();
 
         chatSocket.on('chatUpdate', () => {
             setReload(prev => !prev);
@@ -81,7 +81,7 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
         }
     }, [reload]);
 
-    const amountColor = invitedForGame > 0 ? 'bg-blue-600' : 'bg-red-600';
+    const amountColor = amountGameInvites > 0 ? 'bg-blue-600' : 'bg-red-600';
 
     return (
         <div className='relative inline-block'>
@@ -91,7 +91,7 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
             <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd"/>
             </svg>
             {numberOfUnreadChats > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none ${amountColor} rounded-full`}>{numberOfUnreadChats}</span>}
-            {numberOfUnreadChats === 0 && invitedForGame > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-600 bg-blue-600 rounded-full`}>{numberOfUnreadChats + invitedForGame}</span>}
+            {numberOfUnreadChats === 0 && amountGameInvites > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-600 bg-blue-600 rounded-full`}>{numberOfUnreadChats + amountGameInvites}</span>}
         </Link>
         </div>
     );

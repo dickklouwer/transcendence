@@ -11,6 +11,7 @@ import { fetchGet } from '../../fetch_functions';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import { chatSocket } from '../../chat_componens';
 
 let socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io" });
 
@@ -169,6 +170,8 @@ export default function PongGame() {
 			console.log('Game started');
 			socket.emit('start');
 		}
+		console.log('Game started and update inbox');
+		chatSocket.emit('inboxUpdate');
 	};
 
 	const leave = () => {

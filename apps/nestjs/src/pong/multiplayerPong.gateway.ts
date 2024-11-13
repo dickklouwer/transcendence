@@ -283,8 +283,6 @@ export class MultiplayerPongGateway
         rightPaddle: room.players[1].paddle,
       });
       this.disableInviteGame(intra_id, opp_id);
-      // TODO: update inbox
-
       setTimeout(() => {
         this.startGameLoop(room);
       }, 3000);

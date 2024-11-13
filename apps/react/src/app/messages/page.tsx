@@ -246,16 +246,17 @@ export default function DC() {
                     console.log('Error: ', error);
                 });
                 
-            // console.log(`user.intra_user_id=${user.intra_user_id}`);
-            // fetchGet<boolean>(`api/invitedForGame?other_intra_id=${user.intra_user_id}`)
-            //     .then((res) => {
-            //         if (res) {
-            //             setRecieveInvite(res);
-            //         }
-            //     })
-            //     .catch((error) => {
-            //         console.log('Error: ', error);
-            //     });
+            console.log(`user.intra_user_id=${user.intra_user_id}`);
+            fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${user.intra_user_id}`)
+                .then((res) => {
+                    if (res) {
+                        setRecieveInvite(res);
+                    }
+                })
+                .catch((error) => {
+                    console.log('Error: ', error);
+                });
+
             chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
             
             chatSocket.on('messageFromServer', (message: ChatMessages) => {
@@ -292,20 +293,20 @@ export default function DC() {
         scrollToBottom();
     } , [messages]);
 
-    // useEffect(() => {
-    //     if (!chatInfo.intraId) return;
-    //     console.log('fetch invitedForGame');
-    //     console.log('chatInfo.intraId: ', chatInfo.intraId);
-    //     fetchGet<boolean>(`api/invitedForGame?intra_id=${chatInfo.intraId}`)
-    //     .then((res) => {
-    //         if (res) {
-    //             setRecieveInvite(res);
-    //         }
-    //     })
-    //     .catch((error) => {
-    //         console.log('Error: ', error);
-    //     });
-    // } , );
+    useEffect(() => {
+        if (!chatInfo.intraId) return;
+        console.log('fetch checkIfInvidedForGame');
+        console.log('chatInfo.intraId: ', chatInfo.intraId);
+        fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)
+        .then((res) => {
+            if (res) {
+                setRecieveInvite(res);
+            }
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    }, [chatInfo]);
 
     function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
         fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
@@ -426,7 +427,7 @@ export default function DC() {
         setPSock(sock);
         if(decline) {
             console.log('emit declineGameInvite');
-            sock.emit('declineGameInvite', { sender_id: chatInfo.intraId, receiver_id: chatInfo.intraId });
+            sock.emit('declineGameInvite', {socket_id: sock.id, sender_id: chatInfo.intraId, receiver_id: user?.intra_user_id });
         }
       };
 
@@ -521,9 +522,10 @@ export default function DC() {
                                 <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
                                     console.log('Decline the other player for a game');
                                     setRecieveInvite(false);
-                                    console.log('Invite the other player for a game');
+                                    console.log('Decline the other player for a game');
                                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
                                     connectToSocket(url, true);
+                                    chatSocket.emit('inviteForGame', { sender_id: user?.intra_user_id ?? 0, receiver_id: chatInfo.intraId, invite: false });
                                 }}>
                                     Decline
                                 </button>

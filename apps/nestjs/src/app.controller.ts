@@ -299,24 +299,24 @@ export class AppController {
     res.status(200).send(response);
   }
 
-  @Get('checkIfInvitedForGame')
-  async checkIfInvitedForGame(
+  @Get('getAmountGameInvites')
+  async getAmountGameInvites(
     @Headers('authorization') token: string,
   ): Promise<number> {
-    const invitedForGame = await this.dbservice.checkIfInvitedForGame(
+    const invitedForGame = await this.dbservice.getAmountGameInvites(
       token.split(' ')[1],
     );
 
     return invitedForGame;
   }
 
-  @Get('invitedForGame')
-  async invitedForGame(
+  @Get('checkIfInvidedForGame')
+  async checkIfInvidedForGame(
     @Headers('authorization') token: string,
     @Query('other_intra_id') other_intra_id: number,
   ): Promise<boolean> {
     console.log(`other_intra_id: ${other_intra_id}`);
-    const invitedForGame = await this.dbservice.invitedForGame(
+    const invitedForGame = await this.dbservice.checkIfInvidedForGame(
       token.split(' ')[1],
       other_intra_id,
     );

@@ -1184,7 +1184,7 @@ export class DbService {
     }
   }
 
-  async checkIfInvitedForGame(jwtToken: string): Promise<number> {
+  async getAmountGameInvites(jwtToken: string): Promise<number> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
@@ -1209,7 +1209,7 @@ export class DbService {
     }
   }
 
-  async invitedForGame(
+  async checkIfInvidedForGame(
     jwtToken: string,
     other_intra_id: number,
   ): Promise<boolean> {

@@ -173,8 +173,6 @@ export class MessagesGateway
       `Client ${client.id} wants to play with ${receiver_id} from ${sender_id}`,
     );
     this.server.to('inbox').emit('gameInvite', { sender_id, receiver_id });
-    // write to db in the friends table and set invite_game to true
-    // this.dbService.inviteForGame(sender_id, receiver_id, true); // get return value
     if (this.dbService.inviteForGame(sender_id, receiver_id, invite)) {
       this.logger.log('Game invite sent');
     } else {
