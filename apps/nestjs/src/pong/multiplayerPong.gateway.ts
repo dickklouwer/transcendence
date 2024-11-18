@@ -80,6 +80,7 @@ export class MultiplayerPongGateway
   }
 
   handleDisconnect(client: Socket) {
+    this.handleStop();
     this.logger.log(`Client disconnected: ${client.id}`);
 
     // Find the room containing the disconnected client (public or private)

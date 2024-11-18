@@ -1,11 +1,6 @@
-// GameManager.js
-
-// Interface for the Score
-
 import Paddle from '../../game_elements/paddle';
 import Ball from '../../game_elements/ball';
 import { Socket } from "socket.io-client";
-
 
 export class GameManager {
     private context: CanvasRenderingContext2D;
@@ -20,6 +15,8 @@ export class GameManager {
     private leftPaddle: Paddle;
     private ball: Ball;
     private animationFrameId: number | null = null; // Store the request ID
+    private lastKeyPressTime: number = 0;
+    private keyPressInterval: number = 100; // milliseconds
 
     constructor(context: CanvasRenderingContext2D, socket: Socket, gameWidth: number, gameHeight: number, paddleWidth: number, paddleHeight: number, ballSize: number) {
         this.context = context;
@@ -33,7 +30,6 @@ export class GameManager {
         this.leftPaddle = new Paddle(context, 10, 150);
         this.rightPaddle = new Paddle(context, gameWidth - 10, 150);
         this.ball = new Ball(context, gameWidth / 2, gameHeight / 2, ballSize);
-
     }
 
     updatePaddlePosition = (side: string, position: number) => {
@@ -53,7 +49,6 @@ export class GameManager {
 
     startGame() {
         const drawLoop = () => {
-            // console.log('drawLoop ball:', this.ball.positionX, this.ball.positionY);
             this.context.clearRect(0, 0, this.gameWidth, this.gameHeight);
             this.leftPaddle.draw();
             this.rightPaddle.draw();
@@ -79,6 +74,12 @@ export class GameManager {
     }
 
     handleKeyDown = (event: KeyboardEvent) => {
+        const currentTime = Date.now();
+        if (currentTime - this.lastKeyPressTime < this.keyPressInterval) {
+            return;
+        }
+        this.lastKeyPressTime = currentTime;
+
         if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
             event.preventDefault(); // Prevent default scrolling behavior
         }
