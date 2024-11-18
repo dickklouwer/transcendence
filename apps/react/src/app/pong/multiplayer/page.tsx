@@ -1,3 +1,4 @@
+
 "use client";
 
 // PongGame.js
@@ -7,11 +8,8 @@ import { User } from '@repo/db';
 import { GameManager } from './gameManager';
 import Countdown from '../../game_elements/countdown';
 import { fetchGet } from '../../fetch_functions';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-
-let socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, { path: "/ws/socket.io" });
+import { useSearchParams, useRouter } from 'next/navigation';
+import { chatSocket } from '../../chat_componens';
 
 interface UserNames {
 	left: string;
@@ -94,23 +92,18 @@ export default function PongGame() {
 		};
 
 		const handleStartSetup = ({ x, y, leftPaddle, rightPaddle }: any) => {
+			chatSocket.emit('inboxUpdate');
 			manager.updateBallPosition(x, y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
-		});
+			setGamestate("Countdown");
 
-		// socket.on('rightPaddle', (paddle: number) => manager.updatePaddlePosition('right', paddle));
-		// socket.on('leftPaddle', (paddle: number) => manager.updatePaddlePosition('left', paddle));
-		// socket.on('ball', (ball: { x: number, y: number }) => manager.updateBallPosition(ball.x, ball.y));
-
-		socket.on('score', ({ left, right }: { left: number, right: number }) => {
-			setScore([left, right]);
-		});
-
-		socket.on('gameover', () => {
-			SetGameState("GameOver");
-			socket.emit('stop');
-		});
+			setTimeout(() => {
+				startGame();
+				setGamestate("Playing");
+				manager.startGame();
+			}, 3000);
+		};
 
 		const opponentDisconnected = () => {
 			console.log('Opponent disconnected');
@@ -139,8 +132,6 @@ export default function PongGame() {
 			gameManager.startGame();
 			socket.emit('start');
 		}
-		console.log('Game started and update inbox');
-		chatSocket.emit('inboxUpdate');
 	};
 
 	const leave = () => {
