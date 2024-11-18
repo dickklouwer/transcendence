@@ -68,7 +68,8 @@ var friends = mySchema.table("friends", {
   friend_id: (0, import_pg_core.serial)("friend_id").primaryKey(),
   user_id_send: (0, import_pg_core.integer)("user_id_send").notNull().references(() => users.intra_user_id),
   user_id_receive: (0, import_pg_core.integer)("user_id_receive").notNull().references(() => users.intra_user_id),
-  is_approved: (0, import_pg_core.boolean)("is_approved").notNull().default(false)
+  is_approved: (0, import_pg_core.boolean)("is_approved").notNull().default(false),
+  invite_game: (0, import_pg_core.boolean)("invite_game").default(false)
 });
 var games = mySchema.table("games", {
   game_id: (0, import_pg_core.serial)("game_id").primaryKey(),

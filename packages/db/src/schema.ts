@@ -38,6 +38,7 @@ export const friends = mySchema.table('friends', {
 	user_id_send: integer('user_id_send').notNull().references(() => users.intra_user_id),
 	user_id_receive: integer('user_id_receive').notNull().references(() => users.intra_user_id),
 	is_approved: boolean('is_approved').notNull().default(false),
+	invite_game: boolean('invite_game').default(false),
 });
 
 export const games = mySchema.table('games', {

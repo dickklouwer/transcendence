@@ -8,7 +8,6 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { number } from 'zod';
 
 const gameWidth = 400;
 const gameHeight = 400;
