@@ -55,6 +55,8 @@ export class MessagesGateway
     client: Socket,
     { chat_id, intra_user_id }: { chat_id: string; intra_user_id: string },
   ): void {
+    // TODO: check if user is already in the room
+
     this.logger.log(
       `Client ${client.id} user_id: ${intra_user_id} joined chat_id: ${chat_id}`,
     );
