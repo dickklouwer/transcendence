@@ -1217,10 +1217,6 @@ export class DbService {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      console.log(
-        `own intra_id: ${user.intra_user_id}, invited other_intra_id: ${other_intra_id}`,
-      );
-
       const result = await this.db
         .select()
         .from(friends)

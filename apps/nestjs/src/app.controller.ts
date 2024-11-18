@@ -315,7 +315,6 @@ export class AppController {
     @Headers('authorization') token: string,
     @Query('other_intra_id') other_intra_id: number,
   ): Promise<boolean> {
-    console.log(`other_intra_id: ${other_intra_id}`);
     const invitedForGame = await this.dbservice.checkIfInvidedForGame(
       token.split(' ')[1],
       other_intra_id,
