@@ -1,3 +1,5 @@
+// Path: src/game/GameManager.ts
+
 import Paddle from '../../game_elements/paddle';
 import Ball from '../../game_elements/ball';
 import { Socket } from "socket.io-client";
@@ -10,15 +12,23 @@ export class GameManager {
     private paddleWidth: number;
     private paddleHeight: number;
     private ballSize: number;
-    
+
     private rightPaddle: Paddle;
     private leftPaddle: Paddle;
     private ball: Ball;
-    private animationFrameId: number | null = null; // Store the request ID
-    private lastKeyPressTime: number = 0;
-    private keyPressInterval: number = 100; // milliseconds
+    private animationFrameId: number | null = null;
 
-    constructor(context: CanvasRenderingContext2D, socket: Socket, gameWidth: number, gameHeight: number, paddleWidth: number, paddleHeight: number, ballSize: number) {
+    private keyState: { [key: string]: boolean } = {}; // Track key states
+
+    constructor(
+        context: CanvasRenderingContext2D,
+        socket: Socket,
+        gameWidth: number,
+        gameHeight: number,
+        paddleWidth: number,
+        paddleHeight: number,
+        ballSize: number
+    ) {
         this.context = context;
         this.socket = socket;
         this.gameWidth = gameWidth;
@@ -74,29 +84,33 @@ export class GameManager {
     }
 
     handleKeyDown = (event: KeyboardEvent) => {
-        const currentTime = Date.now();
-        if (currentTime - this.lastKeyPressTime < this.keyPressInterval) {
-            return;
+        const key = event.key;
+        if (!this.keyState[key]) { // Only handle if the key is not already pressed
+            this.keyState[key] = true; // Mark key as pressed
+            this.socket.emit('key_event', { key, state: 'down' });
         }
-        this.lastKeyPressTime = currentTime;
 
-        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        if (key === 'ArrowUp' || key === 'ArrowDown') {
             event.preventDefault(); // Prevent default scrolling behavior
         }
-        if (event.key === 'ArrowUp') {
-            this.socket.emit('movement', 'ArrowUp');
-        }
-        if (event.key === 'ArrowDown') {
-            this.socket.emit('movement', 'ArrowDown');
+    };
+
+    handleKeyUp = (event: KeyboardEvent) => {
+        const key = event.key;
+        if (this.keyState[key]) { // Only handle if the key was previously pressed
+            this.keyState[key] = false; // Mark key as released
+            this.socket.emit('key_event', { key, state: 'up' });
         }
     };
 
     attachListeners = () => {
         window.addEventListener('keydown', this.handleKeyDown);
+        window.addEventListener('keyup', this.handleKeyUp);
     };
 
     removeListeners = () => {
         window.removeEventListener('keydown', this.handleKeyDown);
+        window.removeEventListener('keyup', this.handleKeyUp);
         this.socket.removeAllListeners();
     };
 }

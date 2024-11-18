@@ -34,9 +34,17 @@ interface Room {
   rematch: number;
 }
 
+// interface Player {
+//   client: Socket | null;
+//   paddle: number;
+//   score: number;
+// }
+
 interface Player {
   client: Socket | null;
-  paddle: number;
+  paddle: number; // Current paddle position
+  movementDirection: 'up' | 'down' | null; // Current movement direction
+  movementInterval: NodeJS.Timeout | null; // Interval ID for paddle movement
   score: number;
 }
 
@@ -59,7 +67,7 @@ export class MultiplayerPongGateway
   // private clientPlayerMap: Map<string, Player> = new Map(); // Maps client ID to player object
 
   private createPlayer(client: Socket | null): Player {
-    return { client: client, paddle: 150, score: 0 };
+    return { client: client, paddle: 150, movementDirection: null, movementInterval: null, score: 0 };
   }
   private createRoom(roomID: string, players: Player[], ball: Ball): Room {
     return { roomID, players, ball, rematch: 0 };
@@ -281,50 +289,83 @@ export class MultiplayerPongGateway
     }
   }
 
-  @SubscribeMessage('movement')
-  handleMovement(client: Socket, payload: string): void {
-    this.logger.log(`Client id: ${client.id}`);
+  @SubscribeMessage('key_event')
+  handleKeyEvent(client: Socket, payload: { key: string; state: 'down' | 'up' }): void {
+    this.logger.log(`Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`);
     const roomId = this.clientRoomMap.get(client.id);
     if (roomId) {
       const room = this.rooms.get(roomId);
       if (room) {
         if (client.id === room.players[0].client.id) {
-          this.logger.log(`Client payload: ${payload}`);
-          this.moveLeftPaddle(room, payload);
+          this.handleLeftPaddleKey(room, payload);
         } else if (client.id === room.players[1].client.id) {
-          this.logger.log(`Client payload: ${payload}`);
-          this.moveRightPaddle(room, payload);
+          this.handleRightPaddleKey(room, payload);
         }
       }
     }
   }
 
-  moveLeftPaddle(room: Room, payload: string): void {
-    if (payload === 'ArrowUp') {
-      this.logger.log('ArrowUp');
-      room.players[0].paddle = Math.max(0, room.players[0].paddle - 5);
-      // this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
-    }
-    if (payload === 'ArrowDown') {
-      this.logger.log('ArrowDown');
-      room.players[0].paddle = Math.min(
-        gameHeight - paddleHeight,
-        room.players[0].paddle + 5,
-      );
-      // this.server.to(room.roomID).emit('leftPaddle', room.players[0].paddle);
+  private handleLeftPaddleKey(room: Room, payload: { key: string; state: 'down' | 'up' }): void {
+    const player = room.players[0];
+
+    if (payload.state === 'down') {
+      if (payload.key === 'ArrowUp') {
+        player.movementDirection = 'up';
+      } else if (payload.key === 'ArrowDown') {
+        player.movementDirection = 'down';
+      }
+      this.startPaddleMovement(room, player, 'left');
+    } else if (payload.state === 'up') {
+      if (payload.key === 'ArrowUp' && player.movementDirection === 'up') {
+        player.movementDirection = null;
+      } else if (payload.key === 'ArrowDown' && player.movementDirection === 'down') {
+        player.movementDirection = null;
+      }
+      if (!player.movementDirection) {
+        this.stopPaddleMovement(room, player, 'left');
+      }
     }
   }
 
-  moveRightPaddle(room: Room, payload: string): void {
-    if (payload === 'ArrowUp') {
-      this.logger.log('ArrowUp');
-      room.players[1].paddle = Math.max(0, room.players[1].paddle - 5);
-      // this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+  private handleRightPaddleKey(room: Room, payload: { key: string; state: 'down' | 'up' }): void {
+    const player = room.players[1];
+
+    if (payload.state === 'down') {
+      if (payload.key === 'ArrowUp') {
+        player.movementDirection = 'up';
+      } else if (payload.key === 'ArrowDown') {
+        player.movementDirection = 'down';
+      }
+      this.startPaddleMovement(room, player, 'right');
+    } else if (payload.state === 'up') {
+      if (payload.key === 'ArrowUp' && player.movementDirection === 'up') {
+        player.movementDirection = null;
+      } else if (payload.key === 'ArrowDown' && player.movementDirection === 'down') {
+        player.movementDirection = null;
+      }
+      if (!player.movementDirection) {
+        this.stopPaddleMovement(room, player, 'right');
+      }
     }
-    if (payload === 'ArrowDown') {
-      this.logger.log('ArrowDown');
-      room.players[1].paddle = Math.min(gameHeight - paddleHeight, room.players[1].paddle + 5);
-      // this.server.to(room.roomID).emit('rightPaddle', room.players[1].paddle);
+  }
+
+  private startPaddleMovement(room: Room, player: Player, side: 'left' | 'right'): void {
+    if (!player.movementInterval) {
+      player.movementInterval = setInterval(() => {
+        if (player.movementDirection === 'up') {
+          player.paddle = Math.max(0, player.paddle - 2);
+        } else if (player.movementDirection === 'down') {
+          player.paddle = Math.min(gameHeight - paddleHeight, player.paddle + 2);
+        }
+        this.server.to(room.roomID).emit(`${side}Paddle`, player.paddle);
+      }, 1000 / 60); // 60 updates per second
+    }
+  }
+
+  private stopPaddleMovement(room: Room, player: Player, side: 'left' | 'right'): void {
+    if (player.movementInterval) {
+      clearInterval(player.movementInterval);
+      player.movementInterval = null;
     }
   }
 
@@ -348,11 +389,6 @@ export class MultiplayerPongGateway
       this.gameInterval = undefined;
     }
   }
-
-  // @SubscribeMessage('disconnect')
-  // handleDisconnectGame(client: Socket): void {
-  //   this.handleDisconnect(client);
-  // }
 
   resetGame = (room: Room) => {
     room.ball = { x: 200, y: 200, vx: 2, vy: 0 };
