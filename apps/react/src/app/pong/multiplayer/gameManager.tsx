@@ -1,11 +1,8 @@
-// GameManager.js
-
-// Interface for the Score
+// Path: src/game/GameManager.ts
 
 import Paddle from '../../game_elements/paddle';
 import Ball from '../../game_elements/ball';
 import { Socket } from "socket.io-client";
-
 
 export class GameManager {
     private context: CanvasRenderingContext2D;
@@ -15,13 +12,23 @@ export class GameManager {
     private paddleWidth: number;
     private paddleHeight: number;
     private ballSize: number;
-    
+
     private rightPaddle: Paddle;
     private leftPaddle: Paddle;
     private ball: Ball;
-    private animationFrameId: number | null = null; // Store the request ID
+    private animationFrameId: number | null = null;
 
-    constructor(context: CanvasRenderingContext2D, socket: Socket, gameWidth: number, gameHeight: number, paddleWidth: number, paddleHeight: number, ballSize: number) {
+    private keyState: { [key: string]: boolean } = {}; // Track key states
+
+    constructor(
+        context: CanvasRenderingContext2D,
+        socket: Socket,
+        gameWidth: number,
+        gameHeight: number,
+        paddleWidth: number,
+        paddleHeight: number,
+        ballSize: number
+    ) {
         this.context = context;
         this.socket = socket;
         this.gameWidth = gameWidth;
@@ -33,7 +40,6 @@ export class GameManager {
         this.leftPaddle = new Paddle(context, 10, 150);
         this.rightPaddle = new Paddle(context, gameWidth - 10, 150);
         this.ball = new Ball(context, gameWidth / 2, gameHeight / 2, ballSize);
-
     }
 
     updatePaddlePosition = (side: string, position: number) => {
@@ -53,7 +59,6 @@ export class GameManager {
 
     startGame() {
         const drawLoop = () => {
-            // console.log('drawLoop ball:', this.ball.positionX, this.ball.positionY);
             this.context.clearRect(0, 0, this.gameWidth, this.gameHeight);
             this.leftPaddle.draw();
             this.rightPaddle.draw();
@@ -79,23 +84,33 @@ export class GameManager {
     }
 
     handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        const key = event.key;
+        if (!this.keyState[key]) { // Only handle if the key is not already pressed
+            this.keyState[key] = true; // Mark key as pressed
+            this.socket.emit('key_event', { key, state: 'down' });
+        }
+
+        if (key === 'ArrowUp' || key === 'ArrowDown') {
             event.preventDefault(); // Prevent default scrolling behavior
         }
-        if (event.key === 'ArrowUp') {
-            this.socket.emit('movement', 'ArrowUp');
-        }
-        if (event.key === 'ArrowDown') {
-            this.socket.emit('movement', 'ArrowDown');
+    };
+
+    handleKeyUp = (event: KeyboardEvent) => {
+        const key = event.key;
+        if (this.keyState[key]) { // Only handle if the key was previously pressed
+            this.keyState[key] = false; // Mark key as released
+            this.socket.emit('key_event', { key, state: 'up' });
         }
     };
 
     attachListeners = () => {
         window.addEventListener('keydown', this.handleKeyDown);
+        window.addEventListener('keyup', this.handleKeyUp);
     };
 
     removeListeners = () => {
         window.removeEventListener('keydown', this.handleKeyDown);
+        window.removeEventListener('keyup', this.handleKeyUp);
         this.socket.removeAllListeners();
     };
 }
