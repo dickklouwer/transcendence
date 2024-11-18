@@ -132,6 +132,7 @@ export class MultiplayerPongGateway
     // Notify the remaining player
     const otherClient = room.players[0].client;
     if (room.players.length > 0) {
+      this.logger.log(`Opponent left: ${client.id}`);
       otherClient?.emit('opponent_left', 'Your opponent has left the game');
     }
 
@@ -347,10 +348,10 @@ export class MultiplayerPongGateway
     }
   }
 
-  @SubscribeMessage('disconnect')
-  handleDisconnectGame(client: Socket): void {
-    this.handleDisconnect(client);
-  }
+  // @SubscribeMessage('disconnect')
+  // handleDisconnectGame(client: Socket): void {
+  //   this.handleDisconnect(client);
+  // }
 
   resetGame = (room: Room) => {
     room.ball = { x: 200, y: 200, vx: 2, vy: 0 };

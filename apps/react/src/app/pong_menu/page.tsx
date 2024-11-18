@@ -28,8 +28,8 @@ const Menu = () => {
   };
 
   const handleMultiplayerClick = () => {
-    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-    connectToSocket(url);
+    // const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+    // connectToSocket(url);
     router.push('/pong/multiplayer'); // Navigate to multiplayer page
   };
 
