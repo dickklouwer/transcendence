@@ -22,7 +22,6 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
     const [status, setStatus] = useState<String>('sent');
     const [showStatus, setShowStatus] = useState(false);
     const [reload, setReload] = useState<boolean>(false);
-    // const [nicknames, setNicknames] = useState<{ [key: number]: string }>({});
 
     const renderMessageWithLineBreaks = (text: string) => {
         return text.split('\n').map((str, index) => (
@@ -30,57 +29,8 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
         ));
     };
 
-    function updateStatusMessage() {
-        fetchGet<MessageStatus[] | null>(`api/messageStatus?message_id=${message.message_id}`)
-            .then((res) => {
-                if (!res) res = [];
-
-                const transformedStatus = res.map(status => ({
-                    ...status,
-                    receivet_at: status.receivet_at ? new Date(status.receivet_at) : null,
-                    read_at: status.read_at ? new Date(status.read_at) : null,
-                }));
-
-                setFullStatus(transformedStatus);
-                setStatus(renderMessageStatus(transformedStatus));
-                // fetchNicknames(transformedStatus);
-                console.log('loadStatus');
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-            });
-    }
-
-    // function fetchNicknames(statusArray: MessageStatus[]) {
-    //     const nicknamePromises = statusArray.map(status => getNickname(status.receiver_id));
-    //     Promise.all(nicknamePromises)
-    //         .then(nicknamesArray => {
-    //             const nicknamesMap = statusArray.reduce((acc, status, index) => {
-    //                 acc[status.receiver_id] = nicknamesArray[index];
-    //                 return acc;
-    //             }, {} as { [key: number]: string });
-    //             setNicknames(nicknamesMap);
-    //         })
-    //         .catch(error => {
-    //             console.log('Error fetching nicknames: ', error);
-    //         });
-    // }
-
-    // function getNickname(intra_id: number): Promise<string> {
-    //     return fetchGet<string>(`api/getNickname?intra_id=${intra_id}`)
-    //         .then((res) => {
-    //             return res;
-    //         })
-    //         .catch((error) => {
-    //             console.log('Error: ', error);
-    //             return '-';
-    //         });
-    // }
-
     useEffect(() => {
         console.log('useEffect');
-        // updateStatusMessage();
-        // fetchNicknames(fullStatus ?? []);
 
         chatSocket.on('statusUpdate', () => {
             console.log('statusUpdate received');
@@ -91,41 +41,14 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
         }
     }, [reload, fullStatus]);
 
-    function renderMessageStatus(messageStatus: MessageStatus[] | null) {
-        console.log('renderMessageStatus');
-        if (!messageStatus)
-            return '';
-        const allRead = messageStatus.every((status) => status.read_at);
-        const allReceived = messageStatus.every((status) => status.receivet_at);
-        if (allRead)
-            return 'read';
-        if (allReceived)
-            return 'received';
-        return 'sent';
-    }
-
-    function showAndHideDetails() {
-        setShowStatus(!showStatus);
-        console.log('show status = ', showStatus);
-        if (showStatus) {
-            console.log('fullStatus = ', fullStatus);
-        }
-    }
-
     return (
-        <button className='w-full' onClick={() => showAndHideDetails()}>
+        <button className='w-full'>
             <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                 <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                     {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
                     {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
                     <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
                     {isMyMessage && <div className="text-xs text-right text-gray-600">{status}</div>}
-                    {isMyMessage && showStatus && fullStatus && fullStatus.map((status, index) => (
-                        <div key={index} className="text-xs text-right text-gray-600">
-                            {/* {nicknames[status.receiver_id]}{status.read_at ? ' read at ' + renderDate(status.read_at) : status.receivet_at ? ' received at ' + renderDate(status.receivet_at) : ' not received'} */}
-                            {status.receiver_id}{status.read_at ? ' read at ' + renderDate(status.read_at) : status.receivet_at ? ' received at ' + renderDate(status.receivet_at) : ' not received'}
-                        </div>
-                    ))}
                 </div>
             </div>
         </button>
