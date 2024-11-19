@@ -39,7 +39,6 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         .catch((error) => {
             console.log('Error: ', error);
         });
-        console.log(`chatInfo.intraId: ${chatInfo.intraId}`);
 
         if (chatInfo.isDm) {
             fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)

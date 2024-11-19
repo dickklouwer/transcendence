@@ -544,7 +544,6 @@ export class DbService {
         .where(eq(chats.chat_id, chat_id));
 
       if (!chat[0].password) {
-        console.log('Chat has no password!');
         return true;
       }
 

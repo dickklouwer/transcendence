@@ -32,10 +32,7 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
     };
 
     useEffect(() => {
-        console.log('useEffect');
-
         chatSocket.on('statusUpdate', () => {
-            console.log('statusUpdate received');
             setReload(prev => !prev);
         });
         return () => {
@@ -101,7 +98,6 @@ export default function DC() {
         fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
             .then((res) => {
                 setHasPassword(res);
-                console.log('hasPassword: ', res);
                 setIsLoaded(true);
             })
             .catch((error) => {
@@ -111,9 +107,7 @@ export default function DC() {
 
     useEffect(() => {
         chatSocket.on('gameInvite', (data: { sender_id: number, receiver_id: number }) => {
-            console.log('Invite received. sender_id: ', data.sender_id, ' receiver_id: ', data.receiver_id);
             if (data.receiver_id !== user?.intra_user_id) return;
-            console.log('Invite received for the current user');
             setRecieveInvite(true);
         });
         return () => {
@@ -125,7 +119,6 @@ export default function DC() {
         if (!user || !isLoaded) return;
 
         if (hasPassword === false) {
-            console.log('no password');
             fetchGet<ChatMessages[] | boolean>(`api/messages?chat_id=${chat_id}`)
             .then((res) => {
                     if (typeof res === 'boolean' && res === false) {
@@ -155,8 +148,6 @@ export default function DC() {
                 .catch((error) => {
                     console.log('Error: ', error);
                 });
-                
-            console.log(`user.intra_user_id=${user.intra_user_id}`);
             fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${user.intra_user_id}`)
                 .then((res) => {
                     if (res) {
@@ -178,12 +169,10 @@ export default function DC() {
             });
 
             chatSocket.on('statusUpdate', () => {
-                console.log('statusUpdate received');
                 setMessages((prevMessages) => [...prevMessages]);
             });
 
         }
-        console.log('send inboxUpdate');
         chatSocket.emit('inboxUpdate');
 
         return () => {
@@ -226,8 +215,6 @@ export default function DC() {
 
     useEffect(() => {
         if (!chatInfo.intraId) return;
-        console.log('fetch checkIfInvidedForGame');
-        console.log('chatInfo.intraId: ', chatInfo.intraId);
         fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)
         .then((res) => {
             if (res) {
@@ -357,7 +344,6 @@ export default function DC() {
         });
         setPSock(sock);
         if(decline) {
-            console.log('emit declineGameInvite');
             sock.emit('declineGameInvite', {socket_id: sock.id, sender_id: chatInfo.intraId, receiver_id: user?.intra_user_id });
         }
       };
@@ -439,10 +425,8 @@ export default function DC() {
                     <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                         {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
                             () => {
-                                console.log('Invite the other player for a game');
                                 const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
                                 connectToSocket(url, false);
-                                console.log('emit player_id: ', chatInfo.intraId, ' nick_name: ', chatInfo.nickName);
                                 chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: true });
                             }
                         }>
@@ -455,7 +439,6 @@ export default function DC() {
                             <div className="flex space-x-4">
                                 <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                        console.log('Invite the other player for a game');
                                         const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
                                         connectToSocket(url, false);
                                     }}>
@@ -463,9 +446,7 @@ export default function DC() {
                                     </button>
                                 </Link>
                                 <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                    console.log('Decline the other player for a game');
                                     setRecieveInvite(false);
-                                    console.log('Decline the other player for a game');
                                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
                                     connectToSocket(url, true);
                                     chatSocket.emit('inviteForGame', { sender_id: user?.intra_user_id ?? 0, receiver_id: chatInfo.intraId, invite: false });
