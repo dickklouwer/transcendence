@@ -71,27 +71,10 @@ function customTransparantToBlack() {
     );
 }
 
-function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
-    return (
-        <div className="relative text-gray-600 focus-within:text-gray-400 w-96 px-3">
-            <input
-                type="search"
-                name="q"
-                className="py-2 text-sm w-full text-white bg-gray-900 rounded-md pl-3 pr-3 focus:outline-none focus:bg-white focus:text-gray-900"
-                placeholder="Search..."
-                autoComplete="off"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-        </div>
-    );
-}
-
 export default function DC() {
     const searchParams = useSearchParams();
     const Router = useRouter();
     const [user, setUser] = useState<User>();
-    const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState<ChatMessages[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
@@ -382,7 +365,7 @@ export default function DC() {
     const image = chatInfo.image ? chatInfo.image : defaultUserImage;
 
     return (
-        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+        <div className="flex flex-col items-center justify-center">
             {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
                 <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
                     <div className="flex items-center">
@@ -418,7 +401,6 @@ export default function DC() {
                     </div>
                 </Link>
             )}
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 <div className="flex flex-col h-full">
                     {customTransparantToBlack()}

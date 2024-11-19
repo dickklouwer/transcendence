@@ -55,20 +55,6 @@ export class MessagesGateway
     client: Socket,
     { chat_id, intra_user_id }: { chat_id: string; intra_user_id: string },
   ): void {
-    // check if the user is already in this.rooms
-    const room = this.rooms.get(Number(chat_id));
-    if (room) {
-      const userIndex = room.users.findIndex(
-        (user) => user.intra_id === Number(intra_user_id),
-      );
-      if (userIndex !== -1) {
-        this.logger.log(
-          `User ${intra_user_id} is already in chat_id: ${chat_id}`,
-        );
-        return;
-      }
-    }
-
     this.logger.log(
       `Client ${client.id} user_id: ${intra_user_id} joined chat_id: ${chat_id}`,
     );
