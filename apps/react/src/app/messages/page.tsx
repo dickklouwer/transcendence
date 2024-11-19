@@ -13,6 +13,7 @@ import { renderDate } from '@/app/chat_componens';
 
 import io, { Socket } from 'socket.io-client';
 import { userSocket } from '../profile_headers';
+import { DisplayUserStatus } from '../profile/page';
 
 const checkPassword: boolean = true;
 
@@ -385,7 +386,16 @@ export default function DC() {
             {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
                 <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
                     <div className="flex items-center">
-                        <Image src={image} alt="User" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <div className="relative">
+                            <Image
+                                src={image}
+                                alt="Profile Image"
+                                className="w-11 h-11 rounded-full"
+                                width={100}
+                                height={100}
+                            />
+                            <DisplayUserStatus state={friendStatus} width={15} height={15} />
+                        </div>
                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.nickName}
                         </button>
@@ -395,14 +405,19 @@ export default function DC() {
             {!chatInfo.isDm && chatInfo.chatId && chatInfo.title && (
                 <Link href={{ pathname: '/group_view', query: { id: chatInfo.chatId } }}>
                     <div className="flex items-center">
-                        <Image src={image} alt="Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <Image
+                            src={image}
+                            alt="Profile Image"
+                            className="w-11 h-11 rounded-full"
+                            width={100}
+                            height={100}
+                        />
                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.title}
                         </button>
                     </div>
                 </Link>
             )}
-            {chatInfo.isDm && <div>Status: {friendStatus}</div>}
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 <div className="flex flex-col h-full">
@@ -439,8 +454,6 @@ export default function DC() {
                 </div>
                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-                    {/* check if the user is online */}
-                    
                     <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                         {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
                             () => {
