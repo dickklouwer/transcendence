@@ -343,6 +343,22 @@ export class AppController {
     res.status(200).send(users);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('getExternalUser')
+  async searchExternal(
+    @Query('id') id: number,
+    @Res() res: Response,
+  ): Promise<ExternalUser> {
+    const user = await this.dbservice.getExternalUser(id);
+
+    console.log('user: ', user);
+    if (!user) {
+      res.status(404).send('No users found');
+      return;
+    }
+    res.status(200).send(user[0]);
+  }
+
   @Post('sendFriendRequest')
   async sendFriendRequest(
     @Headers('authorization') token: string,
