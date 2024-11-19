@@ -52,31 +52,28 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
     const [amountGameInvites, setAmountGameInvites] = useState<number>(0);
 
     const getNumberOfUnreadChats = async () => {
-        fetchGet<number>('api/getNumberOfUnreadChats')
+        fetchGet<number>('/api/getNumberOfUnreadChats')
             .then((res) => {
                 setNumberOfUnreadChats(res);
             });
     }
 
     const updateMessageStatusReceived = async () => {
-        fetchPost('api/updateMessageStatusReceived', { user_intra_id });
+        fetchPost('/api/updateMessageStatusReceived', { user_intra_id });
     }
 
     const getAmountGameInvites = async () => {
-        fetchGet<number>('api/getAmountGameInvites')
+        fetchGet<number>('/api/getAmountGameInvites')
             .then((res) => {
                 setAmountGameInvites(res);
             });
     }
 
     useEffect(() => {
-        try {
-            getNumberOfUnreadChats();
-            updateMessageStatusReceived();
-            getAmountGameInvites();
-        } catch (error) {
-            console.log('Error update in chat icon: ', error);
-        }
+        getNumberOfUnreadChats();
+        updateMessageStatusReceived();
+        getAmountGameInvites();
+
         
         chatSocket.on('chatUpdate', () => {
                 setReload(prev => !prev);
