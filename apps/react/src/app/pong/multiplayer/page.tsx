@@ -97,6 +97,7 @@ export default function PongGame() {
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
 			setGamestate("Countdown");
+			chatSocket.emit('inboxUpdate');
 
 			setTimeout(() => {
 				startGame();
