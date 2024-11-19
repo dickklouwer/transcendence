@@ -367,7 +367,7 @@ export default function DC() {
     return (
         <div className="flex flex-col items-center justify-center">
             {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
-                <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
+                <Link href={{ pathname: '/profile_external', query: { id: chatInfo.intraId } }}>
                     <div className="flex items-center">
                         <div className="relative">
                             <Image
