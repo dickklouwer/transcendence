@@ -70,14 +70,17 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
     }
 
     useEffect(() => {
-        getNumberOfUnreadChats();
-        updateMessageStatusReceived();
-        getAmountGameInvites();
-
+        try {
+            getNumberOfUnreadChats();
+            updateMessageStatusReceived();
+            getAmountGameInvites();
+        } catch (error) {
+            console.log('Error update in chat icon: ', error);
+        }
+        
         chatSocket.on('chatUpdate', () => {
-            setReload(prev => !prev);
-        });
-
+                setReload(prev => !prev);
+            });
         return () => {
             chatSocket.off('chatUpdate');
         }
