@@ -48,6 +48,27 @@ export class DbService {
     return result.length > 0 ? result[0] : null;
   }
 
+  async getExternalUser(id: number) {
+    try {
+      const user = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image_url,
+        })
+        .from(users)
+        .where(eq(users.intra_user_id, id));
+      //      console.log('DB: getExternalUser: ', user);
+      return user;
+    } catch (error) {
+      console.log('DB: getExternalUser Error: ', error);
+      return null;
+    }
+  }
+
   async updateImage(id: number, image: string) {
     try {
       await this.db
