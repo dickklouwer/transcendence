@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use, Fragment } from 'react';
+import React, { useState, useEffect, useRef, use, Fragment, cache } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { User, ChatMessages, MessageStatus, DmInfo } from '@repo/db';
+import { User, ChatMessages, MessageStatus, DmInfo, ExternalUser } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 import { chatSocket } from '../chat_componens';
@@ -12,6 +12,7 @@ import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { renderDate } from '@/app/chat_componens';
 
 import io, { Socket } from 'socket.io-client';
+import { userSocket } from '../profile_headers';
 
 const checkPassword: boolean = true;
 
@@ -100,6 +101,8 @@ export default function DC() {
 
     const [pSock, setPSock] = useState<Socket | null>(null);
     const [recieveInvite, setRecieveInvite] = useState(false);
+    const [friendStatus, setFriendStatus] = useState<"Online" | "Offline" | "In-Game">("Offline");
+    const [reload, setReload] = useState<boolean>(false);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
@@ -205,6 +208,27 @@ export default function DC() {
             chatSocket.off('statusUpdate');
         };
     }, [user, chat_id, hasPassword, isLoaded, Router]);
+
+    useEffect(() => {
+        try {
+            fetchGet<ExternalUser[]>("/api/getApprovedFriends")
+            .then((data) => {
+                if (chatInfo.isDm && chatInfo.intraId) {
+                    setFriendStatus(data.find((friend) => friend.intra_user_id === chatInfo.intraId)?.state ?? "Offline");
+                }
+            });
+
+            userSocket.on('statusChange', () => {
+                setReload(prev => !prev);
+            });
+        } catch (error) {
+            console.log('Error: ', error);
+        }
+
+        return () => {
+            userSocket.off('statusChange');
+        }
+    }, [reload, chatInfo]);
 
     const scrollToBottom = () => {
         if (messagesEndRef.current) {
@@ -378,6 +402,7 @@ export default function DC() {
                     </div>
                 </Link>
             )}
+            {chatInfo.isDm && <div>Status: {friendStatus}</div>}
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 <div className="flex flex-col h-full">
@@ -412,7 +437,7 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                     {/* check if the user is online */}
                     
@@ -456,6 +481,16 @@ export default function DC() {
                         </div>
                     )}
                 </div>
+                )}
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'In-Game' && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                        <h4 className="text-center">The other player is in a game, you can not invite for a game</h4>
+                    </div>
+                )}
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Offline' && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                        <h4 className="text-center">The other player is offline, you can not invite for a game</h4>
+                    </div>
                 )}
             </div>
         </div>
