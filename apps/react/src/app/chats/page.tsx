@@ -66,7 +66,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                         />
                     </Link>
                 ) : (
-                    <Link href={{ pathname: '/group_view', query: { chat_id: chatField.chatid } }}>
+                    <Link href={{ pathname: '/group_view', query: { id: chatField.chatid } }}>
                         <Image
                         src={userImage}
                         alt="Profile Image"
@@ -76,7 +76,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                         />
                     </Link>
                 )}
-                <Link className="flex-grow" href={{ pathname: '/messages', query: { id: chatField.chatid } }}>
+                <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
