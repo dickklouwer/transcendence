@@ -56,7 +56,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
                 {chatInfo.isDm ? (
-                    <Link href={{ pathname: '/profile_view', query: { user_id: chatInfo.intraId } }}>
+                    <Link href={{ pathname: '/profile_external', query: { id: chatInfo.intraId } }}>
                         <Image
                         src={userImage}
                         alt="Profile Image"
@@ -76,7 +76,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                         />
                     </Link>
                 )}
-                <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
+                <Link className="flex-grow" href={{ pathname: '/messages', query: { id: chatField.chatid } }}>
                     <div className="flex justify-between w-full">
                         <div>
                             <h3 className="font-bold text-left">{chatField.title}</h3>
