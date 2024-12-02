@@ -169,7 +169,7 @@ function MatchList(){
                 {match.map((match, idx) => (
                     <div className="bg-black p-2 m-1 rounded-lg whitespace-nowrap nm-inset-slate-900" key={idx}>
                         <div className="flex items-center space-x-2">
-                            <Image className='rounded-full w-12 h-12 m-1' src={user.image} alt="Profile Picture" width={100} height={100} />
+                            <Image className='rounded-full w-12 h-12 m-1' src={user.image_url} alt="Profile Picture" width={100} height={100} />
                             {user.nick_name === null ? 
                             <p className="text-white"> {user.user_name}</p>:
                             <p className="text-white"> {user.nick_name}</p>}
