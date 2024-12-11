@@ -159,4 +159,25 @@ export class MessagesGateway
     this.server.to('inbox').emit('messageUpdate');
     this.server.to('inbox').emit('statusUpdate');
   }
+
+  @SubscribeMessage('inviteForGame')
+  handleInviteForGame(
+    client: Socket,
+    {
+      sender_id,
+      receiver_id,
+      invite,
+    }: { sender_id: number; receiver_id: number; invite: boolean },
+  ): void {
+    this.logger.log(
+      `Client ${client.id} wants to play with ${receiver_id} from ${sender_id}`,
+    );
+    this.server.to('inbox').emit('gameInvite', { sender_id, receiver_id });
+    if (this.dbService.inviteForGame(sender_id, receiver_id, invite)) {
+      this.logger.log('Game invite sent');
+    } else {
+      this.logger.log('Game invite failed');
+    }
+    this.handleInboxUpdate(client);
+  }
 }

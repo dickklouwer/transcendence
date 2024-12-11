@@ -24,6 +24,7 @@ import type {
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
+import { promises } from 'dns';
 
 const dublicated_key = '23505';
 const defaultUserImage =
@@ -47,6 +48,27 @@ export class DbService {
     return result.length > 0 ? result[0] : null;
   }
 
+  async getExternalUser(id: number) {
+    try {
+      const user = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image_url,
+        })
+        .from(users)
+        .where(eq(users.intra_user_id, id));
+      //      console.log('DB: getExternalUser: ', user);
+      return user;
+    } catch (error) {
+      console.log('DB: getExternalUser Error: ', error);
+      return null;
+    }
+  }
+
   async getChatID(id: number) {
     try {
       const user = await this.db
@@ -60,30 +82,6 @@ export class DbService {
         })
         .from(users)
         .where(eq(users.intra_user_id, id));
-      //      console.log('DB: getExternalUser: ', user);
-      return user;
-    } catch (error) {
-      console.log('DB: getExternalUser Error: ', error);
-      return null;
-    }
-  }
-
-  async getExternalUser(id: number) {
-    try {
-      const user = await this.db
-        .select({
-          intra_user_id: users.intra_user_id,
-          user_name: users.user_name,
-          nick_name: users.nick_name,
-          email: users.email,
-          state: users.state,
-          image: users.image,
-        })
-        .from(users)
-        .where(eq(users.intra_user_id, id));
-
-      // NOTE: Should also add Wins and Fails to this. see if it is required
-
       //      console.log('DB: getExternalUser: ', user);
       return user;
     } catch (error) {
@@ -577,7 +575,6 @@ export class DbService {
         .where(eq(chats.chat_id, chat_id));
 
       if (!chat[0].password) {
-        console.log('Chat has no password!');
         return true;
       }
 
@@ -1231,6 +1228,96 @@ export class DbService {
         .set({ receivet_at: new Date(new Date().getTime()) })
         .where(eq(messageStatus.receiver_id, user_intra_id));
 
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async getAmountGameInvites(jwtToken: string): Promise<number> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const result = await this.db
+        .select({ count: count() })
+        .from(friends)
+        .where(
+          and(
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+            eq(friends.invite_game, true),
+          ),
+        );
+
+      return result[0].count;
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async checkIfInvidedForGame(
+    jwtToken: string,
+    other_intra_id: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const result = await this.db
+        .select()
+        .from(friends)
+        .where(
+          and(
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+            or(
+              eq(friends.user_id_send, other_intra_id),
+              eq(friends.user_id_receive, other_intra_id),
+            ),
+          ),
+        );
+
+      if (result.length === 0) {
+        return false;
+      }
+      return result[0].invite_game;
+    } catch (error) {
+      console.log('Error!: ', error);
+      return false;
+    }
+  }
+
+  async inviteForGame(
+    sender_id: number,
+    receiver_id: number,
+    invite: boolean,
+  ): Promise<boolean> {
+    console.log(
+      `Set invite game from ${sender_id} to ${receiver_id} is ${invite}`,
+    );
+    try {
+      await this.db
+        .update(friends)
+        .set({ invite_game: invite })
+        .where(
+          or(
+            and(
+              eq(friends.user_id_send, sender_id),
+              eq(friends.user_id_receive, receiver_id),
+            ),
+            and(
+              eq(friends.user_id_send, receiver_id),
+              eq(friends.user_id_receive, sender_id),
+            ),
+          ),
+        );
       return true;
     } catch (error) {
       console.log('Error: ', error);

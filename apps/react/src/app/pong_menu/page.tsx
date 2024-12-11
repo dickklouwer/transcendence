@@ -9,7 +9,8 @@ const Menu = () => {
   const router = useRouter(); // Get the router object
 
   const connectToSocket = (url: string) => {
-    const sock = io(url, {
+    // console.log(`pSock: ${pSock ? pSock.toString() : 'null'}`);
+    let sock = io(url, {
       transports: ['websocket'],
       query: {
         currentPath: window.location.pathname,
@@ -17,6 +18,7 @@ const Menu = () => {
       withCredentials: true,
     });
     setPSock(sock);
+    // console.log(`sock: ${sock.id ? sock.toString() : 'null'}`);
   };
 
   const handleSinglePlayerClick = () => {
@@ -26,8 +28,8 @@ const Menu = () => {
   };
 
   const handleMultiplayerClick = () => {
-    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-    connectToSocket(url);
+    // const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+    // connectToSocket(url);
     router.push('/pong/multiplayer'); // Navigate to multiplayer page
   };
 

@@ -29,6 +29,7 @@ function ChatField({ chatField }: { chatField: UserChats }) {
     const userImage = chatField.image ? chatField.image : defaultUserImage;
     const commonWidth = "500px";
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
+    const [gameInvite, setGameInvite] = useState<boolean>(false);
 
     useEffect(() => {
         fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chatField.chatid}`)
@@ -38,22 +39,41 @@ function ChatField({ chatField }: { chatField: UserChats }) {
         .catch((error) => {
             console.log('Error: ', error);
         });
-    } , [chatField.chatid]);
+
+        if (chatInfo.isDm) {
+            fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)
+            .then((res) => {
+                setGameInvite(res);
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
+        }
+
+    }, [chatField, chatInfo.intraId, chatInfo.isDm]);
 
     return (
         <div style={{ width: commonWidth }} className="border border-gray-300 rounded-lg overflow-hidden">
             <div className="flex items-center space-x-4 p-4 justify-between">
                 {chatInfo.isDm ? (
-                    <Link href={{ pathname: '/profile_view', query: { user_id: chatInfo.intraId } }}>
-                        <div className="flex justify-center items-center w-12 h-12">
-                            <Image src={userImage} alt="User or Group" width={48} height={48} className="rounded-full" />
-                        </div>
+                    <Link href={{ pathname: '/profile_external', query: { id: chatInfo.intraId } }}>
+                        <Image
+                        src={userImage}
+                        alt="Profile Image"
+                        className="w-11 h-11 rounded-full"
+                        width={100}
+                        height={100}
+                        />
                     </Link>
                 ) : (
-                    <Link href={{ pathname: '/group_view', query: { chat_id: chatField.chatid } }}>
-                        <div className="flex justify-center items-center w-12 h-12">
-                            <Image src={userImage} alt="User or Group" width={48} height={48} className="rounded-full" />
-                        </div>
+                    <Link href={{ pathname: '/group_view', query: { id: chatField.chatid } }}>
+                        <Image
+                        src={userImage}
+                        alt="Profile Image"
+                        className="w-11 h-11 rounded-full"
+                        width={100}
+                        height={100}
+                        />
                     </Link>
                 )}
                 <Link className="flex-grow" href={{ pathname: '/messages', query: { chat_id: chatField.chatid } }}>
@@ -63,8 +83,16 @@ function ChatField({ chatField }: { chatField: UserChats }) {
                             <p className="max-w-xs overflow-ellipsis overflow-hidden text-gray-500 whitespace-nowrap text-sm">
                                 {chatField.lastMessage && !chatField.hasPassword ? (
                                     <>
-                                    <span className="text-white">{chatField.nickName} </span>
-                                    <span className="text-gray-500">{chatField.lastMessage}</span>
+                                    {gameInvite ? (
+                                        <span className="text-blue-500">{chatField.nickName} </span>
+                                    ) : (
+                                        <span className="text-white">{chatField.nickName} </span>
+                                    )}
+                                    {chatField.lastMessage.startsWith('#') ? (
+                                        <i className="text-blue-500">Game invite</i>
+                                    ) : (
+                                        <span className="text-gray-500">{chatField.lastMessage}</span>
+                                    )}
                                     </>
                                 ) : chatField.hasPassword ? (
                                     <i className="text-gray-500">Password</i>

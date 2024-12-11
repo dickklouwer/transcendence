@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use, Fragment } from 'react';
+import React, { useState, useEffect, useRef, use, Fragment, cache } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { User, ChatMessages, MessageStatus, DmInfo } from '@repo/db';
+import { User, ChatMessages, MessageStatus, DmInfo, ExternalUser } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useSearchParams } from 'next/navigation';
 import { chatSocket } from '../chat_componens';
 import defaultUserImage from '@/app/images/defaltUserImage.jpg';
 import { renderDate } from '@/app/chat_componens';
+
+import io, { Socket } from 'socket.io-client';
+import { userSocket } from '../profile_headers';
+import { DisplayUserStatus } from '../profile/page';
 
 const checkPassword: boolean = true;
 
@@ -20,7 +24,6 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
     const [status, setStatus] = useState<String>('sent');
     const [showStatus, setShowStatus] = useState(false);
     const [reload, setReload] = useState<boolean>(false);
-    // const [nicknames, setNicknames] = useState<{ [key: number]: string }>({});
 
     const renderMessageWithLineBreaks = (text: string) => {
         return text.split('\n').map((str, index) => (
@@ -28,60 +31,8 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
         ));
     };
 
-    function updateStatusMessage() {
-        fetchGet<MessageStatus[] | null>(`api/messageStatus?message_id=${message.message_id}`)
-            .then((res) => {
-                if (!res) res = [];
-
-                const transformedStatus = res.map(status => ({
-                    ...status,
-                    receivet_at: status.receivet_at ? new Date(status.receivet_at) : null,
-                    read_at: status.read_at ? new Date(status.read_at) : null,
-                }));
-
-                setFullStatus(transformedStatus);
-                setStatus(renderMessageStatus(transformedStatus));
-                // fetchNicknames(transformedStatus);
-                console.log('loadStatus');
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-            });
-    }
-
-    // function fetchNicknames(statusArray: MessageStatus[]) {
-    //     const nicknamePromises = statusArray.map(status => getNickname(status.receiver_id));
-    //     Promise.all(nicknamePromises)
-    //         .then(nicknamesArray => {
-    //             const nicknamesMap = statusArray.reduce((acc, status, index) => {
-    //                 acc[status.receiver_id] = nicknamesArray[index];
-    //                 return acc;
-    //             }, {} as { [key: number]: string });
-    //             setNicknames(nicknamesMap);
-    //         })
-    //         .catch(error => {
-    //             console.log('Error fetching nicknames: ', error);
-    //         });
-    // }
-
-    // function getNickname(intra_id: number): Promise<string> {
-    //     return fetchGet<string>(`api/getNickname?intra_id=${intra_id}`)
-    //         .then((res) => {
-    //             return res;
-    //         })
-    //         .catch((error) => {
-    //             console.log('Error: ', error);
-    //             return '-';
-    //         });
-    // }
-
     useEffect(() => {
-        console.log('useEffect');
-        // updateStatusMessage();
-        // fetchNicknames(fullStatus ?? []);
-
         chatSocket.on('statusUpdate', () => {
-            console.log('statusUpdate received');
             setReload(prev => !prev);
         });
         return () => {
@@ -89,41 +40,14 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
         }
     }, [reload, fullStatus]);
 
-    function renderMessageStatus(messageStatus: MessageStatus[] | null) {
-        console.log('renderMessageStatus');
-        if (!messageStatus)
-            return '';
-        const allRead = messageStatus.every((status) => status.read_at);
-        const allReceived = messageStatus.every((status) => status.receivet_at);
-        if (allRead)
-            return 'read';
-        if (allReceived)
-            return 'received';
-        return 'sent';
-    }
-
-    function showAndHideDetails() {
-        setShowStatus(!showStatus);
-        console.log('show status = ', showStatus);
-        if (showStatus) {
-            console.log('fullStatus = ', fullStatus);
-        }
-    }
-
     return (
-        <button className='w-full' onClick={() => showAndHideDetails()}>
+        <button className='w-full'>
             <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                 <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                     {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
                     {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
                     <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
                     {isMyMessage && <div className="text-xs text-right text-gray-600">{status}</div>}
-                    {isMyMessage && showStatus && fullStatus && fullStatus.map((status, index) => (
-                        <div key={index} className="text-xs text-right text-gray-600">
-                            {/* {nicknames[status.receiver_id]}{status.read_at ? ' read at ' + renderDate(status.read_at) : status.receivet_at ? ' received at ' + renderDate(status.receivet_at) : ' not received'} */}
-                            {status.receiver_id}{status.read_at ? ' read at ' + renderDate(status.read_at) : status.receivet_at ? ' received at ' + renderDate(status.receivet_at) : ' not received'}
-                        </div>
-                    ))}
                 </div>
             </div>
         </button>
@@ -144,39 +68,10 @@ function customTransparantToBlack() {
     );
 }
 
-function SearchBar({ searchTerm, setSearchTerm }: { searchTerm: string, setSearchTerm: React.Dispatch<React.SetStateAction<string>> }) {
-    return (
-        <div className="relative text-gray-600 focus-within:text-gray-400 w-96 px-3">
-            <input
-                type="search"
-                name="q"
-                className="py-2 text-sm w-full text-white bg-gray-900 rounded-md pl-3 pr-3 focus:outline-none focus:bg-white focus:text-gray-900"
-                placeholder="Search..."
-                autoComplete="off"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-        </div>
-    );
-}
-
-function InviteForGame({ intra_user_id, nick_name } : { intra_user_id: number, nick_name:string }) {
-    return (
-        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-            <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: intra_user_id, nick_name: nick_name } }}>
-                <button className="py-2 px-4 text-blue-500 font-bold">
-                    Invite for a game
-                </button>
-            </Link>
-        </div>
-    );
-}
-
 export default function DC() {
     const searchParams = useSearchParams();
     const Router = useRouter();
     const [user, setUser] = useState<User>();
-    const [searchTerm, setSearchTerm] = useState('');
     const [messages, setMessages] = useState<ChatMessages[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [hasPassword, setHasPassword] = useState(false);
@@ -184,6 +79,11 @@ export default function DC() {
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
     const [isLoaded, setIsLoaded] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const [pSock, setPSock] = useState<Socket | null>(null);
+    const [recieveInvite, setRecieveInvite] = useState(false);
+    const [friendStatus, setFriendStatus] = useState<"Online" | "Offline" | "In-Game">("Offline");
+    const [reload, setReload] = useState<boolean>(false);
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
@@ -198,7 +98,6 @@ export default function DC() {
         fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
             .then((res) => {
                 setHasPassword(res);
-                console.log('hasPassword: ', res);
                 setIsLoaded(true);
             })
             .catch((error) => {
@@ -207,10 +106,19 @@ export default function DC() {
     }, [chat_id]);
 
     useEffect(() => {
+        chatSocket.on('gameInvite', (data: { sender_id: number, receiver_id: number }) => {
+            if (data.receiver_id !== user?.intra_user_id) return;
+            setRecieveInvite(true);
+        });
+        return () => {
+            chatSocket.off('inviteForGame');
+        }
+    }, [user]);
+
+    useEffect(() => {
         if (!user || !isLoaded) return;
 
         if (hasPassword === false) {
-            console.log('no password');
             fetchGet<ChatMessages[] | boolean>(`api/messages?chat_id=${chat_id}`)
             .then((res) => {
                     if (typeof res === 'boolean' && res === false) {
@@ -240,6 +148,15 @@ export default function DC() {
                 .catch((error) => {
                     console.log('Error: ', error);
                 });
+            fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${user.intra_user_id}`)
+                .then((res) => {
+                    if (res) {
+                        setRecieveInvite(res);
+                    }
+                })
+                .catch((error) => {
+                    console.log('Error: ', error);
+                });
 
             chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
             
@@ -252,11 +169,10 @@ export default function DC() {
             });
 
             chatSocket.on('statusUpdate', () => {
-                console.log('statusUpdate received');
                 setMessages((prevMessages) => [...prevMessages]);
             });
+
         }
-        console.log('send inboxUpdate');
         chatSocket.emit('inboxUpdate');
 
         return () => {
@@ -265,6 +181,27 @@ export default function DC() {
             chatSocket.off('statusUpdate');
         };
     }, [user, chat_id, hasPassword, isLoaded, Router]);
+
+    useEffect(() => {
+        try {
+            fetchGet<ExternalUser[]>("/api/getApprovedFriends")
+            .then((data) => {
+                if (chatInfo.isDm && chatInfo.intraId) {
+                    setFriendStatus(data.find((friend) => friend.intra_user_id === chatInfo.intraId)?.state ?? "Offline");
+                }
+            });
+
+            userSocket.on('statusChange', () => {
+                setReload(prev => !prev);
+            });
+        } catch (error) {
+            console.log('Error: ', error);
+        }
+
+        return () => {
+            userSocket.off('statusChange');
+        }
+    }, [reload, chatInfo]);
 
     const scrollToBottom = () => {
         if (messagesEndRef.current) {
@@ -275,6 +212,19 @@ export default function DC() {
     useEffect(() => {
         scrollToBottom();
     } , [messages]);
+
+    useEffect(() => {
+        if (!chatInfo.intraId) return;
+        fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)
+        .then((res) => {
+            if (res) {
+                setRecieveInvite(res);
+            }
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    }, [chatInfo]);
 
     function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
         fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
@@ -294,6 +244,14 @@ export default function DC() {
 
     const handleSendMessage = (intra_id: number) => {
         if (newMessage.trim() === '') return;
+        if (newMessage.length > 1000) {
+            alert('Message is too long');
+            return;
+        }
+        if (newMessage === '#Invite for a game') {
+            alert('You can not send this message');
+            return;
+        }
 
         const message: ChatMessages = {
             message_id: 0,          // auto generate in database
@@ -376,14 +334,37 @@ export default function DC() {
         );
     }
 
+    const connectToSocket = (url: string, decline: boolean) => {
+        const sock = io(url, {
+          transports: ['websocket'],
+          query: {
+            currentPath: window.location.pathname,
+          },
+          withCredentials: true,
+        });
+        setPSock(sock);
+        if(decline) {
+            sock.emit('declineGameInvite', {socket_id: sock.id, sender_id: chatInfo.intraId, receiver_id: user?.intra_user_id });
+        }
+      };
+
     const image = chatInfo.image ? chatInfo.image : defaultUserImage;
 
     return (
-        <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+        <div className="flex flex-col items-center justify-center">
             {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && (
-                <Link href={{ pathname: '/profile_view', query: { id: chatInfo.intraId } }}>
+                <Link href={{ pathname: '/profile_external', query: { id: chatInfo.intraId } }}>
                     <div className="flex items-center">
-                        <Image src={image} alt="User" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <div className="relative">
+                            <Image
+                                src={image}
+                                alt="Profile Image"
+                                className="w-11 h-11 rounded-full"
+                                width={100}
+                                height={100}
+                            />
+                            <DisplayUserStatus state={friendStatus} width={15} height={15} />
+                        </div>
                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.nickName}
                         </button>
@@ -393,14 +374,19 @@ export default function DC() {
             {!chatInfo.isDm && chatInfo.chatId && chatInfo.title && (
                 <Link href={{ pathname: '/group_view', query: { id: chatInfo.chatId } }}>
                     <div className="flex items-center">
-                        <Image src={image} alt="Group" width={48} height={48} className="w-12 h-12 rounded-full" />
+                        <Image
+                            src={image}
+                            alt="Profile Image"
+                            className="w-11 h-11 rounded-full"
+                            width={100}
+                            height={100}
+                        />
                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.title}
                         </button>
                     </div>
                 </Link>
             )}
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <div className="relative w-96 px-4 h-80">
                 <div className="flex flex-col h-full">
                     {customTransparantToBlack()}
@@ -434,7 +420,54 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {chatInfo.isDm && chatInfo.intraId  && chatInfo.nickName && <InviteForGame intra_user_id={chatInfo.intraId} nick_name={chatInfo.nickName} />}
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                    <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
+                        {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
+                            () => {
+                                const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                connectToSocket(url, false);
+                                chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: true });
+                            }
+                        }>
+                            Invite for a game
+                        </button>}
+                    </Link>
+                    {recieveInvite && (
+                        <div className="flex flex-col items-center space-y-4">
+                            <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
+                            <div className="flex space-x-4">
+                                <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
+                                    <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+                                        const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                        connectToSocket(url, false);
+                                    }}>
+                                        Accept
+                                    </button>
+                                </Link>
+                                <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+                                    setRecieveInvite(false);
+                                    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                    connectToSocket(url, true);
+                                    chatSocket.emit('inviteForGame', { sender_id: user?.intra_user_id ?? 0, receiver_id: chatInfo.intraId, invite: false });
+                                }}>
+                                    Decline
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                )}
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'In-Game' && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                        <h4 className="text-center">The other player is in a game, you can not invite for a game</h4>
+                    </div>
+                )}
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Offline' && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                        <h4 className="text-center">The other player is offline, you can not invite for a game</h4>
+                    </div>
+                )}
             </div>
         </div>
     );
