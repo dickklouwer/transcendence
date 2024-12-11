@@ -10,7 +10,7 @@ import { ExternalUser } from "@repo/db"
 import { ExternalFriendsList } from "./form_components";
 import { DisplayUserStatus } from "../profile/page";
 
-export default function ProfileExternalPage() {
+export default function ProfileViewPage() {
   const [externalUser, setExternalUser] = useState<ExternalUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
@@ -35,9 +35,6 @@ export default function ProfileExternalPage() {
   if (!externalUser)
     return <div>Could not load user</div>;
 
-  /*
-   *
-   */
   //NOTE: Need to see if i can get normal FriendsList working withtout reworking the entire function get @jmeruma
   //      see ./form_components.tsx for ExternalFriendlist component
   //      PS: The DisplayUserStatus component is not working as intended, or i'm not sure what is up.
@@ -96,17 +93,16 @@ export default function ProfileExternalPage() {
 }
 
 /*
- <div className="">
- </div>
-
+<div className="">
+</div>
 
 <div className="flex-grow min-w-0 mb-4">
   {nicknameContext.nickname === undefined ? (
   <h1 className="text-2xl">{user.user_name}</h1>
   ) : (
   <h1 className="text-2xl break-words w-auto">
-    {nicknameContext.nickname} aka ({user.user_name}
-    )
+  {nicknameContext.nickname} aka ({user.user_name}
+  )
   </h1>
   )}
   <p className="text-blue-400 break-all ">{user.email}</p>

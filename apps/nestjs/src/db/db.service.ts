@@ -47,6 +47,27 @@ export class DbService {
     return result.length > 0 ? result[0] : null;
   }
 
+  async getChatID(id: number) {
+    try {
+      const user = await this.db
+        .select({
+          intra_user_id: users.intra_user_id,
+          user_name: users.user_name,
+          nick_name: users.nick_name,
+          email: users.email,
+          state: users.state,
+          image: users.image,
+        })
+        .from(users)
+        .where(eq(users.intra_user_id, id));
+      //      console.log('DB: getExternalUser: ', user);
+      return user;
+    } catch (error) {
+      console.log('DB: getExternalUser Error: ', error);
+      return null;
+    }
+  }
+
   async getExternalUser(id: number) {
     try {
       const user = await this.db
@@ -60,6 +81,9 @@ export class DbService {
         })
         .from(users)
         .where(eq(users.intra_user_id, id));
+
+      // NOTE: Should also add Wins and Fails to this. see if it is required
+
       //      console.log('DB: getExternalUser: ', user);
       return user;
     } catch (error) {
