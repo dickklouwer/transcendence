@@ -78,7 +78,7 @@ export class DbService {
           nick_name: users.nick_name,
           email: users.email,
           state: users.state,
-          image: users.image,
+          image: users.image_url,
         })
         .from(users)
         .where(eq(users.intra_user_id, id));

@@ -43,6 +43,7 @@ export const ExternalFriendsList = ({ userId }: { userId: number }) => {
           <div key={user.intra_user_id} className="">
             <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded ">
               <div className="flex items-center space-x-4">
+                {/* TODO: Image ratio isn't adjusted propperly */}
                 <div className="relative">
                   <Image
                     src={user.image}
