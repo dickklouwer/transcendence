@@ -24,6 +24,13 @@ interface Ball {
 	vy: number;
 }
 
+interface Player {
+	client: Socket | null;
+	paddle: number; // Current paddle position
+	movementDirection: 'up' | 'down' | null; // Current movement direction
+	movementInterval: NodeJS.Timeout | null; // Interval ID for paddle movement
+  }
+
 enum PowerUpType {
 	shield = 1,
 	largePaddle = 2,
@@ -35,7 +42,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	@WebSocketServer() server: Server;
 	private logger: Logger = new Logger('power-upPongGateway');
 	private leftPaddle: number = 150;
-	private rightPaddle: number = 150;
+	private player: Player = { client: null, paddle: 150, movementDirection: null, movementInterval: null };
+	// private rightPaddle: number = 150;
 	private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
 	private score = { left: 0, right: 0 };
 	private gameInterval: NodeJS.Timeout;
@@ -62,7 +70,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id} to power up game`);
-		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
+		this.player.client = client;
+		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.player.paddle });
 	}
 
 	handleDisconnect(client: Socket) {
@@ -79,17 +88,59 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 	}
 
-	@SubscribeMessage('movement')
-	handleMovement(client: Socket, payload: string): void {
-		if (payload === 'ArrowUp') {
-			// this.logger.log('ArrowUp');
-			this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-			// client.emit('rightPaddle', this.rightPaddle);
+	// @SubscribeMessage('movement')
+	// handleMovement(client: Socket, payload: string): void {
+	// 	if (payload === 'ArrowUp') {
+	// 		// this.logger.log('ArrowUp');
+	// 		this.rightPaddle = Math.max(0, this.rightPaddle - 5);
+	// 		// client.emit('rightPaddle', this.rightPaddle);
+	// 	}
+	// 	if (payload === 'ArrowDown') {
+	// 		// this.logger.log('ArrowDown');
+	// 		this.rightPaddle = Math.min(gameHeight - this.rightPaddleSize, this.rightPaddle + 5);
+	// 		// client.emit('rightPaddle', this.rightPaddle);
+	// 	}
+	// }
+
+	@SubscribeMessage('key_event')
+	handleKeyEvent(client: Socket, payload: { key: string; state: 'down' | 'up' }): void {
+		this.logger.log(`Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`);
+		if (payload.state === 'down') {
+			if (payload.key === 'ArrowUp') {
+				this.player.movementDirection = 'up';
+			} else if (payload.key === 'ArrowDown') {
+				this.player.movementDirection = 'down';
+			}
+			this.startPaddleMovement();
+		} else if (payload.state === 'up') {
+			if (payload.key === 'ArrowUp' && this.player.movementDirection === 'up') {
+				this.player.movementDirection = null;
+			} else if (payload.key === 'ArrowDown' && this.player.movementDirection === 'down') {
+				this.player.movementDirection = null;
+			}
+			if (!this.player.movementDirection) {
+				this.stopPaddleMovement();
+			}
 		}
-		if (payload === 'ArrowDown') {
-			// this.logger.log('ArrowDown');
-			this.rightPaddle = Math.min(gameHeight - this.rightPaddleSize, this.rightPaddle + 5);
-			// client.emit('rightPaddle', this.rightPaddle);
+	}
+
+	private startPaddleMovement(): void {
+		if (!this.player.movementInterval) {
+			this.player.movementInterval = setInterval(() => {
+				if (this.player.movementDirection === 'up') {
+					this.player.paddle = Math.max(0, this.player.paddle - 3);
+				} else if (this.player.movementDirection === 'down') {
+					this.player.paddle = Math.min(gameHeight - this.rightPaddleSize, this.player.paddle + 3);
+				}
+				this.player.client.emit(`right`, this.player.paddle);
+			}, 1000 / 60); // 60 updates per second
+		}
+	}
+
+	private stopPaddleMovement(): void {
+		if (this.player.movementInterval) {
+			clearInterval(this.player.movementInterval);
+			this.player.movementInterval = null;
 		}
 	}
 
@@ -107,7 +158,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.ball.vy = 0;
 		this.ball.x = 200;
 		this.ball.y = 200;
-		this.rightPaddle = 150;
+		this.player.paddle = 150;
 		this.leftPaddle = 150;
 		this.hits = 0;
 		this.ShowPowerUp = false;
@@ -119,16 +170,16 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.powerUpType = this.getRandomNumber(1, 3);
 		this.hitNumber = this.getRandomNumber(2, 6);
 		this.powerUpHeight = this.getRandomNumber(0, 270);
-		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
+		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.player.paddle});
 	};
-	
+
 	startGameLoop(client: Socket) {
 		this.powerUpType = this.getRandomNumber(1, 3);
 		this.hitNumber = this.getRandomNumber(2, 6);
 		this.powerUpHeight = this.getRandomNumber(0, 270);
 		this.gameInterval = setInterval(() => this.handleGameUpdate(client), 16);
 	}
-	
+
 	changeBallDirection = (paddlePosition: number, paddleSize: number) => {
 		const diff = this.ball.y - (paddlePosition + paddleSize / 2);
 		this.ball.vy = diff / 20;
@@ -141,12 +192,12 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
 		}
 	}
-	
+
 	handleGameUpdate(client: Socket) {
 		// Update ball position
 		this.ball.x += this.ball.vx;
 		this.ball.y += this.ball.vy;
-		
+
 		// Ball collision with walls
 		if (this.ball.y <= borderWidth || this.ball.y >= gameHeight - borderWidth) {
 			this.ball.vy = -this.ball.vy;
@@ -171,10 +222,10 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 		// Ball collision with right paddle
 		else if (this.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
-			if (this.ball.y >= this.rightPaddle && this.ball.y <= this.rightPaddle + this.rightPaddleSize) {
+			if (this.ball.y >= this.player.paddle && this.ball.y <= this.player.paddle + this.rightPaddleSize) {
 				if (this.ball.vx > 0)
 					this.ball.vx = -this.ball.vx;
-				this.changeBallDirection(this.rightPaddle, this.rightPaddleSize);
+				this.changeBallDirection(this.player.paddle, this.rightPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
 				this.logger.log('Hits: ' + this.hits);
@@ -186,7 +237,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				// this.logger.log('bal.x : ' + this.ball.x);
 			}
 		}
-		
+
 
 		if (this.ShowPowerUp) {
 			if (this.ball.x >= 185 && this.ball.x <= 215)
@@ -200,9 +251,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 						if (this.ball.vx < 0)
 							this.extraLifeRight = true;
 						else
-						this.extraLifeLeft = true;
-				}
-				if (this.powerUpType === PowerUpType.largePaddle) {
+							this.extraLifeLeft = true;
+					}
+					if (this.powerUpType === PowerUpType.largePaddle) {
 						this.logger.log('Large paddle hit');
 						if (this.ball.vx < 0) {
 							this.rightPaddleSize = 150;
@@ -269,7 +320,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 
 		// Emit updated state to clients
-		client.emit('gameUpdate', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.rightPaddle });
+		client.emit('gameUpdate', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.player.paddle });
 		// client.emit('ball', { x: this.ball.x, y: this.ball.y });
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);

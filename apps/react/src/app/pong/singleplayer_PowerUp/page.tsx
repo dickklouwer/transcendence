@@ -63,17 +63,17 @@ export default function PongGame() {
 			manager.updatePaddlePosition('right', rightPaddle);
 		});
 
-		socket.on('rightPaddle', (paddle: number) => {
-			manager.updatePaddlePosition('right', paddle);
-		});
+		// socket.on('rightPaddle', (paddle: number) => {
+		// 	manager.updatePaddlePosition('right', paddle);
+		// });
 
-		socket.on('leftPaddle', (paddle: number) => {
-			manager.updatePaddlePosition('left', paddle);
-		});
+		// socket.on('leftPaddle', (paddle: number) => {
+		// 	manager.updatePaddlePosition('left', paddle);
+		// });
 
-		socket.on('ball', ({ x, y }: { x: number, y: number }) => {
-			manager.updateBallPosition(x, y);
-		});
+		// socket.on('ball', ({ x, y }: { x: number, y: number }) => {
+		// 	manager.updateBallPosition(x, y);
+		// });
 
 		socket.on('showPowerUp', ({ powerUpType, powerUpHeight }: { powerUpType: number, powerUpHeight: number }) => {
 			// manager.updateSVGString(shieldSVGString);
