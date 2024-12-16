@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from 'next/navigation';
 import Image from "next/image";
 import Link from "next/link";
+
 import { fetchGet } from "../fetch_functions";
 import { ExternalUser } from "@repo/db"
 import { ExternalFriendsList } from "./form_components";
@@ -34,9 +35,6 @@ export default function ProfileExternalPage() {
   if (!externalUser)
     return <div>Could not load user</div>;
 
-  /*
-   *
-   */
   //NOTE: Need to see if i can get normal FriendsList working withtout reworking the entire function get @jmeruma
   //      see ./form_components.tsx for ExternalFriendlist component
   //      PS: The DisplayUserStatus component is not working as intended, or i'm not sure what is up.
