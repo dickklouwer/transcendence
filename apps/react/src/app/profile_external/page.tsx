@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { fetchGet } from "../fetch_functions";
 import { ExternalUser } from "@repo/db"
-//import { FriendsList } from "../profile/form_components";
 import { ExternalFriendsList } from "./form_components";
 import { DisplayUserStatus } from "../profile/page";
 
