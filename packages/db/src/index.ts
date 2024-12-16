@@ -6,14 +6,22 @@ import postgres from 'postgres'
 export const createQueryClient = (input: string) => postgres(input);
 export const createDrizzleClient = (client: ReturnType<typeof createQueryClient>) => drizzle(client);
 
+type GroupChatInfo = {
+  title: string;
+  image: string | null;
+  intra_user_id: number[];
+  password: string | null;
+  isPrivate: boolean;
+};
+
 type UserChats = {
-	chatid: number;
-	title: string;
-	image: string;
-	lastMessage: string;
+  chatid: number;
+  title: string;
+  image: string;
+  lastMessage: string;
   nickName: string;
-	time: Date;
-	unreadMessages: number;
+  time: Date;
+  unreadMessages: number;
   hasPassword: boolean;
 };
 
@@ -24,15 +32,15 @@ type InvitedChats = {
 };
 
 type ExternalUser = {
-    intra_user_id: number;
-    user_name: string;
-    nick_name: string;
-    email: string;
-    state: 'Online' | 'Offline' | 'In-Game';
-    image: string;
-    wins: number;
-    losses: number;
-  };
+  intra_user_id: number;
+  user_name: string;
+  nick_name: string;
+  email: string;
+  state: 'Online' | 'Offline' | 'In-Game';
+  image: string;
+  wins: number;
+  losses: number;
+};
 
 type MultiplayerMatches = {
   player1_id: number;
@@ -64,5 +72,5 @@ type ChatInfo = {
   image: string | null;
 };
 
-export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatInfo as DmInfo, ChatsUsers, Chats, Messages, MessageStatus };
-export { users, friends, messages, messageStatus, chats, games, chatsUsers};
+export type { User, UserChats, GroupChatInfo, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatInfo as DmInfo, ChatsUsers, Chats, Messages, MessageStatus };
+export { users, friends, messages, messageStatus, chats, games, chatsUsers };

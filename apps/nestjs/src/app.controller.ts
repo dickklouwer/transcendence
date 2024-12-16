@@ -14,7 +14,13 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { User, ExternalUser, UserChats, InvitedChats } from '@repo/db';
+import type {
+  User,
+  ExternalUser,
+  UserChats,
+  InvitedChats,
+  GroupChatInfo,
+} from '@repo/db';
 import { DbService } from './db/db.service';
 import { query, Response } from 'express';
 
@@ -145,6 +151,25 @@ export class AppController {
     );
 
     return isBanned;
+  }
+
+  @Post('createGroupChat')
+  async createGroupChat(
+    @Headers('authorization') token: string,
+    @Body('groupchatinfo') InfoGroup: GroupChatInfo,
+    @Res() res: Response,
+  ) {
+    console.log('Backend - GroupChatInfo: ', InfoGroup);
+    //const response = await this.dbservice.createGroupChat(
+    // token.split(' ')[1],
+    // GroupChatInfo,
+    //);
+
+    //if (!response) {
+    //  res.status(422).send('Failed to create chat');
+    //  return;
+    //}
+    res.status(200).send(res);
   }
 
   @Post('joinChat')

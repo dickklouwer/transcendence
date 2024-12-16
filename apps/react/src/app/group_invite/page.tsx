@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import { userSocket } from "../profile_headers";
-import { fetchGet } from "../fetch_functions";
+import { useRouter } from 'next/navigation';
+import { fetchGet, fetchPost } from "../fetch_functions";
 import { DisplayUserStatus } from "../profile/page";
-import { ExternalUser } from "@repo/db";
+import { ExternalUser, GroupChatInfo } from "@repo/db";
 
 const InviteList = ({ selectedUsers, setSelectedUsers }: { selectedUsers: number[], setSelectedUsers: React.Dispatch<React.SetStateAction<number[]>> }) => {
 
@@ -95,17 +96,43 @@ const InviteList = ({ selectedUsers, setSelectedUsers }: { selectedUsers: number
 
 
 export default function GroupInvite() {
+  const Router = useRouter();
 
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [isPrivate, setChannelType] = useState<boolean>(true);
-  const [inputValue, setInputValue] = useState<string>('');
   const [hasPassword, setHasPassword] = useState<boolean>(false);
   const [isInputVisible, setIsInputVisible] = useState<boolean>(false);
+  const [password, setInputValue] = useState<string>("");
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
   };
+
+  function CreateGroupChat() {
+
+    const GroupchatInfo: GroupChatInfo = {
+      title: "Text Title",
+      image: null,
+      intra_user_id: selectedUsers,
+      password: password === "" ? null : password,
+      isPrivate: isPrivate,
+    };
+
+    // TODO: Check if all required values are filled in
+
+    console.log("info of the info: ", GroupchatInfo);
+
+    fetchPost("/api/CreateGroupChat", { GroupchatInfo: GroupchatInfo })
+      .then(() => {
+        console.log("Group Chat Created");
+        Router.push("/chats");
+      })
+      .catch((error) => {
+        console.log("Error Creating Group Chat", error);
+
+      });
+  }
 
   {/* TODO: Add collor and filler up spaces */ }
   return (
@@ -132,7 +159,7 @@ export default function GroupInvite() {
           </div>
 
           {/* TODO: Title for chat needs to be added
-                  check if all required values are filled in
+                    check if all required values are filled in
           /*}
             
           {/* Option List */}
@@ -180,7 +207,7 @@ export default function GroupInvite() {
                       className="bg-slate-900 rounded"
                       type={isInputVisible ? "text" : "password"}
                       id="passwordField"
-                      value={inputValue}
+                      value={password}
                       onChange={(e) => setInputValue(e.target.value)}
                       placeholder="Password"
                     />
@@ -196,11 +223,11 @@ export default function GroupInvite() {
               </div>
               {/* Create Button should create chat and go back to chats */}
               <div className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 ">
-                <Link href="/chats">
-                  <button >
-                    Create
-                  </button>
-                </Link>
+
+                <button onClick={CreateGroupChat} >
+                  {/* TODO: check if all required values are filled in */}
+                  Create
+                </button>
               </div>
             </div>
           </div>
@@ -208,11 +235,11 @@ export default function GroupInvite() {
       </div>
 
       {/* Debug Box*/}
-      <div className="flex flex-col justify-center">
+      <div className="flex flex-col items-center justify-center">
         <p>Selected Users: {selectedUsers.join(", ")}</p>
         <p>Private Chat: {isPrivate ? "True" : "False"} </p>
         <p>Has Password: {hasPassword ? "True" : "False"}</p>
-        <p>Input Value: {inputValue}</p>
+        <p>password: {password}</p>
         <p>Input Visible: {isInputVisible ? "True" : "False"}</p>
       </div>
 
