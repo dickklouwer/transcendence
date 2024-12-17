@@ -19,7 +19,8 @@ import type {
   ExternalUser,
   UserChats,
   InvitedChats,
-  GroupChatInfo,
+  ChatSettings,
+  ChatsUsers,
 } from '@repo/db';
 import { DbService } from './db/db.service';
 import { query, Response } from 'express';
@@ -153,23 +154,74 @@ export class AppController {
     return isBanned;
   }
 
-  @Post('createGroupChat')
-  async createGroupChat(
+  @Post('createChat')
+  async createChat(
     @Headers('authorization') token: string,
-    @Body('groupchatinfo') InfoGroup: GroupChatInfo,
+    @Body('ChatSettings') ChatSettings: ChatSettings,
     @Res() res: Response,
   ) {
-    console.log('Backend - GroupChatInfo: ', InfoGroup);
-    //const response = await this.dbservice.createGroupChat(
-    // token.split(' ')[1],
-    // GroupChatInfo,
-    //);
+    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
+    if (!user) {
+      res.status(422).send('Failed to get user');
+      return;
+    }
 
-    //if (!response) {
-    //  res.status(422).send('Failed to create chat');
-    //  return;
-    //}
-    res.status(200).send(res);
+    console.log('BE - host:', user.intra_user_id);
+
+    const chat_id = await this.dbservice.createChat(
+      token.split(' ')[1],
+      ChatSettings,
+    );
+    if (chat_id === 0) {
+      res.status(422).send('Failed to create chat');
+      return;
+    }
+
+    const userSettings: ChatsUsers = {
+      intra_user_id: user.intra_user_id,
+      chat_id: chat_id,
+      chat_user_id: 0,
+      is_owner: true,
+      is_admin: true,
+      is_banned: false,
+      mute_untill: null,
+      joined: true,
+      joined_at: null,
+    };
+
+    // add host to chat
+    let status = await this.dbservice.createChatUsers(
+      token.split(' ')[1],
+      chat_id,
+      userSettings,
+    );
+    // NOTE: if Host can't be added only then remove the Chat from the chats table
+    if (!status) {
+      res.status(422).send(`Failed to add Host[${user}] to chat[${chat_id}]`);
+      return;
+    }
+
+    // prepare for adding other users
+    userSettings.is_owner = false;
+    userSettings.is_admin = false;
+    userSettings.joined = false;
+
+    // add other users to chat
+    for (const user of ChatSettings.intraId) {
+      userSettings.intra_user_id = user;
+
+      status = await this.dbservice.createChatUsers(
+        token.split(' ')[1],
+        chat_id,
+        userSettings,
+      );
+
+      if (!status) {
+        res.status(422).send(`Failed to add user[${user}] to chat[${chat_id}]`);
+        return;
+      }
+    }
+    res.status(201).send(res);
   }
 
   @Post('joinChat')

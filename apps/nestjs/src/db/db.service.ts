@@ -21,6 +21,7 @@ import type {
   ChatsUsers,
   DmInfo,
   MessageStatus,
+  ChatSettings,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
@@ -61,7 +62,6 @@ export class DbService {
         })
         .from(users)
         .where(eq(users.intra_user_id, id));
-      //      console.log('DB: getExternalUser: ', user);
       return user;
     } catch (error) {
       console.log('DB: getExternalUser Error: ', error);
@@ -529,7 +529,6 @@ export class DbService {
         console.log('Chat Password Not Set!');
         return false;
       }
-
       const saltRounds = parseInt(process.env.SALT_ROUNDS);
 
       await this.db
@@ -829,11 +828,80 @@ export class DbService {
     }
   }
 
-  async joinChat(jwtToken: string, chat_id: number): Promise<boolean> {
+  // TODO: function get ChatsUsers based on chat_id
+
+  // /*
+  async createChat(
+    jwtToken: string,
+    ChatSettings: ChatSettings,
+  ): Promise<number> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+
+      if (!process.env.SALT_ROUNDS) throw Error('Env SALT_ROUNDS is undefined');
+      if (!user) throw Error('Failed to fetch User!');
+
+      const saltRounds: number = parseInt(process.env.SALT_ROUNDS);
+      const pwdHashed: string | null =
+        ChatSettings.password == null
+          ? null
+          : bycrypt.hashSync(ChatSettings.password, saltRounds);
+
+      const chat = await this.db
+        .insert(chats)
+        .values({
+          title: ChatSettings.title,
+          is_direct: ChatSettings.isDirect,
+          is_public: !ChatSettings.isPrivate,
+          image: ChatSettings.image,
+          password: pwdHashed,
+        })
+        .returning({ chat_id: chats.chat_id });
+
+      console.log('DB - Chat Created: ', chat[0].chat_id);
+      return chat[0].chat_id;
+    } catch (error) {
+      console.log('Error: ', error);
+      return 0;
+    }
+  }
+
+  async createChatUsers(
+    jwtToken: string,
+    chatId: number,
+    UserInfo: ChatsUsers,
+  ): Promise<boolean> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
+      await this.db.insert(chatsUsers).values({
+        intra_user_id: UserInfo.intra_user_id,
+        chat_id: chatId,
+        is_owner: UserInfo.is_owner,
+        is_admin: UserInfo.is_admin,
+        is_banned: false,
+        joined: UserInfo.joined,
+      });
+      console.log(
+        `DB - created ChatsUser (${UserInfo.joined ? 'Host' : 'User'}): `,
+        UserInfo.intra_user_id,
+      );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async joinChat(jwtToken: string, chat_id: number): Promise<boolean> {
+    try {
+      // Check if user exists in DB
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      // Check if user is Banned
       const isBanned = await this.checkIfUserIsBanned(jwtToken, chat_id);
       if (isBanned) {
         console.log('User is banned');
@@ -850,7 +918,7 @@ export class DbService {
           ),
         );
 
-      console.log('Joined Chat!');
+      console.log('Joined ', user.intra_user_id, ' to chat ', chat_id);
       return true;
     } catch (error) {
       console.log('Error: ', error);

@@ -8,7 +8,7 @@ import { userSocket } from "../profile_headers";
 import { useRouter } from 'next/navigation';
 import { fetchGet, fetchPost } from "../fetch_functions";
 import { DisplayUserStatus } from "../profile/page";
-import { ExternalUser, GroupChatInfo } from "@repo/db";
+import { ChatSettings, ExternalUser, User } from "@repo/db";
 
 const InviteList = ({ selectedUsers, setSelectedUsers }: { selectedUsers: number[], setSelectedUsers: React.Dispatch<React.SetStateAction<number[]>> }) => {
 
@@ -101,42 +101,62 @@ export default function GroupInvite() {
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [isPrivate, setChannelType] = useState<boolean>(true);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
-  const [isInputVisible, setIsInputVisible] = useState<boolean>(false);
-  const [password, setInputValue] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
   };
 
+
   function CreateGroupChat() {
 
-    const GroupchatInfo: GroupChatInfo = {
-      title: "Text Title",
-      image: null,
-      intra_user_id: selectedUsers,
-      password: password === "" ? null : password,
+    const Settings: ChatSettings = {
       isPrivate: isPrivate,
+      isDirect: false,
+      intraId: selectedUsers,
+      title: title,
+      password: password === "" ? null : password,
+      image: null,
     };
 
-    // TODO: Check if all required values are filled in
+    // TODO: Find Alternative to alert
+    if (Settings.title === "") {
+      alert("Chat needs a title");
+      return;
+    }
+    if (Settings.intraId.length === 0) {
+      alert("Chat needs at least one member");
+      return;
+    }
+    if (hasPassword && Settings.password === null) {
+      alert("Private Chat needs a password");
+      return;
+    }
 
-    console.log("info of the info: ", GroupchatInfo);
+    console.log("FE - ChatSettings: ", Settings);
 
-    fetchPost("/api/CreateGroupChat", { GroupchatInfo: GroupchatInfo })
+    fetchPost("/api/createChat", { ChatSettings: Settings })
       .then(() => {
-        console.log("Group Chat Created");
-        Router.push("/chats");
+        {/*
+        NOTE: figure out why this log shows up in client console
+              |
+              POST http://f1r3s17.codam.nl:4433/api/createChat
+              500 | Internal Server Error | 23ms
+      */}
       })
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
 
       });
+    Router.push("/chats");
   }
 
   {/* TODO: Add collor and filler up spaces */ }
   return (
-    <div className="flex flex-col w-5/6 border">
+    <div className="flex flex-col w-5/6">
 
       {/* topBox*/}
       <div className="flex flex-col items-center justify-center flex-grow space-y-4">
@@ -158,17 +178,32 @@ export default function GroupInvite() {
           <div className="flex flex-col w-10">
           </div>
 
-          {/* TODO: Title for chat needs to be added
-                    check if all required values are filled in
+          {/* TODO: [x] Title for chat needs to be added
+                    [ ] check if all required values are filled in
           /*}
-            
+
           {/* Option List */}
-          <div className="flex flex-col items-center border ">
-            <div className="flex flex-col w-full">
+          <div className="flex flex-col items-center ">
+            <div className="flex flex-col w-full m-3">
+
+              {/* option Title */}
+              <div className="flex flex-col justify-start m-3">
+                <div className="flex justify-start">
+                  <p>Title:</p>
+                  <input
+                    className="bg-slate-900 rounded"
+                    type="text"
+                    id="TitleField"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Title"
+                  />
+                </div>
+              </div>
 
               {/* option Public/Private */}
-              <div className="flex flex-row items-center space-x-4 p-2">
-                <div className="flex-grow justify-start">
+              <div className="flex flex-row items-center m-3 ">
+                <div className="flex flex-grow justify-start">
                   <p>Private:</p>
                 </div>
                 <input type="radio" name="channelType" value="true"
@@ -176,8 +211,8 @@ export default function GroupInvite() {
                   onChange={handleRadioChange}
                   className="flex items-center w-5 h-5 " />
               </div>
-              <div className="flex flex-row items-center space-x-4 p-2">
-                <div className="flex-grow justify-start">
+              <div className="flex flex-row items-center m-3">
+                <div className="flex flex-grow justify-start">
                   <p>Public:</p>
                 </div>
                 <input type="radio" name="channelType" value="false"
@@ -187,7 +222,7 @@ export default function GroupInvite() {
               </div>
 
               {/* Option Password */}
-              <div className="flex flex-col">
+              <div className="flex flex-col m-3">
                 <div className="flex flex-row">
                   <div className="flex justify-start">
                     <p>Password: </p>
@@ -199,16 +234,16 @@ export default function GroupInvite() {
                 </div>
 
                 {hasPassword ?
-                  <div className="flex flex-row space-x-4">
-                    <div className="items-start" onClick={() => setIsInputVisible(!isInputVisible)}>
-                      {isInputVisible ? "hide" : "show"}
+                  <div className="flex flex-row">
+                    <div className="flex justify-start mr-3" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? "hide" : "show"}
                     </div>
                     <input
                       className="bg-slate-900 rounded"
-                      type={isInputVisible ? "text" : "password"}
+                      type={showPassword ? "text" : "password"}
                       id="passwordField"
                       value={password}
-                      onChange={(e) => setInputValue(e.target.value)}
+                      onChange={(e) => setPassword(e.target.value)}
                       placeholder="Password"
                     />
                   </div> : null}
@@ -237,10 +272,12 @@ export default function GroupInvite() {
       {/* Debug Box*/}
       <div className="flex flex-col items-center justify-center">
         <p>Selected Users: {selectedUsers.join(", ")}</p>
-        <p>Private Chat: {isPrivate ? "True" : "False"} </p>
-        <p>Has Password: {hasPassword ? "True" : "False"}</p>
+
+        <p>Title: {title}</p>
         <p>password: {password}</p>
-        <p>Input Visible: {isInputVisible ? "True" : "False"}</p>
+
+        <p>Has Password: {hasPassword ? "True" : "False"}</p>
+        <p>Show Password : {showPassword ? "True" : "False"}</p>
       </div>
 
     </div>
