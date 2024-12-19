@@ -372,7 +372,7 @@ export default function DC() {
                 </Link>
             )}
             {!chatInfo.isDm && chatInfo.chatId && chatInfo.title && (
-                <Link href={{ pathname: '/group_view', query: { id: chatInfo.chatId } }}>
+                <Link href={{ pathname: '/group_option', query: { chatId: chatInfo.chatId } }}>
                     <div className="flex items-center">
                         <Image
                             src={image}

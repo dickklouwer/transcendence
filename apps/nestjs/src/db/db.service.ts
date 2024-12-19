@@ -866,6 +866,34 @@ export class DbService {
     }
   }
 
+  async getChatSettings(
+    jwtToken: string,
+    chat_id: number,
+  ): Promise<ChatSettings | null> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      const chat = await this.db
+        .select()
+        .from(chats)
+        .where(eq(chats.chat_id, chat_id));
+      if (chat.length === 0) throw Error('Failed to fetch Chat!');
+
+      return {
+        title: chat[0].title,
+        intraId: [],
+        isDirect: chat[0].is_direct,
+        isPrivate: !chat[0].is_public,
+        image: chat[0].image,
+        password: chat[0].password,
+      };
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
   async createChatUsers(
     jwtToken: string,
     chatId: number,

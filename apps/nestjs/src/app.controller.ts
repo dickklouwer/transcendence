@@ -154,6 +154,21 @@ export class AppController {
     return isBanned;
   }
 
+  //TODO: Finish Get chat settings
+  @Get(`getChatSettings`)
+  async getChatSettings(
+    @Headers('authorization') token: string,
+    @Query('chatId') chatId: number,
+  ): Promise<ChatSettings> {
+    const chatSettings = await this.dbservice.getChatSettings(
+      token.split(' ')[1],
+      chatId,
+    );
+
+    console.log(`BE - getChatSettings[${chatId}]:`, chatSettings);
+    return chatSettings;
+  }
+
   @Post('createChat')
   async createChat(
     @Headers('authorization') token: string,
