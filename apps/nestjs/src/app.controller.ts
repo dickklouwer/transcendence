@@ -19,11 +19,11 @@ import type {
   ExternalUser,
   UserChats,
   InvitedChats,
-  ChatSettings,
   ChatsUsers,
+  ChatSettings,
 } from '@repo/db';
 import { DbService } from './db/db.service';
-import { query, Response } from 'express';
+import { Response } from 'express';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')

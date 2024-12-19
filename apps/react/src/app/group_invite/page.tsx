@@ -82,8 +82,10 @@ const InviteList = ({ selectedUsers, setSelectedUsers }: { selectedUsers: number
               {/* TODO: Add svg to Button */}
               {/* Toggle Button */}
               <button onClick={() => toggleInvite(user.intra_user_id)}>
-                <div className="flex w-11 h-11 rounded border border-t-white">
-                  {isInvited(user.intra_user_id) ? "-" : "+"}
+                <div className="flex items-center justify-center w-11 h-11 rounded border border-t-white">
+                  <p className="font-bold">
+                    {isInvited(user.intra_user_id) ? "-" : "+"}
+                  </p>
                 </div>
               </button>
             </div>
@@ -174,10 +176,6 @@ export default function GroupInvite() {
             <InviteList selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
           </div>
 
-          {/* Spacing */}
-          <div className="flex flex-col w-10">
-          </div>
-
           {/* TODO: [x] Title for chat needs to be added
                     [ ] check if all required values are filled in
           /*}
@@ -187,16 +185,16 @@ export default function GroupInvite() {
             <div className="flex flex-col w-full m-3">
 
               {/* option Title */}
-              <div className="flex flex-col justify-start m-3">
-                <div className="flex justify-start">
-                  <p>Title:</p>
+              <div className="flex flex-row justify-between m-3">
+                <p>Title:</p>
+                <div>
                   <input
-                    className="bg-slate-900 rounded"
+                    className="bg-slate-600 rounded"
                     type="text"
                     id="TitleField"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title"
+                    placeholder=" Title"
                   />
                 </div>
               </div>
@@ -223,29 +221,31 @@ export default function GroupInvite() {
 
               {/* Option Password */}
               <div className="flex flex-col m-3">
-                <div className="flex flex-row">
-                  <div className="flex justify-start">
+                <div className="flex flex-row justify-between">
+                  <div className="">
                     <p>Password: </p>
                   </div>
                   <input type="checkbox" name="hasPassword"
                     checked={hasPassword}
                     onChange={() => setHasPassword(!hasPassword)}
-                    className="flex justify-end w-5 h-5 " />
+                    className="flex justify-end w-5 h-5" />
                 </div>
 
                 {hasPassword ?
-                  <div className="flex flex-row">
-                    <div className="flex justify-start mr-3" onClick={() => setShowPassword(!showPassword)}>
+                  <div className="flex justify-between flex-row">
+                    <div onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? "hide" : "show"}
                     </div>
-                    <input
-                      className="bg-slate-900 rounded"
-                      type={showPassword ? "text" : "password"}
-                      id="passwordField"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Password"
-                    />
+                    <div className="flex ">
+                      <input
+                        className="bg-slate-600 rounded"
+                        type={showPassword ? "text" : "password"}
+                        id="passwordField"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder=" Password"
+                      />
+                    </div>
                   </div> : null}
               </div>
             </div>
