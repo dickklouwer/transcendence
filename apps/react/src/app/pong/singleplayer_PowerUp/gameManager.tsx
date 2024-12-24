@@ -32,8 +32,13 @@ export class GameManager {
     powerUpHeight: number;
     powerUp: number;
     powerUpImage: HTMLImageElement | null;
+	private previousTimestamp: number | null = null;
 
     private keyState: { [key: string]: boolean } = {}; // Track key states
+    private targetBallX: number = 0;
+    private targetBallY: number = 0;
+	private ballX: number = 0;
+	private ballY: number = 0;
 
     constructor(context: CanvasRenderingContext2D, socket: Socket, gameWidth: number, gameHeight: number, paddleWidth: number, paddleHeight: number, ballSize: number) {
         this.context = context;
@@ -51,6 +56,8 @@ export class GameManager {
         this.powerUpHeight = 0;
         this.powerUp = 0;
         this.powerUpImage = null;
+		this.ballX = gameWidth / 2;
+		this.ballY = gameHeight / 2;
     }
 
     drawPowerUp = () => {
@@ -93,36 +100,55 @@ export class GameManager {
     updatePaddlePosition = (side: string, position: number) => {
         if (side === 'left') {
             this.leftPaddle.setPosition(position);
-            this.leftPaddle.draw();
         } else {
             this.rightPaddle.setPosition(position);
-            this.rightPaddle.draw();
         }
     };
 
     updateBallPosition = (x: number, y: number) => {
-        this.ball.setPosition(x, y);
-        this.ball.draw();
-    };
+		this.targetBallX = x;
+        this.targetBallY = y;
+	};
 
     updatePowerUpHeight = (height: number) => {
         this.powerUpHeight = height;
     };
 
     startGame() {
-        const drawLoop = () => {
+        const drawLoop = (timestamp: number) => {
             this.context.clearRect(0, 0, this.gameWidth, this.gameHeight);
+			
+			if (this.previousTimestamp !== null) {
+				const delta = timestamp - this.previousTimestamp;
+				const duration = 100; //ms to move ball
+				const t = Math.min(1, delta / duration);
+				this.ballX = this.ballX + (this.targetBallX - this.ballX) * t;
+				this.ballY = this.ballY + (this.targetBallY - this.ballY) * t;
+				this.ball.setPosition(this.ballX, this.ballY);
+				if(t < 1)
+					this.previousTimestamp = timestamp;
+				else
+					this.previousTimestamp = null;
+			}
+			else {
+				this.ballX = this.targetBallX;
+				this.ballY = this.targetBallY;
+				this.ball.setPosition(this.ballX, this.ballY)
+			}
+
             this.leftPaddle.draw();
             this.rightPaddle.draw();
             this.ball.draw();
-            
+
             // Draw the shield if the game state is "shield"
             if (this.powerUp !== 0) {
                 this.drawPowerUp();
             }
+			
             requestAnimationFrame(drawLoop);
         };
-        drawLoop();
+		
+		requestAnimationFrame(drawLoop);
     }
 
     resetGame = () => {
@@ -134,6 +160,7 @@ export class GameManager {
         this.rightPaddle.setPosition(150);
         this.leftPaddle.updateHeight(100);
         this.rightPaddle.updateHeight(100);
+		this.previousTimestamp = null;
         this.startGame();
     };
 

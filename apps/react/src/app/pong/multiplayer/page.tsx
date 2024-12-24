@@ -1,4 +1,3 @@
-
 "use client";
 
 // PongGame.js
@@ -104,11 +103,11 @@ export default function PongGame() {
 				manager.startGame();
 			}, 3000);
 		};
-
+		
 		const opponentDisconnected = () => {
 			console.log('Opponent disconnected');
 			socket.disconnect();
-			setGameManager(null);
+			setGameManager(null);	
 			router.push('/pong/opponent_left');
 		}
 
@@ -134,9 +133,8 @@ export default function PongGame() {
 	};
 
 	const leave = () => {
-		// socket.emit('stop');
 		socket.disconnect();
-		setGameManager(null);
+		setGameManager(null);	
 		router.push('/menu');
 	};
 

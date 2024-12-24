@@ -36,6 +36,18 @@ enum PowerUpType {
 	largePaddle = 2,
 	speedUp = 3,
 }
+interface gameState {
+	ball: {
+		x: number,
+		y: number,
+	},
+	leftPaddle: number,
+	rightPaddle: number,
+	score: {
+		left: number,
+		right: number,
+	},
+}
 
 @WebSocketGateway({ cors: { origin: `http://${process.env.HOST_NAME}:2424` }, namespace: 'power-up', credentials: true, allowEIO3: true })
 export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -71,7 +83,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	handleConnection(client: Socket) {
 		this.logger.log(`Client connected: ${client.id} to power up game`);
 		this.player.client = client;
-		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.player.paddle });
+		client.emit('startSetup', this.getGameState());
 	}
 
 	handleDisconnect(client: Socket) {
@@ -170,7 +182,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.powerUpType = this.getRandomNumber(1, 3);
 		this.hitNumber = this.getRandomNumber(2, 6);
 		this.powerUpHeight = this.getRandomNumber(0, 270);
-		client.emit('startSetup', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.player.paddle});
+		client.emit('startSetup', this.getGameState());
 	};
 
 	startGameLoop(client: Socket) {
@@ -191,6 +203,20 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 			client.emit('showPowerUp', { powerUpType: this.powerUpType, powerUpHeight: this.powerUpHeight });
 			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
 		}
+	}
+	getGameState = (): gameState => {
+		return ({
+				ball: {
+					x: this.ball.x,
+					y: this.ball.y,
+				},
+				leftPaddle: this.leftPaddle,
+				rightPaddle: this.player.paddle,
+				score: {
+					left: this.score.left,
+					right: this.score.right,
+				}
+		})
 	}
 
 	handleGameUpdate(client: Socket) {
@@ -320,7 +346,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 
 		// Emit updated state to clients
-		client.emit('gameUpdate', { x: this.ball.x, y: this.ball.y, leftPaddle: this.leftPaddle, rightPaddle: this.player.paddle });
+		client.emit('gameUpdate', this.getGameState());
 		// client.emit('ball', { x: this.ball.x, y: this.ball.y });
 		// client.emit('rightPaddle', this.rightPaddle);
 		// client.emit('leftPaddle', this.leftPaddle);
