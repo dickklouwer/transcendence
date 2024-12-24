@@ -48,9 +48,9 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
                     {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
                     <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
                     {isMyMessage && <div className="text-xs text-right text-gray-600">{status}</div>}
-                </div>
+                 </div>
             </div>
-        </button>
+         </button>
     );
 }
 
@@ -79,7 +79,7 @@ export default function DC() {
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
     const [isLoaded, setIsLoaded] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
+    
     const [pSock, setPSock] = useState<Socket | null>(null);
     const [recieveInvite, setRecieveInvite] = useState(false);
     const [friendStatus, setFriendStatus] = useState<"Online" | "Offline" | "In-Game">("Offline");
@@ -140,7 +140,6 @@ export default function DC() {
                     console.log('Error: ', error);
                 });
             updateStatusReceivedMessages(chat_id, user.intra_user_id);
-
             fetchGet<DmInfo>(`api/getChatInfo?chat_id=${chat_id}`)
                 .then((res) => {
                     setDmInfo(res);
@@ -164,14 +163,12 @@ export default function DC() {
                 /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
                 message.sent_at = new Date(message.sent_at);
                 setMessages((prevMessages) => [...prevMessages, message]);
-                updateStatusReceivedMessages(chat_id, user.intra_user_id);
-
+                 updateStatusReceivedMessages(chat_id, user.intra_user_id);
             });
 
             chatSocket.on('statusUpdate', () => {
                 setMessages((prevMessages) => [...prevMessages]);
             });
-
         }
         chatSocket.emit('inboxUpdate');
 
@@ -226,16 +223,6 @@ export default function DC() {
         });
     }, [chatInfo]);
 
-    function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
-        fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
-            .then(() => {
-                chatSocket.emit('inboxUpdate');
-            })
-            .catch((error) => {
-                console.log('Error updating unread messages: ', error);
-            });
-    }
-
     const sendMessage = (message: ChatMessages) => {
         chatSocket.emit('messageToServer', message);
         setNewMessage('');
@@ -266,6 +253,17 @@ export default function DC() {
 
         sendMessage(message);
     };
+
+
+        function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
+        fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
+            .then(() => {
+                chatSocket.emit('inboxUpdate');
+            })
+            .catch((error) => {
+                console.log('Error updating unread messages: ', error);
+            });
+    }
 
     const handlePasswordCheck = () => {
         fetchGet<{ chat_id: string, password: string }>(`api/isValidChatPassword?chat_id=${chat_id}&password=${password}`)
@@ -334,7 +332,7 @@ export default function DC() {
         );
     }
 
-    const connectToSocket = (url: string, decline: boolean) => {
+      const connectToSocket = (url: string, decline: boolean) => {
         const sock = io(url, {
           transports: ['websocket'],
           query: {
@@ -364,7 +362,7 @@ export default function DC() {
                                 height={100}
                             />
                             <DisplayUserStatus state={friendStatus} width={15} height={15} />
-                        </div>
+                         </div>
                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.nickName}
                         </button>
@@ -378,12 +376,12 @@ export default function DC() {
                             src={image}
                             alt="Profile Image"
                             className="w-11 h-11 rounded-full"
-                            width={100}
-                            height={100}
+                             width={100}
+                             height={100}
                         />
-                        <button className="py-2 px-4 text-blue-500 font-bold">
+                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.title}
-                        </button>
+                         </button>
                     </div>
                 </Link>
             )}
@@ -408,11 +406,11 @@ export default function DC() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPressMessage(e, user?.intra_user_id ?? 0)}
-                ></textarea>
-                <div className='flow-root'>
+                 ></textarea>
+                 <div className='flow-root'>
                     <Link className="float-left py-2 px-4" href={'/chats'}>
                         Back
-                    </Link>
+                     </Link>
                     <button
                         className="float-right py-2 px-4 rounded bg-blue-500 text-black font-bold "
                         onClick={() => handleSendMessage(user?.intra_user_id ?? 0)}
@@ -420,7 +418,7 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
+                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                     <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                         {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
@@ -433,29 +431,29 @@ export default function DC() {
                             Invite for a game
                         </button>}
                     </Link>
-                    {recieveInvite && (
+                     {recieveInvite && (
                         <div className="flex flex-col items-center space-y-4">
                             <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
                             <div className="flex space-x-4">
                                 <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                        const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                        connectToSocket(url, false);
+                                         const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                         connectToSocket(url, false);
                                     }}>
-                                        Accept
+                                       Accept
                                     </button>
                                 </Link>
                                 <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                    setRecieveInvite(false);
-                                    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                    connectToSocket(url, true);
-                                    chatSocket.emit('inviteForGame', { sender_id: user?.intra_user_id ?? 0, receiver_id: chatInfo.intraId, invite: false });
+                                     setRecieveInvite(false);
+                                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
+                                     connectToSocket(url, true);
+                                    chatSocket.emit('declineGameInvite', { client: user?.intra_user_id ?? 0, opp_id: chatInfo.intraId});
                                 }}>
                                     Decline
                                 </button>
                             </div>
-                        </div>
-                    )}
+                         </div>
+                     )}
                 </div>
                 )}
                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'In-Game' && (
@@ -463,12 +461,12 @@ export default function DC() {
                         <h4 className="text-center">The other player is in a game, you can not invite for a game</h4>
                     </div>
                 )}
-                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Offline' && (
-                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-                        <h4 className="text-center">The other player is offline, you can not invite for a game</h4>
-                    </div>
-                )}
+                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Offline' && (
+                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                         <h4 className="text-center">The other player is offline, you can not invite for a game</h4>
+                     </div>
+                 )}
             </div>
-        </div>
+         </div>
     );
 }
