@@ -437,6 +437,7 @@ export default function DC() {
                             <div className="flex space-x-4">
                                 <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+                                         setRecieveInvite(false);
                                          const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
                                          connectToSocket(url, false);
                                     }}>
