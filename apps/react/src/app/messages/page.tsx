@@ -15,6 +15,11 @@ import io, { Socket } from 'socket.io-client';
 import { userSocket } from '../profile_headers';
 import { DisplayUserStatus } from '../profile/page';
 
+const multiplayerSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, {
+    path: "/ws/socket.io",
+    autoConnect: false, // Prevent automatic connection
+});
+
 const checkPassword: boolean = true;
 
 function Message({ message, intra_id }: { message: ChatMessages, intra_id: number }) {
@@ -88,14 +93,17 @@ export default function DC() {
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
     useEffect(() => {
+        multiplayerSocket.connect();
+        
+        
         fetchGet<User>('api/profile')
-            .then((user) => {
+        .then((user) => {
                 setUser(user);
             })
             .catch((error) => {
                 console.log('Error: ', error);
             });
-        fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
+            fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
             .then((res) => {
                 setHasPassword(res);
                 setIsLoaded(true);
@@ -104,7 +112,7 @@ export default function DC() {
                 console.log('Error: ', error);
         });
     }, [chat_id]);
-
+    
     useEffect(() => {
         chatSocket.on('gameInvite', (data: { sender_id: number, receiver_id: number }) => {
             if (data.receiver_id !== user?.intra_user_id) return;
@@ -332,20 +340,6 @@ export default function DC() {
         );
     }
 
-      const connectToSocket = (url: string, decline: boolean) => {
-        const sock = io(url, {
-          transports: ['websocket'],
-          query: {
-            currentPath: window.location.pathname,
-          },
-          withCredentials: true,
-        });
-        setPSock(sock);
-        if(decline) {
-            sock.emit('declineGameInvite', {socket_id: sock.id, sender_id: chatInfo.intraId, receiver_id: user?.intra_user_id });
-        }
-      };
-
     const image = chatInfo.image ? chatInfo.image : defaultUserImage;
 
     return (
@@ -423,8 +417,6 @@ export default function DC() {
                     <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                         {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
                             () => {
-                                const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                connectToSocket(url, false);
                                 chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: true });
                             }
                         }>
@@ -437,17 +429,26 @@ export default function DC() {
                             <div className="flex space-x-4">
                                 <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                         const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                         connectToSocket(url, false);
+                                        if (user) {
+                                            chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: false });
+                                        }
                                     }}>
                                        Accept
                                     </button>
                                 </Link>
                                 <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                     setRecieveInvite(false);
-                                     const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`;
-                                     connectToSocket(url, true);
-                                    chatSocket.emit('declineGameInvite', { client: user?.intra_user_id ?? 0, opp_id: chatInfo.intraId});
+                                    setRecieveInvite(false);
+                                    if (user && user.intra_user_id) {      
+                                        console.log('user intra id: ', chatInfo.intraId);
+                                        // multiplayerSocket.connect();
+                                        console.log('decline emit');
+                                        multiplayerSocket.emit('declineGameInvite', {intra_id: user.intra_user_id, opp_id: chatInfo.intraId});
+                                        console.log('decline sent');
+                                        // multiplayerSocket.disconnect();
+                                        chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: false });
+                                    } else {
+                                        console.log('No user');
+                                    }
                                 }}>
                                     Decline
                                 </button>

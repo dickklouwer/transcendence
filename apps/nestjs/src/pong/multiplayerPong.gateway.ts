@@ -175,13 +175,33 @@ export class MultiplayerPongGateway
     this.clientRoomMap.delete(client.id);
   }
 
+  // @SubscribeMessage('declineGameInvite')
+  // async handleDeclineGameInvite(client: Socket, opp_id: number): Promise<void> {
+  //   this.logger.log(`Client ${client.id} declined game invite from ${opp_id}`);
+  //   const sortedIds = [client.data.intra_id, opp_id].sort((a, b) => a - b);
+  //   const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
+  //   this.privateRooms.delete(roomId);
+  //   await this.disableInviteGame(client.data.intra_id, opp_id);
+  // }
+
   @SubscribeMessage('declineGameInvite')
-  async handleDeclineGameInvite(client: Socket, opp_id: number): Promise<void> {
-    this.logger.log(`Client ${client.id} declined game invite from ${opp_id}`);
-    const sortedIds = [client.data.intra_id, opp_id].sort((a, b) => a - b);
+  handleDeclineGameInvite(
+    client: Socket,
+    { intra_id, opp_id }: { intra_id: number; opp_id: number },
+  ): void {
+    this.logger.log(`declineGameInvite intra_id ${intra_id} opp_id: ${opp_id}`);
+    // const sortedIds = [client.data.intra_id, opp_id].sort((a, b) => a - b);
+    // const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
+    // this.privateRooms.delete(roomId);
+    const sortedIds = [intra_id, opp_id].sort((a, b) => a - b);
     const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
+    const room = this.privateRooms.get(roomId);
+    this.logger.log(`Room: ${room}`);
+    this.logger.log(`Room ID: ${roomId}`);
+    this.server
+      .to(room.roomID)
+      .emit('opponent_left', 'Your opponent declined the game invite');
     this.privateRooms.delete(roomId);
-    await this.disableInviteGame(client.data.intra_id, opp_id);
   }
 
   @SubscribeMessage('registerUsers')
@@ -222,28 +242,6 @@ export class MultiplayerPongGateway
         payload.opp_id,
         payload.opp_nn,
       );
-    }
-  }
-
-  async disableInviteGame(intra_id: number, opp_id: number): Promise<void> {
-    try {
-      await this.db
-        .update(friends)
-        .set({ invite_game: false })
-        .where(
-          or(
-            and(
-              eq(friends.user_id_send, intra_id),
-              eq(friends.user_id_receive, opp_id),
-            ),
-            and(
-              eq(friends.user_id_send, opp_id),
-              eq(friends.user_id_receive, intra_id),
-            ),
-          ),
-        );
-    } catch (error) {
-      console.error('Error updating invite game:', error);
     }
   }
 
