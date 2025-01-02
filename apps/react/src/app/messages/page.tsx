@@ -444,7 +444,7 @@ export default function DC() {
                                         console.log('decline emit');
                                         multiplayerSocket.emit('declineGameInvite', {intra_id: user.intra_user_id, opp_id: chatInfo.intraId});
                                         console.log('decline sent');
-                                        // multiplayerSocket.disconnect();
+                                        multiplayerSocket.disconnect();
                                         chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: false });
                                     } else {
                                         console.log('No user');

@@ -111,12 +111,20 @@ export default function PongGame() {
 			router.push('/pong/opponent_left');
 		}
 
+		const opponentDeclinedInvite = () => {
+			console.log('Opponent declined invite');
+			socket.disconnect();
+			setGameManager(null);	
+			router.push('/pong/opponent_declined');
+		}
+
 		socket.on('gameUpdate', handleGameUpdate);
 		socket.on('startSetup', handleStartSetup);
 		socket.on('score', ({ left, right }: { left: number; right: number }) => setScore([left, right]));
 		socket.on('gameover', () => setGamestate("GameOver"));
 		socket.on('names', (user: string[]) => setUserNames({ left: user[0], right: user[1] }));
 		socket.on('opponent_left', opponentDisconnected);
+		socket.on('opponent_declined', opponentDeclinedInvite);
 
 		return () => {
 			socket.off('gameUpdate', handleGameUpdate);

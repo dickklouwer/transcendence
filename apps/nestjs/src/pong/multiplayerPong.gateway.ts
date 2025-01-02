@@ -200,7 +200,7 @@ export class MultiplayerPongGateway
     this.logger.log(`Room ID: ${roomId}`);
     this.server
       .to(room.roomID)
-      .emit('opponent_left', 'Your opponent declined the game invite');
+      .emit('opponent_declined', 'Your opponent declined the game invite');
     this.privateRooms.delete(roomId);
   }
 
