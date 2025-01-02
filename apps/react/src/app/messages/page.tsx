@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use, Fragment, cache } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -15,10 +15,6 @@ import io, { Socket } from 'socket.io-client';
 import { userSocket } from '../profile_headers';
 import { DisplayUserStatus } from '../profile/page';
 
-const multiplayerSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/multiplayer`, {
-    path: "/ws/socket.io",
-    autoConnect: false, // Prevent automatic connection
-});
 
 const checkPassword: boolean = true;
 
@@ -53,9 +49,9 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
                     {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
                     <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
                     {isMyMessage && <div className="text-xs text-right text-gray-600">{status}</div>}
-                 </div>
+                </div>
             </div>
-         </button>
+        </button>
     );
 }
 
@@ -84,59 +80,85 @@ export default function DC() {
     const [chatInfo, setDmInfo] = useState<DmInfo>({ isDm: false, intraId: null, nickName: null, chatId: null, title: null, image: null });
     const [isLoaded, setIsLoaded] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    
+
     const [pSock, setPSock] = useState<Socket | null>(null);
-    const [recieveInvite, setRecieveInvite] = useState(false);
+    const [inviteState, setInviteState] = useState<{ inviteSent: boolean; recieveInvite: boolean }>({
+        inviteSent: false,
+        recieveInvite: false,
+      });
     const [friendStatus, setFriendStatus] = useState<"Online" | "Offline" | "In-Game">("Offline");
     const [reload, setReload] = useState<boolean>(false);
+
 
     const chat_id: number = Number(searchParams?.get('chat_id')) ?? -1;
 
     useEffect(() => {
-        multiplayerSocket.connect();
-        
-        
         fetchGet<User>('api/profile')
-        .then((user) => {
+            .then((user) => {
                 setUser(user);
             })
             .catch((error) => {
                 console.log('Error: ', error);
             });
-            fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
+        fetchGet<boolean>(`api/chatHasPassword?chat_id=${chat_id}`)
             .then((res) => {
                 setHasPassword(res);
                 setIsLoaded(true);
             })
             .catch((error) => {
                 console.log('Error: ', error);
-        });
+            });
     }, [chat_id]);
-    
+
     useEffect(() => {
-        chatSocket.on('gameInvite', (data: { sender_id: number, receiver_id: number }) => {
-            if (data.receiver_id !== user?.intra_user_id) return;
-            setRecieveInvite(true);
+        chatSocket.on('gameInvite', (data: { sender_id: number, receiver_id: number, invite: boolean }) => {
+            if (!user || (data.receiver_id !== user.intra_user_id && data.sender_id !== user.intra_user_id)) return;
+
+            if (data.receiver_id === user.intra_user_id) {
+                if (data.invite) {
+                  setInviteState((prev) => ({ ...prev, recieveInvite: true, inviteSent: false}));
+                }
+                else {
+                  setInviteState((prev) => ({ ...prev, recieveInvite: false, inviteSent: false}));
+                }
+            }
+            else if (data.sender_id === user.intra_user_id) {
+                if (!data.invite) {
+                    setInviteState((prev) => ({ ...prev, recieveInvite: false, inviteSent: false}));
+                }
+            }
         });
         return () => {
-            chatSocket.off('inviteForGame');
+            chatSocket.off('gameInvite');
         }
     }, [user]);
+
+    useEffect(() => {
+        chatSocket.on('redirectToGame', (data: { player_id: number, nick_name: string }) => {
+           if (!chatInfo || !user) return;
+           
+          Router.push(`/pong/multiplayer?player_id=${data.player_id}&nick_name=${data.nick_name}`);
+         });
+
+        return () => {
+            chatSocket.off('redirectToGame');
+        };
+      }, [Router, chatInfo, user]);
 
     useEffect(() => {
         if (!user || !isLoaded) return;
 
         if (hasPassword === false) {
             fetchGet<ChatMessages[] | boolean>(`api/messages?chat_id=${chat_id}`)
-            .then((res) => {
+                .then((res) => {
                     if (typeof res === 'boolean' && res === false) {
                         alert('You are not a member of this chat');
                         Router.push('/chats')
                         return;
                     }
-                    
+
                     if (typeof res === 'boolean') return;
-                
+
                     /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
                     const transformedMessages = res.map(message => ({
                         ...message,
@@ -155,10 +177,10 @@ export default function DC() {
                 .catch((error) => {
                     console.log('Error: ', error);
                 });
-            fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${user.intra_user_id}`)
+            fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${user.intra_user_id}`)
                 .then((res) => {
                     if (res) {
-                        setRecieveInvite(res);
+                      setInviteState((prev) => ({ ...prev, recieveInvite: res }));
                     }
                 })
                 .catch((error) => {
@@ -166,12 +188,12 @@ export default function DC() {
                 });
 
             chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
-            
+
             chatSocket.on('messageFromServer', (message: ChatMessages) => {
                 /* Set date type because the JSON parser does not automatically convert date strings to Date objects */
                 message.sent_at = new Date(message.sent_at);
                 setMessages((prevMessages) => [...prevMessages, message]);
-                 updateStatusReceivedMessages(chat_id, user.intra_user_id);
+                updateStatusReceivedMessages(chat_id, user.intra_user_id);
             });
 
             chatSocket.on('statusUpdate', () => {
@@ -190,11 +212,11 @@ export default function DC() {
     useEffect(() => {
         try {
             fetchGet<ExternalUser[]>("/api/getApprovedFriends")
-            .then((data) => {
-                if (chatInfo.isDm && chatInfo.intraId) {
-                    setFriendStatus(data.find((friend) => friend.intra_user_id === chatInfo.intraId)?.state ?? "Offline");
-                }
-            });
+                .then((data) => {
+                    if (chatInfo.isDm && chatInfo.intraId) {
+                        setFriendStatus(data.find((friend) => friend.intra_user_id === chatInfo.intraId)?.state ?? "Offline");
+                    }
+                });
 
             userSocket.on('statusChange', () => {
                 setReload(prev => !prev);
@@ -216,19 +238,19 @@ export default function DC() {
 
     useEffect(() => {
         scrollToBottom();
-    } , [messages]);
+    }, [messages]);
 
     useEffect(() => {
         if (!chatInfo.intraId) return;
-        fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${chatInfo.intraId}`)
-        .then((res) => {
-            if (res) {
-                setRecieveInvite(res);
-            }
-        })
-        .catch((error) => {
-            console.log('Error: ', error);
-        });
+        fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${chatInfo.intraId}`)
+            .then((res) => {
+                if (res) {
+                    setInviteState((prev) => ({ ...prev, recieveInvite: res }));
+                }
+            })
+            .catch((error) => {
+                console.log('Error: ', error);
+            });
     }, [chatInfo]);
 
     const sendMessage = (message: ChatMessages) => {
@@ -263,7 +285,7 @@ export default function DC() {
     };
 
 
-        function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
+    function updateStatusReceivedMessages(chat_id: number, intra_user_id: number) {
         fetchPost('api/updateStatusReceivedMessages', { chat_id: chat_id, intra_user_id: intra_user_id })
             .then(() => {
                 chatSocket.emit('inboxUpdate');
@@ -293,7 +315,7 @@ export default function DC() {
     const handleKeyPressMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>, intra_id: number) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            const newMessage = e.currentTarget.value.replace(/\n/g, ''); // remove new line from message
+            const newMessage = e.currentTarget.value.replace(/\n/g, '');
             setNewMessage(newMessage);
             handleSendMessage(intra_id);
         }
@@ -356,7 +378,7 @@ export default function DC() {
                                 height={100}
                             />
                             <DisplayUserStatus state={friendStatus} width={15} height={15} />
-                         </div>
+                        </div>
                         <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.nickName}
                         </button>
@@ -370,12 +392,12 @@ export default function DC() {
                             src={image}
                             alt="Profile Image"
                             className="w-11 h-11 rounded-full"
-                             width={100}
-                             height={100}
+                            width={100}
+                            height={100}
                         />
-                         <button className="py-2 px-4 text-blue-500 font-bold">
+                        <button className="py-2 px-4 text-blue-500 font-bold">
                             {chatInfo.title}
-                         </button>
+                        </button>
                     </div>
                 </Link>
             )}
@@ -400,11 +422,11 @@ export default function DC() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPressMessage(e, user?.intra_user_id ?? 0)}
-                 ></textarea>
-                 <div className='flow-root'>
+                ></textarea>
+                <div className='flow-root'>
                     <Link className="float-left py-2 px-4" href={'/chats'}>
                         Back
-                     </Link>
+                    </Link>
                     <button
                         className="float-right py-2 px-4 rounded bg-blue-500 text-black font-bold "
                         onClick={() => handleSendMessage(user?.intra_user_id ?? 0)}
@@ -412,62 +434,62 @@ export default function DC() {
                         Send
                     </button>
                 </div>
-                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Online' && (
                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-                    <Link className="flex-grow" href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
-                        {!recieveInvite && user?.intra_user_id && <button className="py-2 px-4 text-blue-500 font-bold" onClick={
-                            () => {
-                                chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: true });
-                            }
-                        }>
-                            Invite for a game
-                        </button>}
-                    </Link>
-                     {recieveInvite && (
-                        <div className="flex flex-col items-center space-y-4">
-                            <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
-                            <div className="flex space-x-4">
-                                <Link href={{ pathname: '/pong/multiplayer', query: { player_id: chatInfo.intraId, nick_name: chatInfo.nickName } }}>
+                        {!inviteState.inviteSent && !inviteState.recieveInvite && user?.intra_user_id && (
+                            <button className="py-2 px-4 text-blue-500 font-bold" onClick={
+                                () => {
+                                    chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: true });
+                                   setInviteState((prev) => ({ ...prev, inviteSent: true}));
+                                }
+                            }>
+                                Invite for a game
+                            </button>)}
+
+                        {inviteState.inviteSent && !inviteState.recieveInvite && (
+                            <h4 className="text-2xl font-bold text-center">
+                                Invite Sent
+                            </h4>
+                        )}
+
+                        {inviteState.recieveInvite && (
+                            <div className="flex flex-col items-center space-y-4">
+                                <h4 className="text-2xl font-bold text-center">Invite for a game</h4>
+                                <div className="flex space-x-4">
+                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
+                                          if (user && chatInfo) {
+                                                chatSocket.emit('acceptGameInvite', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, nick_name: chatInfo.nickName });
+                                           }
+                                        }}>
+                                        Accept
+                                    </button>
                                     <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                        if (user) {
+                                        setInviteState((prev) => ({ ...prev, recieveInvite: false, inviteSent: false }));
+                                         
+                                        if (user && user.intra_user_id) {
                                             chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: false });
+                                        } else {
+                                            console.log('No user');
                                         }
                                     }}>
-                                       Accept
+                                        Decline
                                     </button>
-                                </Link>
-                                <button className="py-2 px-4 text-blue-500 font-bold" onClick={() => {
-                                    setRecieveInvite(false);
-                                    if (user && user.intra_user_id) {      
-                                        console.log('user intra id: ', chatInfo.intraId);
-                                        // multiplayerSocket.connect();
-                                        console.log('decline emit');
-                                        multiplayerSocket.emit('declineGameInvite', {intra_id: user.intra_user_id, opp_id: chatInfo.intraId});
-                                        console.log('decline sent');
-                                        multiplayerSocket.disconnect();
-                                        chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: false });
-                                    } else {
-                                        console.log('No user');
-                                    }
-                                }}>
-                                    Decline
-                                </button>
+                                </div>
                             </div>
-                         </div>
-                     )}
-                </div>
+                        )}
+                    </div>
                 )}
                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'In-Game' && (
                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
                         <h4 className="text-center">The other player is in a game, you can not invite for a game</h4>
                     </div>
                 )}
-                 {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Offline' && (
-                     <div className="flex flex-col items-center justify-center flex-grow space-y-4">
-                         <h4 className="text-center">The other player is offline, you can not invite for a game</h4>
-                     </div>
-                 )}
+                {chatInfo.isDm && chatInfo.intraId && chatInfo.nickName && friendStatus === 'Offline' && (
+                    <div className="flex flex-col items-center justify-center flex-grow space-y-4">
+                        <h4 className="text-center">The other player is offline, you can not invite for a game</h4>
+                    </div>
+                )}
             </div>
-         </div>
+        </div>
     );
 }
