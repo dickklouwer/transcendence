@@ -74,7 +74,6 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
         updateMessageStatusReceived();
         getAmountGameInvites();
 
-        
         chatSocket.on('chatUpdate', () => {
                 setReload(prev => !prev);
             });
@@ -83,8 +82,6 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
         }
     }, [reload]);
 
-    const amountColor = amountGameInvites > 0 ? 'bg-blue-600' : 'bg-red-600';
-
     return (
         <div className='relative inline-block'>
         <Link href={'/chats'} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-blue-700 transition-all duration-150">
@@ -92,8 +89,8 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ user_intra_id }) => {
             <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd"/>
             <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd"/>
             </svg>
-            {numberOfUnreadChats > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none ${amountColor} rounded-full`}>{numberOfUnreadChats + amountGameInvites}</span>}
-            {numberOfUnreadChats === 0 && amountGameInvites > 0 && <span className={`absolute right-5 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none ${amountColor} rounded-full`}>{amountGameInvites}</span>}
+            {numberOfUnreadChats > 0 && <span className={`absolute right-6 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none bg-red-600 rounded-full`}>{numberOfUnreadChats}</span>}
+            {amountGameInvites > 0 && <span className={`absolute left-6 bottom-[-5px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none bg-blue-600 rounded-full`}>{amountGameInvites}</span>}
         </Link>
         </div>
     );
