@@ -177,15 +177,6 @@ export default function DC() {
                 .catch((error) => {
                     console.log('Error: ', error);
                 });
-            fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${user.intra_user_id}`)
-                .then((res) => {
-                    if (res) {
-                      setInviteState((prev) => ({ ...prev, recieveInvite: res }));
-                    }
-                })
-                .catch((error) => {
-                    console.log('Error: ', error);
-                });
 
             chatSocket.emit('joinChat', { chat_id: chat_id.toString(), intra_user_id: user.intra_user_id.toString() });
 

@@ -1,3 +1,5 @@
+// Backend: messages.gateway.ts
+
 import {
     SubscribeMessage,
     WebSocketGateway,
@@ -11,7 +13,6 @@ import { Server, Socket } from 'socket.io';
 import { ChatMessages } from '@repo/db';
 import { DbService } from '../db/db.service';
 
-
 interface Users {
     intra_id: number;
     socket: Socket;
@@ -22,6 +23,11 @@ interface Room {
     users: Users[];
 }
 
+interface GameInvite {
+    sender_id: number;
+    receiver_id: number;
+    invite: boolean;
+}
 
 @WebSocketGateway({
     cors: { origin: `http://${process.env.HOST_NAME}:2424` },
@@ -35,6 +41,7 @@ export class MessagesGateway
     private logger: Logger = new Logger('MessagesGateway');
     private rooms: Map<number, Room> = new Map();
     private userSockets: Map<number, Socket> = new Map(); // Store user sockets directly
+    private gameInvites: Map<number, GameInvite> = new Map(); // Store game invites
 
     constructor(private readonly dbService: DbService) { }
 
@@ -51,12 +58,12 @@ export class MessagesGateway
         this.logger.log(`Client disconnected and leaved inbox: ${client.id}`);
         this.userSockets.forEach((socket, intra_id) => {
             if (socket.id === client.id) {
-               this.userSockets.delete(intra_id);
-               this.logger.log(`Client deleted from userSockets: ${intra_id}`);
+                this.userSockets.delete(intra_id);
+                this.logger.log(`Client deleted from userSockets: ${intra_id}`);
             }
-       });
+        });
 
-       client.leave('inbox');
+        client.leave('inbox');
     }
 
     @SubscribeMessage('joinChat')
@@ -84,6 +91,12 @@ export class MessagesGateway
                     .join(', ')}`,
             );
         });
+        // Emit gameInvite if user has a pending invite
+        const gameInvite = this.gameInvites.get(Number(intra_user_id));
+        if (gameInvite) {
+            client.emit('gameInvite', gameInvite);
+            this.logger.log(`Sent game invite to newly joined user: ${intra_user_id}`);
+        }
     }
 
     @SubscribeMessage('leaveChat')
@@ -161,7 +174,6 @@ export class MessagesGateway
         this.handleInboxUpdate(client);
     }
 
-
     @SubscribeMessage('inboxUpdate')
     handleInboxUpdate(_client: Socket): void {
         void _client;
@@ -183,23 +195,25 @@ export class MessagesGateway
         this.logger.log(
             `Client ${client.id} wants to play with ${receiver_id} from ${sender_id}`,
         );
-    
-       try {
-            await this.dbService.inviteForGame(sender_id, receiver_id, invite)
-            this.logger.log('Game invite sent');
 
-             const receiverSocket = this.userSockets.get(receiver_id);
-            if (receiverSocket) {
-             receiverSocket.emit('gameInvite', { sender_id, receiver_id, invite });
-            }
-             else {
-                  this.logger.log(`Receiver socket not found for intra_id: ${receiver_id}`);
-             }
+        if (invite) {
+            // Store the invite
+            this.gameInvites.set(receiver_id, { sender_id, receiver_id, invite });
+            this.logger.log(`Game invite stored for receiver: ${receiver_id}`);
+        } else {
+            // Remove the invite
+            this.gameInvites.delete(receiver_id);
+            this.logger.log(`Game invite removed for receiver: ${receiver_id}`);
+        }
 
-        } catch (error) {
-            this.logger.error(`Error saving game invite: ${error}`)
+        const receiverSocket = this.userSockets.get(receiver_id);
+        if (receiverSocket) {
+            receiverSocket.emit('gameInvite', { sender_id, receiver_id, invite });
+        } else {
+            this.logger.log(`Receiver socket not found for intra_id: ${receiver_id}`);
         }
     }
+
     @SubscribeMessage('acceptGameInvite')
     async handleAcceptGameInvite(
         client: Socket,
@@ -207,8 +221,12 @@ export class MessagesGateway
         this.logger.log(
             `Client ${client.id} accepted game with ${receiver_id} from ${sender_id}`,
         );
-         const senderSocket = this.userSockets.get(sender_id);
-         const receiverSocket = this.userSockets.get(receiver_id);
+
+        // Remove the invite
+        this.gameInvites.delete(receiver_id);
+
+        const senderSocket = this.userSockets.get(sender_id);
+        const receiverSocket = this.userSockets.get(receiver_id);
 
         if (senderSocket) {
             senderSocket.emit('redirectToGame', { player_id: receiver_id, nick_name: receiver_nick_name });
