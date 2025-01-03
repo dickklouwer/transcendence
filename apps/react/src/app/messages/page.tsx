@@ -177,8 +177,9 @@ export default function DC() {
                 .catch((error) => {
                     console.log('Error: ', error);
                 });
-            fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${user.intra_user_id}`)
+            fetchGet<boolean>(`api/checkIfInvidedForGame?other_intra_id=${user.intra_user_id}`)
                 .then((res) => {
+                    console.log('checkIfInvidedForGame res: ', res);
                     if (res) {
                       setInviteState((prev) => ({ ...prev, recieveInvite: res }));
                     }
@@ -239,19 +240,6 @@ export default function DC() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
-
-    useEffect(() => {
-        if (!chatInfo.intraId) return;
-        fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${chatInfo.intraId}`)
-            .then((res) => {
-                if (res) {
-                    setInviteState((prev) => ({ ...prev, recieveInvite: res }));
-                }
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-            });
-    }, [chatInfo]);
 
     const sendMessage = (message: ChatMessages) => {
         chatSocket.emit('messageToServer', message);
