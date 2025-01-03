@@ -240,18 +240,18 @@ export default function DC() {
         scrollToBottom();
     }, [messages]);
 
-    useEffect(() => {
-        if (!chatInfo.intraId) return;
-        fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${chatInfo.intraId}`)
-            .then((res) => {
-                if (res) {
-                    setInviteState((prev) => ({ ...prev, recieveInvite: res }));
-                }
-            })
-            .catch((error) => {
-                console.log('Error: ', error);
-            });
-    }, [chatInfo]);
+    // useEffect(() => {
+    //     if (!chatInfo.intraId) return;
+    //     fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${chatInfo.intraId}`)
+    //         .then((res) => {
+    //             if (res) {
+    //                 setInviteState((prev) => ({ ...prev, recieveInvite: res }));
+    //             }
+    //         })
+    //         .catch((error) => {
+    //             console.log('Error: ', error);
+    //         });
+    // }, [chatInfo]);
 
     const sendMessage = (message: ChatMessages) => {
         chatSocket.emit('messageToServer', message);

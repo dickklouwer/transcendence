@@ -106,7 +106,7 @@ export class MultiplayerPongGateway
       if (this.privateRooms.has(roomId)) {
         room = this.privateRooms.get(roomId);
         isPrivateRoom = true;
-        this.handleRoomDisconnect(client, room, roomId, true);
+        this.handleRoomDisconnect(client, room, roomId, true)
       } else {
         room = this.rooms.get(roomId);
         this.handleRoomDisconnect(client, room, roomId);
@@ -127,32 +127,25 @@ export class MultiplayerPongGateway
   ) {
     if (!room || !room.players) return; // Handle if room or players array is missing
 
-    const otherClient = room.players.find(
-      (p) => p.client?.id !== client.id,
-    )?.client;
+    const otherClient = room.players.find((p) => p.client?.id !== client.id)?.client;
 
-    if (
-      room?.players &&
-      room.players.length > 1 &&
-      room.players[0]?.client?.id &&
-      room.players[1]?.client?.id
-    ) {
-      if (client.id === room.players[0]?.client?.id) {
-        this.insertGameScore(
-          room.players[0].client.data.intra_id,
-          room.players[1].client.data.intra_id,
-          room.players[0].score,
-          5,
-        );
+    if (room?.players && room.players.length === 2 && room.players[0]?.client?.id && room.players[1]?.client?.id) {
+      const player1Score = room.players[0].score;
+      const player2Score = room.players[1].score;
+
+      if (player1Score !== WinScore && player2Score !== WinScore) {
+        const player1IntraId = room.players[0].client.data.intra_id;
+        const player2IntraId = room.players[1].client.data.intra_id;
+
+        if (client.id === room.players[0].client.id) {
+          this.insertGameScore(player1IntraId, player2IntraId, player1Score, 5);
+        } else {
+          this.insertGameScore(player1IntraId, player2IntraId, 5, player2Score);
+        }
+        this.logger.log(`Opponent left, writing to DB for room: ${roomId}`);
       } else {
-        this.insertGameScore(
-          room.players[0].client.data.intra_id,
-          room.players[1].client.data.intra_id,
-          5,
-          room.players[1].score,
-        );
+        this.logger.log(`Game Over, skipping DB write for room: ${roomId}`);
       }
-      this.logger.log(`Writing to DB for room: ${roomId}`);
     }
 
     // Notify the other client
@@ -163,6 +156,7 @@ export class MultiplayerPongGateway
       // Remove the other client from the client map
       this.clientRoomMap.delete(otherClient?.id);
       this.clients = this.clients.filter((c) => c.id !== otherClient?.id);
+
     }
 
     if (isPrivateRoom) {
@@ -174,36 +168,7 @@ export class MultiplayerPongGateway
 
     this.clientRoomMap.delete(client.id);
   }
-
-  // @SubscribeMessage('declineGameInvite')
-  // async handleDeclineGameInvite(client: Socket, opp_id: number): Promise<void> {
-  //   this.logger.log(`Client ${client.id} declined game invite from ${opp_id}`);
-  //   const sortedIds = [client.data.intra_id, opp_id].sort((a, b) => a - b);
-  //   const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
-  //   this.privateRooms.delete(roomId);
-  //   await this.disableInviteGame(client.data.intra_id, opp_id);
-  // }
-
-  @SubscribeMessage('declineGameInvite')
-  handleDeclineGameInvite(
-    client: Socket,
-    { intra_id, opp_id }: { intra_id: number; opp_id: number },
-  ): void {
-    this.logger.log(`declineGameInvite intra_id ${intra_id} opp_id: ${opp_id}`);
-    // const sortedIds = [client.data.intra_id, opp_id].sort((a, b) => a - b);
-    // const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
-    // this.privateRooms.delete(roomId);
-    const sortedIds = [intra_id, opp_id].sort((a, b) => a - b);
-    const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
-    const room = this.privateRooms.get(roomId);
-    this.logger.log(`Room: ${room}`);
-    this.logger.log(`Room ID: ${roomId}`);
-    this.server
-      .to(room.roomID)
-      .emit('opponent_declined', 'Your opponent declined the game invite');
-    this.privateRooms.delete(roomId);
-  }
-
+  
   @SubscribeMessage('registerUsers')
   handleRegistration(
     client: Socket,
