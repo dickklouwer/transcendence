@@ -338,8 +338,6 @@ export class MultiplayerPongGateway
         this.logger.log(
           `client 1: ${room.players[1].client.id}, username: ${player2}`,
         );
-        this.logger.log('left user: ', player1);
-        this.logger.log('right user: ', player2);
         this.server.to(room.roomID).emit('names', [player1, player2]);
       } else {
         this.logger.log('Could not find names');

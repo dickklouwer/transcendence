@@ -203,7 +203,9 @@ export class MessagesGateway
         } else {
             // Remove the invite
             this.gameInvites.delete(receiver_id);
+            this.gameInvites.delete(sender_id);
             this.logger.log(`Game invite removed for receiver: ${receiver_id}`);
+            this.logger.log(`Game invite removed for receiver: ${sender_id}`);
         }
 
         const receiverSocket = this.userSockets.get(receiver_id);
@@ -221,9 +223,6 @@ export class MessagesGateway
         this.logger.log(
             `Client ${client.id} accepted game with ${receiver_id} from ${sender_id}`,
         );
-
-        // Remove the invite
-        this.gameInvites.delete(receiver_id);
 
         const senderSocket = this.userSockets.get(sender_id);
         const receiverSocket = this.userSockets.get(receiver_id);
