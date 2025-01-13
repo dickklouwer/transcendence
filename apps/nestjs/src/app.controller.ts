@@ -28,7 +28,7 @@ import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(private dbservice: DbService) {}
+  constructor(private dbservice: DbService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -154,18 +154,27 @@ export class AppController {
     return isBanned;
   }
 
-  //TODO: Finish Get chat settings
   @Get(`getChatSettings`)
   async getChatSettings(
     @Headers('authorization') token: string,
     @Query('chatId') chatId: number,
   ): Promise<ChatSettings> {
+    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const chatSettings = await this.dbservice.getChatSettings(
       token.split(' ')[1],
       chatId,
     );
+    if (!user) {
+      throw Error('Failed to fetch user');
+    }
+    if (chatSettings === null) {
+      throw Error('Failed to fetch chatSettings');
+    }
+    if (!chatSettings.userId.includes(user.intra_user_id)) {
+      throw Error('User not in chat');
+    }
 
-    console.log(`BE - getChatSettings[${chatId}]:`, chatSettings);
+    console.log(`BE - getChatSettings[${chatId}]: `, chatSettings.title);
     return chatSettings;
   }
 
@@ -216,14 +225,20 @@ export class AppController {
       return;
     }
 
-    // prepare for adding other users
-    userSettings.is_owner = false;
-    userSettings.is_admin = false;
-    userSettings.joined = false;
-
+    let idx = 0;
     // add other users to chat
-    for (const user of ChatSettings.intraId) {
+    for (const user of ChatSettings.userId) {
+
+      let perm = ChatSettings.userPermission[idx]; // check for permissions
+      userSettings.is_owner = perm - 2 >= -1;
+      perm -= 2;
+      userSettings.is_admin = perm - 1 >= -1;
+      perm -= 1;
+
       userSettings.intra_user_id = user;
+      userSettings.joined = false;
+      idx++;
+
 
       status = await this.dbservice.createChatUsers(
         token.split(' ')[1],
@@ -421,8 +436,24 @@ export class AppController {
     return response;
   }
 
+  @Get('getExternalUsersFromChat')
+  async getExternalUsersFromChat(
+    @Query('chatId') chatId: number,
+    @Res() res: Response,
+  ): Promise<ExternalUser[]> {
+    const users = await this.dbservice.getChatUsers(chatId);
+    var externalUsers: ExternalUser[] = [];
+    for (const user of users) {
+      const externalUser = await this.dbservice.getExternalUser(user);
+      if (!externalUser) res.status(404).send('No users found');
+      externalUsers.push(externalUser);
+    }
+    res.status(200).send(externalUsers);
+    return externalUsers;
+  }
+
   @Get('getExternalUsers')
-  async searchUser(
+  async getExternalUsers(
     @Headers('authorization') token: string,
     @Res() res: Response,
   ): Promise<ExternalUser[]> {
@@ -443,12 +474,13 @@ export class AppController {
   ): Promise<ExternalUser> {
     const user = await this.dbservice.getExternalUser(id);
 
-    console.log('user: ', user);
     if (!user) {
       res.status(404).send('No users found');
       return;
     }
-    res.status(200).send(user[0]);
+    console.log('BE - getExternalUser: ', user.user_name, user.intra_user_id);
+    res.status(200).send(user);
+    return (user);
   }
 
   @UseGuards(JwtAuthGuard)

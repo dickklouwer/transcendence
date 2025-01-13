@@ -112,13 +112,22 @@ export default function GroupInvite() {
     setChannelType(event.target.value === "true" ? true : false);
   };
 
+  function fillPermissions(selectedUsers: number[]): number[] {
+    let userRight: number[] = [];
+
+    for (const user of selectedUsers) {
+      userRight.push(0);
+    }
+    return userRight
+  }
 
   function CreateGroupChat() {
 
     const Settings: ChatSettings = {
       isPrivate: isPrivate,
       isDirect: false,
-      intraId: selectedUsers,
+      userId: selectedUsers,
+      userPermission: fillPermissions(selectedUsers),
       title: title,
       password: password === "" ? null : password,
       image: null,
@@ -129,7 +138,7 @@ export default function GroupInvite() {
       alert("Chat needs a title");
       return;
     }
-    if (Settings.intraId.length === 0) {
+    if (Settings.userId.length === 0) {
       alert("Chat needs at least one member");
       return;
     }
@@ -153,14 +162,13 @@ export default function GroupInvite() {
         console.log("Error Creating Group Chat", error);
 
       });
-    Router.push("/chats");
+    Router.push("/chats"); //NOTE: maybe move this to then on createChat
   }
 
   {/* TODO: Add collor and filler up spaces */ }
   return (
     <div className="flex flex-col w-5/6">
 
-      {/* topBox*/}
       <div className="flex flex-col items-center justify-center flex-grow space-y-4">
         {/* HEADER */}
         <h1>Setup Group Channel</h1>
@@ -187,32 +195,26 @@ export default function GroupInvite() {
               {/* option Title */}
               <div className="flex flex-row justify-between m-3">
                 <p>Title:</p>
-                <div>
-                  <input
-                    className="bg-slate-600 rounded"
-                    type="text"
-                    id="TitleField"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder=" Title"
-                  />
-                </div>
+                <input
+                  className="bg-slate-600 rounded"
+                  type="text"
+                  id="TitleField"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder=" Title"
+                />
               </div>
 
               {/* option Public/Private */}
               <div className="flex flex-row items-center m-3 ">
-                <div className="flex flex-grow justify-start">
-                  <p>Private:</p>
-                </div>
+                <p className="flex flex-grow justify-start">Private:</p>
                 <input type="radio" name="channelType" value="true"
                   checked={isPrivate}
                   onChange={handleRadioChange}
                   className="flex items-center w-5 h-5 " />
               </div>
               <div className="flex flex-row items-center m-3">
-                <div className="flex flex-grow justify-start">
-                  <p>Public:</p>
-                </div>
+                <p className="flex flex-grow justify-start">Public:</p>
                 <input type="radio" name="channelType" value="false"
                   checked={!isPrivate}
                   onChange={handleRadioChange}
@@ -222,9 +224,7 @@ export default function GroupInvite() {
               {/* Option Password */}
               <div className="flex flex-col m-3">
                 <div className="flex flex-row justify-between">
-                  <div className="">
-                    <p>Password: </p>
-                  </div>
+                  <p>Password: </p>
                   <input type="checkbox" name="hasPassword"
                     checked={hasPassword}
                     onChange={() => setHasPassword(!hasPassword)}
@@ -236,16 +236,14 @@ export default function GroupInvite() {
                     <div onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? "hide" : "show"}
                     </div>
-                    <div className="flex ">
-                      <input
-                        className="bg-slate-600 rounded"
-                        type={showPassword ? "text" : "password"}
-                        id="passwordField"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder=" Password"
-                      />
-                    </div>
+                    <input
+                      className="bg-slate-600 rounded"
+                      type={showPassword ? "text" : "password"}
+                      id="passwordField"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder=" Password"
+                    />
                   </div> : null}
               </div>
             </div>

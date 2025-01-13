@@ -67,8 +67,9 @@ type ChatInfo = {
 type ChatSettings = {
   isPrivate: boolean;
   isDirect: boolean;
-  intraId: number[];        //required
-  title: string;            //required
+  userId: number[];
+  userPermission: number[]; //  NOTE: works similar to chmod by adding values to dertermine roles (1 = admin, 2 = owner)
+  title: string;
   password: string | null;
   image: string | null;
 };
