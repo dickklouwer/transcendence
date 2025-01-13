@@ -1,23 +1,23 @@
 "use client"
 
-import { ChatSettings, ExternalUser } from '@repo/db';
-import { useSearchParams } from 'next/navigation';
-
 import Link from 'next/link';
 import Image from "next/image";
+import { useSearchParams } from 'next/navigation';
+
 import { DisplayUserStatus } from "../profile/page";
+import { ChatSettings, ExternalUser } from '@repo/db';
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { Permissions, isAdmin, toBinary, isOwner } from './functions';
+import { isAdmin, isOwner } from './functions';
 
-export default function GroupOptionPage() {
+export default function GroupViewPage() {
   const searchParams = useSearchParams();
   const chatId = searchParams?.get('chatId');
+  var updatedChatSettings: ChatSettings;
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [relead, setReload] = useState<boolean>(false);
+  const [isInvalidData, setIsInvalid] = useState<boolean>(true);
 
-  const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
   const [chatSettings, setChatSettings] = useState<ChatSettings>();
   const [chatUsers, setChatUsers] = useState<ExternalUser[]>();
 
@@ -37,77 +37,123 @@ export default function GroupOptionPage() {
       try {
         setIsLoading(true);
         const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        const alt: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
         const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
 
-        if (alt == null || settings === null || users === null) {
+        if (settings === null || users === null) {
           console.error("Error Fetching Chat Settings or Users");
           setIsLoading(false);
+          setIsInvalid(false);
           return;
         }
-        setChatSettings(alt);
-        setUpdatedChatSettings(settings);
+        setChatSettings(settings);
         setChatUsers(users);
+
+        setTitle(settings.title);
+        setHasPassword(settings.password !== null);
+        setChannelType(settings.isPrivate);
+        setShowPassword(hasPassword);
+        if (settings.password !== null)
+          setPassword(settings.password);
+        else
+          setPassword("");
+
       }
       catch (error) {
         console.error("Error Fetching Chat Settings:", error);
       }
       finally {
         setIsLoading(false);
+        setIsInvalid(false);
       }
     }
     fetchData();
-  }, [chatId]);
+  }, []);
 
-  if (isLoading) return <p>Loading...</p>
-  if (chatSettings == undefined || updatedChatSettings === undefined || chatUsers === undefined) {
+
+  //TODO: remove this function
+  function toBinary(n: number): string {
+    n = Number(n);
+    if (n == 0) return '0';
+    var r = '';
+    while (n != 0) {
+      r = ((n & 1) ? '1' : '0') + r;
+      n = n >>> 1;
+    }
+    return r;
+  }
+
+  // TODO: change permissions 
+
+  function toggleAdmin(id: number) {
+    if (chatSettings === undefined) return;
+
+    const idx: number = chatSettings.userId.indexOf(id);
+    // Clone the object and update the permission
+    chatSettings.userPermission[idx] =
+      chatSettings.userPermission[idx] % 2 == 1
+        ? chatSettings.userPermission[idx] - 1
+        : chatSettings.userPermission[idx] + 1;
+
+    console.log("perms: ", toBinary(chatSettings.userPermission[idx]));
+    console.log("perms >> 0: ", toBinary(chatSettings.userPermission[idx] >> 0));
+    console.log("perms >> 0 & 1: ", toBinary(chatSettings.userPermission[idx] >> 0 & 1));
+    // isAdmin >> 1 & 1
+    // ((isAdmin >> 1) | 1) = 1
+    // isOwner >> 2 & 1
+    // isOwner >> 2 
+    // isBanned >> 3 & 1
+
+    // value | 0010 // second bit true
+    // value & 1101 // second bit false
+    // value ! 1 >> 1 // secons bit true
+    // vlaue & ~(1 >> 1) // second bit false
+
+    // 1110
+    // 1010
+    // pers = pers & ~(1 << 2)
+    // pers >> 2 & 1 = ``
+    // 11
+
+    // Update the state
+    // Update the state
+    setChatSettings(chatSettings);
+  }
+
+  function UpdateSettings() {
+    if (chatSettings === undefined) return;
+
+    const Settings: ChatSettings = {
+      isPrivate: isPrivate,
+      isDirect: false,
+      userId: chatSettings.userId, // TODO: change the following variables when you want to add people
+      userPermission: chatSettings.userPermission,
+      title: title,
+      password: password === "" ? null : password,
+      image: null,
+    };
+
+    fetchPost(`/api/updateChatSettings?chatId=${chatId}`, chatSettings)
+      .then(() => {
+        console.log("Chat Settings Updated");
+      })
+      .catch((error) => {
+        console.error("Error Updating Chat Settings:", error);
+      });
+  }
+
+  console.log('FE - ChatSettings: ', chatSettings);
+  console.log('FE - ExternalUser: ', chatUsers);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isInvalidData || chatSettings === undefined || chatUsers === undefined) {
     return (
-      <div>
-        <p>Invalid Data</p>
+      <div> Invalid Data...
         <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 " href="/chats">
           Back
-        </Link>
-      </div>
-    );
+        </Link> </div>
+    )
   }
-
-  function forceReload() {
-    setReload(!relead);
-  }
-
-  function toggleOwner(id: number) {
-    if (updatedChatSettings === undefined) return;
-
-    const idx: number = updatedChatSettings.userId.indexOf(id);
-    // Clone the object and update the permission
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
-
-    updatedChatSettings.userPermission[idx] >> (Permissions.OWNER) & 1 ?
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] & ~(1 << Permissions.OWNER) :
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] | 1 << Permissions.OWNER;
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
-
-    setUpdatedChatSettings(updatedChatSettings);
-    forceReload();
-  }
-  function toggleAdmin(id: number) {
-    if (updatedChatSettings === undefined) return;
-
-    const idx: number = updatedChatSettings.userId.indexOf(id);
-    // Clone the object and update the permission
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
-
-    updatedChatSettings.userPermission[idx] >> (Permissions.ADMIN) & 1 ?
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] & ~(1 << Permissions.ADMIN) :
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] | 1 << Permissions.ADMIN;
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
-
-    setUpdatedChatSettings(updatedChatSettings);
-    forceReload();
-  }
-
-  console.log("  ChatSettings: ", chatSettings.userPermission);
-  console.log("U ChatSettings: ", updatedChatSettings.userPermission);
+  updatedChatSettings = chatSettings;
 
   return (
     <div className="flex flex-col w-5/6">
@@ -117,7 +163,7 @@ export default function GroupOptionPage() {
         <div className="flex flex-row justify-center space-x-4">
 
           {/* Friendlist */}
-          {/* TODO: Still need to be able to add, kick and ban user to the chat */}
+          {/* TODO: Still need to be able to add user to the chat */}
           <div className="flex flex-col">
             <h1 className="flex justify-center" >Chat Users</h1>
             <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
@@ -128,7 +174,7 @@ export default function GroupOptionPage() {
                   <p className="text-xs">Owner</p>
                 </div>
               </div>
-              {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
+              {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users :(</p>}
               {chatUsers.map((user) => (
                 <div key={user.intra_user_id}>
                   <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-slate-950 rounded">
@@ -163,18 +209,9 @@ export default function GroupOptionPage() {
 
                     {/* {isOwner(permsettings, user.intra_user_id) || isAdmin(permsettings, user.intra_user_id)? */}
                     < div className='flex flex-row justify-around w-2/5 space-x-10'>
-                      {isAdmin(updatedChatSettings, user.intra_user_id) ?
-                        <button className="flex size-15 p-5 rounded bg-green-800" onClick={
-                          () => toggleAdmin(user.intra_user_id)}></button> :
-                        <button className="flex size-15 p-5 rounded bg-red-800" onClick={
-                          () => toggleAdmin(user.intra_user_id)}></button>
-                      }
-                      {isOwner(updatedChatSettings, user.intra_user_id) ?
-                        <button className="flex size-15 p-5 rounded bg-green-800" onClick={
-                          () => toggleOwner(user.intra_user_id)}></button> :
-                        <button className="flex size-15 p-5 rounded bg-red-800" onClick={
-                          () => toggleOwner(user.intra_user_id)}></button>
-                      }
+                      {isAdmin(chatSettings, user.intra_user_id) ?
+                        <button className="flex size-15 p-5 rounded bg-green-800" onClick={() => toggleAdmin(user.intra_user_id)}></button> :
+                        <button className="flex size-15 p-5 rounded bg-red-800" onClick={() => toggleAdmin(user.intra_user_id)}></button>}
                     </div>
                     {/* :
                   < div className='flex flex-row justify-around w-2/5 space-x-10'>
@@ -193,11 +230,10 @@ export default function GroupOptionPage() {
           </div>
 
 
-          <div className="flex flex-col items-center justify-center ">
-            {/* TODO: [x] Title for chat needs to be added
+          {/* TODO: [x] Title for chat needs to be added
                     [ ] check if all required values are filled in
-              */}
-
+          */}
+          <div className="flex flex-col items-center justify-center ">
             <div className='flex flex-col w-[25rem] justify-center m-3 '>
               <div className="flex flex-row justify-between m-2 my-3">
                 <p>Title:</p>
@@ -232,47 +268,32 @@ export default function GroupOptionPage() {
                   className="flex w-5 h-5" />
               </div>
               {hasPassword ?
-                <div className="flex flex-col justify-between m-2 my-3">
-                  <div className="flex justify-between flex-row m-2 my-3">
-                    <div onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? "hide" : "show"}
-                    </div>
-                    <input
-                      className="bg-slate-600 rounded w-4/5"
-                      type={showPassword ? "text" : "password"}
-                      id="passwordField"
-                      defaultValue={password}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+                <div className="flex justify-between flex-row m-2 my-3">
+                  <div onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? "hide" : "show"}
                   </div>
-                  <div className="flex justify-between flex-row m-2 my-3">
-                    <div onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? "hide" : "show"}
-                    </div>
-                    <input
-                      className="bg-slate-600 rounded w-4/5"
-                      type={showPassword ? "text" : "password"}
-                      id="passwordField"
-                      defaultValue={password}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
+                  <input
+                    className="bg-slate-600 rounded w-4/5"
+                    type={showPassword ? "text" : "password"}
+                    id="passwordField"
+                    defaultValue={password}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div> :
-                < p className="flex justify-right flex-row my-3 "></p>
+                < p className="flex justify-right flex-row my-3 ">-</p>
               }
-            </div>
 
+            </div>
             {/* Action Buttons */}
             < div className="flex flex-row justify-center">
               {/* Cancel Button should just go back */}
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 " href="/chats">
                 Back
               </Link>
-              <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " onClick={() => UpdateSettings()} href="/chats">
+              <button className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " onClick={() => UpdateSettings()} >
                 Apply
-              </Link>
+              </button>
               {/* Create Button should create chat and go back to chats */}
             </div>
           </div>
@@ -282,17 +303,12 @@ export default function GroupOptionPage() {
       {/* Debug Box
       */}
       <div className="flex flex-col text-left justify-center">
-        <p>Selected Users: {chatSettings?.userId.join(", ")}</p>
-        <p>Permissions: {chatSettings?.userPermission.join(", ")}</p>
-        {/*
-            <p>Title: {title}</p>
-            <p>password: {password}</p>
-            <p>Has Password: {hasPassword ? "True" : "False"}</p>
-            <p>Show Password : {showPassword ? "True" : "False"}</p>
-            */}
-        <p>Updated</p>
-        <p>Selected Users: {updatedChatSettings?.userId.join(", ")}</p>
-        <p>Permissions: {updatedChatSettings?.userPermission.join(", ")}</p>
+        <p>Selected Users: {chatSettings.userId.join(", ")}</p>
+        <p>Permissions: {chatSettings.userPermission.join(", ")}</p>
+        <p>Title: {title}</p>
+        <p>password: {password}</p>
+        <p>Has Password: {hasPassword ? "True" : "False"}</p>
+        <p>Show Password : {showPassword ? "True" : "False"}</p>
       </div>
 
     </div >

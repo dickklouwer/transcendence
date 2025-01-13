@@ -89,7 +89,11 @@ export class DbService implements OnModuleInit {
         .where(eq(users.intra_user_id, id))
         .limit(1);
 
-      console.log('DB - getExternalUser: ', user[0].user_name, user[0].intra_user_id);
+      console.log(
+        'DB - getExternalUser: ',
+        user[0].user_name,
+        user[0].intra_user_id,
+      );
       return user[0];
     } catch (error) {
       console.error('DB: getExternalUser Error: ', error);
@@ -678,10 +682,7 @@ export class DbService implements OnModuleInit {
         .where(
           and(
             eq(chatsUsers.intra_user_id, user.intra_user_id),
-            or(
-              eq(chats.is_direct, true),
-              eq(chatsUsers.joined, true)
-            ),
+            or(eq(chats.is_direct, true), eq(chatsUsers.joined, true)),
           ),
         );
 
@@ -750,9 +751,9 @@ export class DbService implements OnModuleInit {
         const field: UserChats = {
           chatid: chat_ids[i].chats.chat_id,
           title: chatsInfo[0].isDirect
-            ? (otherUsers[0].nick_name
+            ? otherUsers[0].nick_name
               ? otherUsers[0].nick_name
-              : otherUsers[0].user_name)
+              : otherUsers[0].user_name
             : chatsInfo[0].groep_title,
           image: chatsInfo[0].isDirect
             ? otherUsers[0].image
@@ -918,8 +919,7 @@ export class DbService implements OnModuleInit {
           is_public: chats.is_public,
           image: chats.image,
           password: chats.password,
-        }
-        )
+        })
         .from(chats)
         .where(eq(chats.chat_id, chat_id))
         .limit(1);
@@ -934,8 +934,7 @@ export class DbService implements OnModuleInit {
         const result: number[] = [];
         for (let i = 0; i < chatsUsers.length; i++) {
           result.push(
-            (chatsUsers[i].is_owner ? 2 : 0) +
-            (chatsUsers[i].is_admin ? 1 : 0)
+            (chatsUsers[i].is_owner ? 2 : 0) + (chatsUsers[i].is_admin ? 1 : 0),
           );
         }
         return result;
@@ -957,10 +956,9 @@ export class DbService implements OnModuleInit {
         isPrivate: !chat[0].is_public,
         image: chat[0].image,
         password: chat[0].password,
-      }
+      };
       //console.log('DB - Chat Settings: ', settings);
       return settings;
-
     } catch (error) {
       console.log('Error: ', error);
       return null;
