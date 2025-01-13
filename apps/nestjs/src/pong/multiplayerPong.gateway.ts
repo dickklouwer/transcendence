@@ -39,12 +39,6 @@ interface Room {
   rematch: number;
 }
 
-// interface Player {
-//   client: Socket | null;
-//   paddle: number;
-//   score: number;
-// }
-
 interface Player {
   client: Socket | null;
   paddle: number; // Current paddle position
@@ -70,10 +64,15 @@ export class MultiplayerPongGateway
   private rooms: Map<string, Room> = new Map(); // Maps room ID to Room object
   private clientRoomMap: Map<string, string> = new Map(); // Maps client ID to room ID
   private privateRooms: Map<string, Room> = new Map(); // Maps room ID to Room object
-  // private clientPlayerMap: Map<string, Player> = new Map(); // Maps client ID to player object
 
   private createPlayer(client: Socket | null): Player {
-    return { client: client, paddle: 150, movementDirection: null, movementInterval: null, score: 0 };
+    return {
+      client: client,
+      paddle: 150,
+      movementDirection: null,
+      movementInterval: null,
+      score: 0,
+    };
   }
   private createRoom(roomID: string, players: Player[], ball: Ball): Room {
     return { roomID, players, ball, rematch: 0 };
@@ -97,22 +96,23 @@ export class MultiplayerPongGateway
     this.handleStop();
     this.logger.log(`Client disconnected: ${client.id}`);
 
-    // Find the room containing the disconnected client (public or private)
     const roomId = this.clientRoomMap.get(client.id);
-    const privateRoomId = `room_${client.data.intra_id}`;
 
     if (roomId) {
-      // Handle disconnect from a public room
-      const room = this.rooms.get(roomId);
-      if (room) {
+      this.logger.log(`Found room ${roomId} for client ${client.id}`);
+      let room;
+      let isPrivateRoom = false;
+
+      if (this.privateRooms.has(roomId)) {
+        room = this.privateRooms.get(roomId);
+        isPrivateRoom = true;
+        this.handleRoomDisconnect(client, room, roomId, true)
+      } else {
+        room = this.rooms.get(roomId);
         this.handleRoomDisconnect(client, room, roomId);
       }
-    } else if (this.privateRooms.has(privateRoomId)) {
-      // Handle disconnect from a private room
-      const privateRoom = this.privateRooms.get(privateRoomId);
-      if (privateRoom) {
-        this.handleRoomDisconnect(client, privateRoom, privateRoomId, true);
-      }
+    } else {
+      this.logger.log('Room not found for client');
     }
 
     // Remove the client from the global client list
@@ -125,38 +125,40 @@ export class MultiplayerPongGateway
     roomId: string,
     isPrivateRoom = false,
   ) {
-    // Writing score to DB if game started
-    if (client.id === room.players[0]?.client?.id) {
-      this.insertGameScore(
-        room.players[0].client.data.intra_id,
-        room.players[1].client.data.intra_id,
-        room.players[0].score,
-        5,
-      );
-    } else {
-      this.insertGameScore(
-        room.players[0].client.data.intra_id,
-        room.players[1].client.data.intra_id,
-        5,
-        room.players[1].score,
-      );
+    if (!room || !room.players) return; // Handle if room or players array is missing
+
+    const otherClient = room.players.find((p) => p.client?.id !== client.id)?.client;
+
+    if (room?.players && room.players.length === 2 && room.players[0]?.client?.id && room.players[1]?.client?.id) {
+      const player1Score = room.players[0].score;
+      const player2Score = room.players[1].score;
+
+      if (player1Score !== WinScore && player2Score !== WinScore) {
+        const player1IntraId = room.players[0].client.data.intra_id;
+        const player2IntraId = room.players[1].client.data.intra_id;
+
+        if (client.id === room.players[0].client.id) {
+          this.insertGameScore(player1IntraId, player2IntraId, player1Score, 5);
+        } else {
+          this.insertGameScore(player1IntraId, player2IntraId, 5, player2Score);
+        }
+        this.logger.log(`Opponent left, writing to DB for room: ${roomId}`);
+      } else {
+        this.logger.log(`Game Over, skipping DB write for room: ${roomId}`);
+      }
     }
 
-    this.logger.log(`Writing to DB for room: ${roomId}`);
-
-    // Remove disconnected client from the room
-    room.players = room.players.filter(
-      (player) => player.client?.id !== client.id,
-    );
-
-    // Notify the remaining player
-    const otherClient = room.players[0].client;
-    if (room.players.length > 0) {
+    // Notify the other client
+    if (otherClient) {
       this.logger.log(`Opponent left: ${client.id}`);
-      otherClient?.emit('opponent_left', 'Your opponent has left the game');
+      otherClient.emit('opponent_left', 'Your opponent has left the game');
+
+      // Remove the other client from the client map
+      this.clientRoomMap.delete(otherClient?.id);
+      this.clients = this.clients.filter((c) => c.id !== otherClient?.id);
+
     }
 
-    // Delete the room
     if (isPrivateRoom) {
       this.privateRooms.delete(roomId);
     } else {
@@ -164,55 +166,9 @@ export class MultiplayerPongGateway
     }
     this.logger.log(`Room deleted: ${roomId}`);
 
-    // Remove the client from room mappings
-    this.clientRoomMap.delete(client.id);
-    this.clientRoomMap.delete(otherClient.id);
-
-    // Remove the client from the global client list
-    this.clients = this.clients.filter((c) => c.id !== otherClient.id);
-    // if (room.players.length > 0) {
-    //   this.clientRoomMap.delete(room.players[0].client?.id);
-    // }
-  }
-
-  @SubscribeMessage('declineGameInvite')
-  handleDeclineGameInvite(client: Socket, opp_id: number): void {
-    this.logger.log(`Client declined: ${client.id}`);
-    const roomId = `room_${opp_id}`;
-    const room = this.privateRooms.get(roomId);
-    if (room) {
-      this.logger.log(`Emit declined: ${opp_id}`);
-      room.players[0].client.emit(
-        'opponent_declined',
-        'Your opponent has declined the game',
-      );
-      this.privateRooms.delete(roomId);
-    }
-    this.logger.log(`Client disconnected: ${client.id}`);
-
-    // Find the room containing the disconnected client (public or private)
-    const privateRoomId = `room_${client.data.intra_id}`;
-
-    if (this.privateRooms.has(privateRoomId)) {
-      // Handle disconnect from a private room
-      const privateRoom = this.privateRooms.get(privateRoomId);
-      if (privateRoom) {
-        this.handleRoomDisconnect(client, privateRoom, privateRoomId, true);
-      }
-    }
-
-    // Remove the client from the global client list
-    this.clients = this.clients.filter((c) => c.id !== client.id);
-    room.players = room.players.filter(
-      (player) => player.client?.id !== client.id,
-    );
-    this.privateRooms.delete(roomId);
-    this.logger.log(`Room deleted: ${roomId}`);
-
-    // Remove the client from room mappings
     this.clientRoomMap.delete(client.id);
   }
-
+  
   @SubscribeMessage('registerUsers')
   handleRegistration(
     client: Socket,
@@ -223,18 +179,26 @@ export class MultiplayerPongGateway
       opp_nn: string;
     },
   ): void {
+    // Check if the client is already registered
     const clientExists = this.clients.some(
       (existingClient) => existingClient.id === client.id,
     );
     if (clientExists) {
-      this.logger.log('Client already exists');
+      this.logger.log(`Client ${client.id} already registered`);
       return;
     }
+
+    // Store data in client before doing anything
+    client.data.intra_id = payload.intra_id;
+    client.data.user_name = payload.user_name;
+
     this.clients.push(client);
-    this.logger.log(`opp_id = ${payload.opp_id}`);
-    if (payload.opp_id == 0) {
+    this.logger.log(
+      `Client ${client.id} registered with intra ID: ${payload.intra_id}`,
+    );
+
+    if (payload.opp_id === 0) {
       this.randomMatch(client);
-      this.fillRoomdata(client, payload.intra_id, payload.user_name);
     } else {
       this.privateMatch(
         client,
@@ -246,58 +210,39 @@ export class MultiplayerPongGateway
     }
   }
 
-  async disableInviteGame(intra_id: number, opp_id: number): Promise<void> {
-    try {
-      await this.db
-        .update(friends)
-        .set({ invite_game: false })
-        .where(
-          or(
-            and(
-              eq(friends.user_id_send, intra_id),
-              eq(friends.user_id_receive, opp_id),
-            ),
-            and(
-              eq(friends.user_id_send, opp_id),
-              eq(friends.user_id_receive, intra_id),
-            ),
-          ),
-        );
-    } catch (error) {
-      console.error('Error updating invite game:', error);
-    }
-  }
-
-  privateMatch(
+  private privateMatch(
     client: Socket,
     intra_id: number,
     user_name: string,
     opp_id: number,
     opp_nn: string,
   ): void {
-    if (this.privateRooms.has(`room_${intra_id}`)) {
-      const room = this.privateRooms.get(`room_${intra_id}`);
+    // Sort ids to create consistent room id
+    const sortedIds = [intra_id, opp_id].sort((a, b) => a - b);
+    const roomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
+
+    if (this.privateRooms.has(roomId)) {
+      const room = this.privateRooms.get(roomId);
       const secondClient = client;
       const rightPlayer = this.createPlayer(secondClient);
       room.players[1] = rightPlayer;
       this.logger.log(
-        `Room joined: room_${intra_id} with players ${user_name} and ${opp_nn}`,
+        `Room joined: ${roomId} with players ${user_name} and ${opp_nn}`,
       );
-      secondClient.join(`room_${intra_id}`);
-      this.clientRoomMap.set(secondClient.id, `room_${intra_id}`);
+      secondClient.join(roomId);
+      this.clientRoomMap.set(secondClient.id, roomId);
+
       this.fillRoomdata(client, intra_id, user_name);
-      this.server.to(`room_${intra_id}`).emit('startSetup', {
+      this.server.to(roomId).emit('startSetup', {
         x: room.ball.x,
         y: room.ball.y,
         leftPaddle: room.players[0].paddle,
         rightPaddle: room.players[1].paddle,
       });
-      this.disableInviteGame(intra_id, opp_id);
       setTimeout(() => {
         this.startGameLoop(room);
       }, 3000);
     } else {
-      const roomId = `room_${opp_id}`;
       const firstClient = client;
       const leftPlayer = this.createPlayer(firstClient);
       const players = [leftPlayer, null];
@@ -346,7 +291,18 @@ export class MultiplayerPongGateway
         leftPaddle: room.players[0].paddle,
         rightPaddle: room.players[1].paddle,
       });
-      // this.server.to(roomId).emit('playersReady');
+
+      this.fillRoomdata(
+        firstClient,
+        firstClient.data.intra_id,
+        firstClient.data.user_name,
+      );
+      this.fillRoomdata(
+        secondClient,
+        secondClient.data.intra_id,
+        secondClient.data.user_name,
+      );
+
       setTimeout(() => {
         this.startGameLoop(room);
       }, 3000);
@@ -362,27 +318,30 @@ export class MultiplayerPongGateway
     this.logger.log(`intra ID: ${intra_id}`);
     this.logger.log(`User Name: ${user_name}`);
 
-    // Optionally, store these values in the client object for future reference
-    client.data.intra_id = intra_id;
-    client.data.user_name = user_name;
     const roomId = this.clientRoomMap.get(client.id);
     this.logger.log(`Room ID: ${roomId}`);
-    let room = this.rooms.get(roomId);
-    if (!room) {
-      room = this.privateRooms.get(`room_${intra_id}`);
+
+    let room;
+
+    if (this.privateRooms.has(roomId)) {
+      room = this.privateRooms.get(roomId);
+    } else {
+      room = this.rooms.get(roomId);
     }
     if (room) {
-      const player1 = room.players[0].client.data.user_name;
-      const player2 = room.players[1].client.data.user_name;
-      this.logger.log(
-        `client 0: ${room.players[0].client.id}, username: ${player1}`,
-      );
-      this.logger.log(
-        `client 1: ${room.players[1].client.id}, username: ${player2}`,
-      );
-      this.logger.log('left user: ', player1);
-      this.logger.log('right user: ', player2);
-      this.server.to(room.roomID).emit('names', [player1, player2]);
+      const player1 = room.players[0]?.client?.data?.user_name;
+      const player2 = room.players[1]?.client?.data?.user_name;
+      if (player1 && player2) {
+        this.logger.log(
+          `client 0: ${room.players[0].client.id}, username: ${player1}`,
+        );
+        this.logger.log(
+          `client 1: ${room.players[1].client.id}, username: ${player2}`,
+        );
+        this.server.to(room.roomID).emit('names', [player1, player2]);
+      } else {
+        this.logger.log('Could not find names');
+      }
     } else {
       client.emit('leftUser', user_name);
       this.logger.log('Room not found');
@@ -390,14 +349,21 @@ export class MultiplayerPongGateway
   }
 
   @SubscribeMessage('key_event')
-  handleKeyEvent(client: Socket, payload: { key: string; state: 'down' | 'up' }): void {
-    this.logger.log(`Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`);
+  handleKeyEvent(
+    client: Socket,
+    payload: { key: string; state: 'down' | 'up' },
+  ): void {
+    this.logger.log(
+      `Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`,
+    );
     const roomId = this.clientRoomMap.get(client.id);
     this.logger.log(`room id: ${roomId}`);
     if (roomId) {
-      let room = this.rooms.get(roomId);
-      if (!room) {
+      let room;
+      if (this.privateRooms.has(roomId)) {
         room = this.privateRooms.get(roomId);
+      } else {
+        room = this.rooms.get(roomId);
       }
       if (room) {
         if (client.id === room.players[0].client.id) {
@@ -409,7 +375,10 @@ export class MultiplayerPongGateway
     }
   }
 
-  private handleLeftPaddleKey(room: Room, payload: { key: string; state: 'down' | 'up' }): void {
+  private handleLeftPaddleKey(
+    room: Room,
+    payload: { key: string; state: 'down' | 'up' },
+  ): void {
     const player = room.players[0];
 
     if (payload.state === 'down') {
@@ -422,7 +391,10 @@ export class MultiplayerPongGateway
     } else if (payload.state === 'up') {
       if (payload.key === 'ArrowUp' && player.movementDirection === 'up') {
         player.movementDirection = null;
-      } else if (payload.key === 'ArrowDown' && player.movementDirection === 'down') {
+      } else if (
+        payload.key === 'ArrowDown' &&
+        player.movementDirection === 'down'
+      ) {
         player.movementDirection = null;
       }
       if (!player.movementDirection) {
@@ -431,7 +403,10 @@ export class MultiplayerPongGateway
     }
   }
 
-  private handleRightPaddleKey(room: Room, payload: { key: string; state: 'down' | 'up' }): void {
+  private handleRightPaddleKey(
+    room: Room,
+    payload: { key: string; state: 'down' | 'up' },
+  ): void {
     const player = room.players[1];
 
     if (payload.state === 'down') {
@@ -444,7 +419,10 @@ export class MultiplayerPongGateway
     } else if (payload.state === 'up') {
       if (payload.key === 'ArrowUp' && player.movementDirection === 'up') {
         player.movementDirection = null;
-      } else if (payload.key === 'ArrowDown' && player.movementDirection === 'down') {
+      } else if (
+        payload.key === 'ArrowDown' &&
+        player.movementDirection === 'down'
+      ) {
         player.movementDirection = null;
       }
       if (!player.movementDirection) {
@@ -453,20 +431,31 @@ export class MultiplayerPongGateway
     }
   }
 
-  private startPaddleMovement(room: Room, player: Player, side: 'left' | 'right'): void {
+  private startPaddleMovement(
+    room: Room,
+    player: Player,
+    side: 'left' | 'right',
+  ): void {
     if (!player.movementInterval) {
       player.movementInterval = setInterval(() => {
         if (player.movementDirection === 'up') {
           player.paddle = Math.max(0, player.paddle - 2);
         } else if (player.movementDirection === 'down') {
-          player.paddle = Math.min(gameHeight - paddleHeight, player.paddle + 2);
+          player.paddle = Math.min(
+            gameHeight - paddleHeight,
+            player.paddle + 2,
+          );
         }
         this.server.to(room.roomID).emit(`${side}Paddle`, player.paddle);
       }, 1000 / 60); // 60 updates per second
     }
   }
 
-  private stopPaddleMovement(room: Room, player: Player, side: 'left' | 'right'): void {
+  private stopPaddleMovement(
+    room: Room,
+    player: Player,
+    side: 'left' | 'right',
+  ): void {
     if (player.movementInterval) {
       clearInterval(player.movementInterval);
       player.movementInterval = null;
@@ -477,7 +466,12 @@ export class MultiplayerPongGateway
   handleStart(client: Socket): void {
     const roomId = this.clientRoomMap.get(client.id);
     if (roomId) {
-      const room = this.rooms.get(roomId);
+      let room;
+      if (this.privateRooms.has(roomId)) {
+        room = this.privateRooms.get(roomId);
+      } else {
+        room = this.rooms.get(roomId);
+      }
       if (room && !this.gameInterval) {
         this.logger.log('Starting game loop in room: ' + room.roomID);
         this.startGameLoop(room);

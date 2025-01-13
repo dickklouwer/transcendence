@@ -1,4 +1,3 @@
-
 "use client";
 
 // PongGame.js
@@ -104,12 +103,19 @@ export default function PongGame() {
 				manager.startGame();
 			}, 3000);
 		};
-
+		
 		const opponentDisconnected = () => {
 			console.log('Opponent disconnected');
 			socket.disconnect();
-			setGameManager(null);
+			setGameManager(null);	
 			router.push('/pong/opponent_left');
+		}
+
+		const opponentDeclinedInvite = () => {
+			console.log('Opponent declined invite');
+			socket.disconnect();
+			setGameManager(null);	
+			router.push('/pong/opponent_declined');
 		}
 
 		socket.on('gameUpdate', handleGameUpdate);
@@ -118,6 +124,7 @@ export default function PongGame() {
 		socket.on('gameover', () => setGamestate("GameOver"));
 		socket.on('names', (user: string[]) => setUserNames({ left: user[0], right: user[1] }));
 		socket.on('opponent_left', opponentDisconnected);
+		socket.on('opponent_declined', opponentDeclinedInvite);
 
 		return () => {
 			socket.off('gameUpdate', handleGameUpdate);
@@ -134,9 +141,8 @@ export default function PongGame() {
 	};
 
 	const leave = () => {
-		// socket.emit('stop');
 		socket.disconnect();
-		setGameManager(null);
+		setGameManager(null);	
 		router.push('/menu');
 	};
 

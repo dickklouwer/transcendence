@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   users,
   friends,
@@ -25,20 +25,28 @@ import type {
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
-import { promises } from 'dns';
 
 const dublicated_key = '23505';
 const defaultUserImage =
   'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg';
 
 @Injectable()
-export class DbService {
+export class DbService implements OnModuleInit {
   db: ReturnType<typeof createDrizzleClient>;
   constructor() {
     if (!process.env.DATABASE_URL_LOCAL) {
       throw Error('Env DATABASE_URL_LOCAL is undefined');
     }
     this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
+  }
+
+  async onModuleInit() {
+    try {
+      await this.db.update(users).set({ state: 'Offline' });
+      await this.db.update(friends).set({ invite_game: false });
+    } catch (error) {
+      console.log('Error on data reset in database: ', error);
+    }
   }
 
   async getUserById(id: number): Promise<User | null> {

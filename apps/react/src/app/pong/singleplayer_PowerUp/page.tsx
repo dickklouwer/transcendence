@@ -4,7 +4,7 @@
 import { GameManager } from './gameManager';
 
 import React, { useEffect, useState, useRef } from 'react';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 
 const paddleWidth = 10;
 const paddleHeight = 100;
@@ -51,14 +51,15 @@ export default function PongGame() {
 		setGameManager(manager);
 
 		// upon reloading this does not work anymore
-		socket.on('startSetup', ({ x, y, leftPaddle, rightPaddle }: { x: number, y: number, leftPaddle: number, rightPaddle: number }) => {
-			manager.updateBallPosition(x, y);
+		socket.on('startSetup', ({ball, leftPaddle, rightPaddle, score }: { ball: { x: number, y: number }, leftPaddle: number, rightPaddle: number, score: {left: number, right: number} }) => {
+			manager.updateBallPosition(ball.x, ball.y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
+			setScore([score.left, score.right])
 		});
 
-		socket.on('gameUpdate', ({ x, y, leftPaddle, rightPaddle }: { x: number, y: number, leftPaddle: number, rightPaddle: number }) => {
-			manager.updateBallPosition(x, y);
+		socket.on('gameUpdate', ({ball, leftPaddle, rightPaddle }: { ball: { x: number, y: number }, leftPaddle: number, rightPaddle: number }) => {
+			manager.updateBallPosition(ball.x, ball.y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
 		});
