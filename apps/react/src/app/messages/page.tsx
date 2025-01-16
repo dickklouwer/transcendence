@@ -231,19 +231,6 @@ export default function DC() {
         scrollToBottom();
     }, [messages]);
 
-    // useEffect(() => {
-    //     if (!chatInfo.intraId) return;
-    //     fetchGet<boolean>(`api/checkIfInvitedForGame?other_intra_id=${chatInfo.intraId}`)
-    //         .then((res) => {
-    //             if (res) {
-    //                 setInviteState((prev) => ({ ...prev, recieveInvite: res }));
-    //             }
-    //         })
-    //         .catch((error) => {
-    //             console.log('Error: ', error);
-    //         });
-    // }, [chatInfo]);
-
     const sendMessage = (message: ChatMessages) => {
         chatSocket.emit('messageToServer', message);
         setNewMessage('');
@@ -415,9 +402,18 @@ export default function DC() {
                     onKeyUp={(e: React.KeyboardEvent<HTMLTextAreaElement>) => handleKeyPressMessage(e, user?.intra_user_id ?? 0)}
                 ></textarea>
                 <div className='flow-root'>
-                    <Link className="float-left py-2 px-4" href={'/chats'}>
+                        <button className="float-left py-2 px-4" onClick={() => {
+                                setInviteState((prev) => ({ ...prev, recieveInvite: false, inviteSent: false }));
+
+                                if (user && user.intra_user_id) {
+                                    chatSocket.emit('inviteForGame', { sender_id: user.intra_user_id, receiver_id: chatInfo.intraId, invite: false });
+                                } else {
+                                    console.log('No user');
+                                }
+                                Router.push('/chats');
+                            }}>
                         Back
-                    </Link>
+                        </button>
                     <button
                         className="float-right py-2 px-4 rounded bg-blue-500 text-black font-bold "
                         onClick={() => handleSendMessage(user?.intra_user_id ?? 0)}
