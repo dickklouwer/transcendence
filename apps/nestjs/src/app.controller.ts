@@ -14,13 +14,14 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type {
+import {
   User,
   ExternalUser,
   UserChats,
   InvitedChats,
   ChatsUsers,
   ChatSettings,
+  Permissions,
 } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
@@ -228,17 +229,14 @@ export class AppController {
     let idx = 0;
     // add other users to chat
     for (const user of ChatSettings.userId) {
-
-      let perm = ChatSettings.userPermission[idx]; // check for permissions
-      userSettings.is_owner = perm - 2 >= -1;
-      perm -= 2;
-      userSettings.is_admin = perm - 1 >= -1;
-      perm -= 1;
+      userSettings.is_owner =
+        ((ChatSettings.userPermission[idx] >> Permissions.ADMIN) & 1) == 1;
+      userSettings.is_owner =
+        ((ChatSettings.userPermission[idx] >> Permissions.OWNER) & 1) == 1;
 
       userSettings.intra_user_id = user;
       userSettings.joined = false;
       idx++;
-
 
       status = await this.dbservice.createChatUsers(
         token.split(' ')[1],
@@ -442,12 +440,13 @@ export class AppController {
     @Res() res: Response,
   ): Promise<ExternalUser[]> {
     const users = await this.dbservice.getChatUsers(chatId);
-    var externalUsers: ExternalUser[] = [];
+    const externalUsers: ExternalUser[] = [];
     for (const user of users) {
       const externalUser = await this.dbservice.getExternalUser(user);
       if (!externalUser) res.status(404).send('No users found');
       externalUsers.push(externalUser);
     }
+    console.log('BE - getExternalUsersFromChat: ', externalUsers);
     res.status(200).send(externalUsers);
     return externalUsers;
   }
@@ -480,7 +479,7 @@ export class AppController {
     }
     console.log('BE - getExternalUser: ', user.user_name, user.intra_user_id);
     res.status(200).send(user);
-    return (user);
+    return user;
   }
 
   @UseGuards(JwtAuthGuard)

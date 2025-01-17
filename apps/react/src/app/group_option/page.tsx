@@ -1,6 +1,6 @@
 "use client"
 
-import { ChatSettings, ExternalUser } from '@repo/db';
+import { Permissions, ChatSettings, ExternalUser } from '@repo/db';
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
@@ -8,14 +8,14 @@ import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { Permissions, isAdmin, toBinary, isOwner } from './functions';
+import { isAdmin, isOwner } from './functions';
 
 export default function GroupOptionPage() {
   const searchParams = useSearchParams();
   const chatId = searchParams?.get('chatId');
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [relead, setReload] = useState<boolean>(false);
+  const [reload, setReload] = useState<boolean>(false);
 
   const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
   const [chatSettings, setChatSettings] = useState<ChatSettings>();
@@ -32,22 +32,26 @@ export default function GroupOptionPage() {
     setChannelType(event.target.value === "true" ? true : false);
   };
 
+  /*
   useEffect(() => {
     async function fetchData() {
       try {
-        setIsLoading(true);
-        const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        const alt: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
+        //      setIsLoading(true);
+        //      const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
+        //      const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
 
-        if (alt == null || settings === null || users === null) {
-          console.error("Error Fetching Chat Settings or Users");
-          setIsLoading(false);
-          return;
-        }
-        setChatSettings(alt);
-        setUpdatedChatSettings(settings);
-        setChatUsers(users);
+        //        if (users === null) {
+        //          console.error("Error Fetching Chat Settings or Users");
+        //          setIsLoading(false);
+        //          return;
+        //        }
+        //        console.log("fetchData");
+        //        console.log("Settings: ", settings);
+        //        console.log("users: ", users);
+        //
+        //        setChatSettings(JSON.parse(JSON.stringify(settings)));
+        //        setUpdatedChatSettings(settings);
+        //        setChatUsers(users);
       }
       catch (error) {
         console.error("Error Fetching Chat Settings:", error);
@@ -58,6 +62,7 @@ export default function GroupOptionPage() {
     }
     fetchData();
   }, [chatId]);
+  */
 
   if (isLoading) return <p>Loading...</p>
   if (chatSettings == undefined || updatedChatSettings === undefined || chatUsers === undefined) {
@@ -71,43 +76,42 @@ export default function GroupOptionPage() {
     );
   }
 
-  function forceReload() {
-    setReload(!relead);
-  }
+  //  function forceReload() {
+  //    setReload(!reload);
+  //  }
 
-  function toggleOwner(id: number) {
-    if (updatedChatSettings === undefined) return;
+  /*
+    function toggleOwner(id: number) {
+      if (updatedChatSettings === undefined) return;
+  
+      const idx: number = updatedChatSettings.userId.indexOf(id);
+      // Clone the object and update the permission
+  
+      updatedChatSettings.userPermission[idx] >> (Permissions.OWNER) & 1 ?
+        updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] & ~(1 << Permissions.OWNER) :
+        updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] | 1 << Permissions.OWNER;
+  
+      setUpdatedChatSettings(updatedChatSettings);
+      forceReload();
+    }
 
-    const idx: number = updatedChatSettings.userId.indexOf(id);
-    // Clone the object and update the permission
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
-
-    updatedChatSettings.userPermission[idx] >> (Permissions.OWNER) & 1 ?
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] & ~(1 << Permissions.OWNER) :
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] | 1 << Permissions.OWNER;
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
-
-    setUpdatedChatSettings(updatedChatSettings);
-    forceReload();
-  }
+  */
   function toggleAdmin(id: number) {
     if (updatedChatSettings === undefined) return;
 
     const idx: number = updatedChatSettings.userId.indexOf(id);
     // Clone the object and update the permission
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
+    const settings: ChatSettings = { ...updatedChatSettings };
 
-    updatedChatSettings.userPermission[idx] >> (Permissions.ADMIN) & 1 ?
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] & ~(1 << Permissions.ADMIN) :
-      updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] | 1 << Permissions.ADMIN;
-    console.log("perms: ", updatedChatSettings.userPermission[idx], toBinary(updatedChatSettings.userPermission[idx]));
+    settings.userPermission[idx] >> (Permissions.ADMIN) & 1 ?
+      settings.userPermission[idx] = settings.userPermission[idx] & ~(1 << Permissions.ADMIN) :
+      settings.userPermission[idx] = settings.userPermission[idx] | 1 << Permissions.ADMIN;
 
-    setUpdatedChatSettings(updatedChatSettings);
-    forceReload();
+    setUpdatedChatSettings(settings);
   }
 
-  console.log("  ChatSettings: ", chatSettings.userPermission);
-  console.log("U ChatSettings: ", updatedChatSettings.userPermission);
+  //console.log("  ChatSettings: ", chatSettings.userPermission);
+  //console.log("U ChatSettings: ", updatedChatSettings.userPermission);
 
   return (
     <div className="flex flex-col w-5/6">
@@ -128,11 +132,11 @@ export default function GroupOptionPage() {
                   <p className="text-xs">Owner</p>
                 </div>
               </div>
+              {/*
               {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
               {chatUsers.map((user) => (
                 <div key={user.intra_user_id}>
                   <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-slate-950 rounded">
-                    {/* Chat User OVerview */}
                     <div className="flex flex-col">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
@@ -161,7 +165,8 @@ export default function GroupOptionPage() {
                               Make sure an Admin can't change ownership
                         */}
 
-                    {/* {isOwner(permsettings, user.intra_user_id) || isAdmin(permsettings, user.intra_user_id)? */}
+              {/* {isOwner(permsettings, user.intra_user_id) || isAdmin(permsettings, user.intra_user_id)? */}
+              {/*
                     < div className='flex flex-row justify-around w-2/5 space-x-10'>
                       {isAdmin(updatedChatSettings, user.intra_user_id) ?
                         <button className="flex size-15 p-5 rounded bg-green-800" onClick={
@@ -169,6 +174,7 @@ export default function GroupOptionPage() {
                         <button className="flex size-15 p-5 rounded bg-red-800" onClick={
                           () => toggleAdmin(user.intra_user_id)}></button>
                       }
+                      :
                       {isOwner(updatedChatSettings, user.intra_user_id) ?
                         <button className="flex size-15 p-5 rounded bg-green-800" onClick={
                           () => toggleOwner(user.intra_user_id)}></button> :
@@ -176,7 +182,6 @@ export default function GroupOptionPage() {
                           () => toggleOwner(user.intra_user_id)}></button>
                       }
                     </div>
-                    {/* :
                   < div className='flex flex-row justify-around w-2/5 space-x-10'>
                     {isAdmin(updatedChatSettings, user.intra_user_id) ?
                       <div className="flex size-15 p-5 rounded bg-green-800" ></div> :
@@ -185,10 +190,10 @@ export default function GroupOptionPage() {
                       <div className="flex size-15 p-5 rounded bg-green-800"></div> :
                       <div className="flex size-15 p-5 rounded bg-red-800"></div>}
                   </div>
-                  */}
-                  </div>
-                </div>
+            </div>
+          </div>
               ))}
+                  */}
             </div>
           </div>
 
@@ -196,7 +201,6 @@ export default function GroupOptionPage() {
           <div className="flex flex-col items-center justify-center ">
             {/* TODO: [x] Title for chat needs to be added
                     [ ] check if all required values are filled in
-              */}
 
             <div className='flex flex-col w-[25rem] justify-center m-3 '>
               <div className="flex flex-row justify-between m-2 my-3">
@@ -263,16 +267,18 @@ export default function GroupOptionPage() {
                 < p className="flex justify-right flex-row my-3 "></p>
               }
             </div>
+              */}
 
             {/* Action Buttons */}
             < div className="flex flex-row justify-center">
-              {/* Cancel Button should just go back */}
+              {/* Cancel Button should just go back
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 " href="/chats">
                 Back
               </Link>
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " onClick={() => UpdateSettings()} href="/chats">
                 Apply
               </Link>
+              */}
               {/* Create Button should create chat and go back to chats */}
             </div>
           </div>
@@ -280,20 +286,18 @@ export default function GroupOptionPage() {
       </div >
 
       {/* Debug Box
-      */}
-      <div className="flex flex-col text-left justify-center">
+      < div className="flex flex-col text-left justify-center" >
         <p>Selected Users: {chatSettings?.userId.join(", ")}</p>
         <p>Permissions: {chatSettings?.userPermission.join(", ")}</p>
-        {/*
-            <p>Title: {title}</p>
-            <p>password: {password}</p>
-            <p>Has Password: {hasPassword ? "True" : "False"}</p>
-            <p>Show Password : {showPassword ? "True" : "False"}</p>
-            */}
+        <p>Title: {title}</p>
+        <p>password: {password}</p>
+        <p>Has Password: {hasPassword ? "True" : "False"}</p>
+        <p>Show Password : {showPassword ? "True" : "False"}</p>
         <p>Updated</p>
         <p>Selected Users: {updatedChatSettings?.userId.join(", ")}</p>
         <p>Permissions: {updatedChatSettings?.userPermission.join(", ")}</p>
-      </div>
+      </div >
+      */}
 
     </div >
   );

@@ -64,7 +64,6 @@ export class DbService implements OnModuleInit {
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, id));
 
-      // console.log('DB - getChatUsers : ', userList);
       return userList.map((user) => user.intra_user_id);
     } catch (error) {
       console.error('DB: getChatUsers Error: ', error);
@@ -114,7 +113,6 @@ export class DbService implements OnModuleInit {
         })
         .from(users)
         .where(eq(users.intra_user_id, id));
-      //      console.log('DB: getExternalUser: ', user);
       return user;
     } catch (error) {
       console.log('DB: getExternalUser Error: ', error);
@@ -366,7 +364,6 @@ export class DbService implements OnModuleInit {
           ),
         );
 
-      //      console.log('DB: friendList', friendList);
       return friendList;
     } catch (error) {
       console.log('Error: ', error);
@@ -957,7 +954,6 @@ export class DbService implements OnModuleInit {
         image: chat[0].image,
         password: chat[0].password,
       };
-      //console.log('DB - Chat Settings: ', settings);
       return settings;
     } catch (error) {
       console.log('Error: ', error);
