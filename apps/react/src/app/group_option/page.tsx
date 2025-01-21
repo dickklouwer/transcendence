@@ -1,6 +1,6 @@
 "use client"
 
-import { Permissions, ChatSettings, ExternalUser } from '@repo/db';
+import { ChatSettings, ExternalUser } from '@repo/db';
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
@@ -10,7 +10,30 @@ import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
 import { isAdmin, isOwner } from './functions';
 
+// NOTE: @Jisse help me understand this
+// if i import this enum from @repo/db it gives an error saying i'm using an module not allowed clientside
+// this code is causing this error:
+// _________________________________
+//    Module not found: Can't resolve 'net'
+//    > 1 | import net from 'net'
+//        | ^
+//      2 | import tls from 'tls'
+//      3 | import crypto from 'crypto'
+//      4 | import Stream from 'stream'
+//    
+//    Import trace for requested module:
+//    ../../node_modules/postgres/src/index.js
+//    ../../packages/db/dist/index.mjs
+//    ./src/app/group_option/page.tsx
+
+enum Shifts {
+  ADMIN = 0,
+  OWNER = 1,
+  BANNED = 3,
+};
+
 export default function GroupOptionPage() {
+
   const searchParams = useSearchParams();
   const chatId = searchParams?.get('chatId');
 
@@ -18,7 +41,6 @@ export default function GroupOptionPage() {
   const [reload, setReload] = useState<boolean>(false);
 
   const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
-  const [chatSettings, setChatSettings] = useState<ChatSettings>();
   const [chatUsers, setChatUsers] = useState<ExternalUser[]>();
 
   const [isPrivate, setChannelType] = useState<boolean>(true);
@@ -33,25 +55,24 @@ export default function GroupOptionPage() {
   };
 
   /*
+  */
   useEffect(() => {
     async function fetchData() {
       try {
-        //      setIsLoading(true);
-        //      const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        //      const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
+        setIsLoading(true);
+        const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
+        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
 
-        //        if (users === null) {
-        //          console.error("Error Fetching Chat Settings or Users");
-        //          setIsLoading(false);
-        //          return;
-        //        }
-        //        console.log("fetchData");
-        //        console.log("Settings: ", settings);
-        //        console.log("users: ", users);
-        //
-        //        setChatSettings(JSON.parse(JSON.stringify(settings)));
-        //        setUpdatedChatSettings(settings);
-        //        setChatUsers(users);
+        if (users === null) {
+          console.error("Error Fetching Chat Settings or Users");
+          setIsLoading(false);
+          return;
+        }
+        console.log("fetchData");
+        console.log("users: ", users);
+
+        setUpdatedChatSettings(settings);
+        setChatUsers(users);
       }
       catch (error) {
         console.error("Error Fetching Chat Settings:", error);
@@ -62,10 +83,11 @@ export default function GroupOptionPage() {
     }
     fetchData();
   }, [chatId]);
-  */
 
+
+  //return (<p>HELLO WE ARE CLOSED</p>)
   if (isLoading) return <p>Loading...</p>
-  if (chatSettings == undefined || updatedChatSettings === undefined || chatUsers === undefined) {
+  if (updatedChatSettings === undefined || chatUsers === undefined) {
     return (
       <div>
         <p>Invalid Data</p>
@@ -75,10 +97,7 @@ export default function GroupOptionPage() {
       </div>
     );
   }
-
-  //  function forceReload() {
-  //    setReload(!reload);
-  //  }
+  const pageSettings = { ...updatedChatSettings };
 
   /*
     function toggleOwner(id: number) {
@@ -94,18 +113,18 @@ export default function GroupOptionPage() {
       setUpdatedChatSettings(updatedChatSettings);
       forceReload();
     }
-
   */
+
   function toggleAdmin(id: number) {
     if (updatedChatSettings === undefined) return;
-
-    const idx: number = updatedChatSettings.userId.indexOf(id);
-    // Clone the object and update the permission
     const settings: ChatSettings = { ...updatedChatSettings };
 
-    settings.userPermission[idx] >> (Permissions.ADMIN) & 1 ?
-      settings.userPermission[idx] = settings.userPermission[idx] & ~(1 << Permissions.ADMIN) :
-      settings.userPermission[idx] = settings.userPermission[idx] | 1 << Permissions.ADMIN;
+    const idx: number = settings.userId.indexOf(id);
+    // Clone the object and update the permission
+
+    (settings.userPermission[idx] >> (Shifts.ADMIN)) & 1 ?
+      settings.userPermission[idx] = settings.userPermission[idx] & ~(1 << Shifts.ADMIN) :
+      settings.userPermission[idx] = settings.userPermission[idx] | (1 << Shifts.ADMIN);
 
     setUpdatedChatSettings(settings);
   }
@@ -132,7 +151,6 @@ export default function GroupOptionPage() {
                   <p className="text-xs">Owner</p>
                 </div>
               </div>
-              {/*
               {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
               {chatUsers.map((user) => (
                 <div key={user.intra_user_id}>
@@ -165,35 +183,38 @@ export default function GroupOptionPage() {
                               Make sure an Admin can't change ownership
                         */}
 
-              {/* {isOwner(permsettings, user.intra_user_id) || isAdmin(permsettings, user.intra_user_id)? */}
-              {/*
-                    < div className='flex flex-row justify-around w-2/5 space-x-10'>
-                      {isAdmin(updatedChatSettings, user.intra_user_id) ?
-                        <button className="flex size-15 p-5 rounded bg-green-800" onClick={
-                          () => toggleAdmin(user.intra_user_id)}></button> :
-                        <button className="flex size-15 p-5 rounded bg-red-800" onClick={
-                          () => toggleAdmin(user.intra_user_id)}></button>
-                      }
+                    {isOwner(pageSettings, user.intra_user_id) || isAdmin(pageSettings, user.intra_user_id) ?
+                      < div className='flex flex-row justify-around w-2/5 space-x-10'>
+                        {isAdmin(updatedChatSettings, user.intra_user_id) ?
+                          <button className="flex size-15 p-5 rounded bg-green-800" onClick={
+                            () => toggleAdmin(user.intra_user_id)}></button> :
+                          <button className="flex size-15 p-5 rounded bg-red-800" onClick={
+                            () => toggleAdmin(user.intra_user_id)}></button>
+                        }
+                        {isOwner(updatedChatSettings, user.intra_user_id) ?
+                          <button className="flex size-15 p-5 rounded bg-green-800" onClick={
+                            () => toggleOwner(user.intra_user_id)}></button> :
+                          <button className="flex size-15 p-5 rounded bg-red-800" onClick={
+                            () => toggleOwner(user.intra_user_id)}></button>
+                        }
+                        {/* 
+                        */}
+                      </div>
                       :
-                      {isOwner(updatedChatSettings, user.intra_user_id) ?
-                        <button className="flex size-15 p-5 rounded bg-green-800" onClick={
-                          () => toggleOwner(user.intra_user_id)}></button> :
-                        <button className="flex size-15 p-5 rounded bg-red-800" onClick={
-                          () => toggleOwner(user.intra_user_id)}></button>
-                      }
-                    </div>
-                  < div className='flex flex-row justify-around w-2/5 space-x-10'>
-                    {isAdmin(updatedChatSettings, user.intra_user_id) ?
-                      <div className="flex size-15 p-5 rounded bg-green-800" ></div> :
-                      <div className="flex size-15 p-5 rounded bg-red-800"></div>}
-                    {isOwner(updatedChatSettings, user.intra_user_id) ?
-                      <div className="flex size-15 p-5 rounded bg-green-800"></div> :
-                      <div className="flex size-15 p-5 rounded bg-red-800"></div>}
+                      < div className='flex flex-row justify-around w-2/5 space-x-10'>
+                        {isAdmin(updatedChatSettings, user.intra_user_id) ?
+                          <div className="flex size-15 p-5 rounded bg-green-800" ></div> :
+                          <div className="flex size-15 p-5 rounded bg-red-800"></div>}
+                        {/* 
+                        {isOwner(updatedChatSettings, user.intra_user_id) ?
+                          <div className="flex size-15 p-5 rounded bg-green-800"></div> :
+                          <div className="flex size-15 p-5 rounded bg-red-800"></div>}
+                        */}
+                      </div>
+                    }
                   </div>
-            </div>
-          </div>
+                </div>
               ))}
-                  */}
             </div>
           </div>
 
