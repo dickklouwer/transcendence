@@ -438,6 +438,19 @@ export class AppController {
     return response;
   }
 
+  @Get('getChatIdOfDm')
+  async getChatIdOfDm(
+    @Headers('authorization') token: string,
+    @Query('external_user_id') external_user_id: number,
+  ): Promise<number | undefined> {
+    const chat_id = await this.dbservice.getChatIdOfDm(
+      token.split(' ')[1],
+      external_user_id,
+    );
+
+    return chat_id;
+  }
+
   @Get('getExternalUsersFromChat')
   async getExternalUsersFromChat(
     @Query('chatId') chatId: number,

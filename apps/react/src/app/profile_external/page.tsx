@@ -17,6 +17,7 @@ export default function ProfileExternalPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const externalUserIdString = searchParams?.get('id');
+  const Router = useRouter();
 
   useEffect(() => {
       fetchGet<User>('api/profile')
@@ -80,12 +81,12 @@ export default function ProfileExternalPage() {
       ownUserId,
       externalUserId
     ];
-
+    
     return users;
   }
-
+  
   function GoToDirectMessage() {
-    // const Router = useRouter();
+    console.log('Direct Message button clicked');
     
     const users: number[] = GetUserIds();
 
@@ -94,34 +95,38 @@ export default function ProfileExternalPage() {
       return;
     }
 
-    // TODO: check if chat already exists
+    const chatSettings: ChatSettings = {
+      isPrivate: true,
+      isDirect: true,
+      userInfo: parseUserInfo(users),
+      title: "No title",
+      password: null,
+      image: null,
+    };
 
-    if (false) { // if chat not exists
-      console.log('ChatSettings: ', chatSettings);
-  
-      fetchPost("/api/createChat", { ChatSettings: chatSettings })
-        .then(() => {
-          console.log("Group Chat Created");
-        })
-        .catch((error) => {
-          console.log("Error Creating Group Chat", error);
-  
-        });
+    console.log("chatSettings: ", chatSettings);
 
-      const chatSettings: ChatSettings = {
-        isPrivate: true,
-        isDirect: true,
-        userInfo: parseUserInfo(users),
-        title: "No title",
-        password: null,
-        image: null,
-      };
-    }
-
-
-    // Router.push("/messages?chat_id=");
-
-    console.log('Direct Message button clicked');
+    fetchGet<number | undefined>(`/api/getChatIdOfDm?${users[1]}`)
+      .then((chatId) => {
+        console.log("ChatId: ", chatId);
+        if (chatId !== undefined) {
+          console.log("Chat already exists");
+          Router.push(`/messages?chat_id=${chatId}`);
+        } else {
+          console.log("Chat does not exist, create one");
+          // fetchPost("/api/createChat", { ChatSettings: chatSettings })
+          //   .then((new_chat_id) => {
+          //     console.log("Group Chat Created");
+          //     Router.push(`/messages?chat_id=${new_chat_id}`);
+          //   })
+          //   .catch((error) => {
+          //     console.log("Error Creating Group Chat", error);
+          //   });
+        }
+      })
+      .catch((error) => {
+        console.log("Error: ", error);
+      });
   }
 
   if (loading)

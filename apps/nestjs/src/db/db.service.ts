@@ -57,6 +57,7 @@ export class DbService implements OnModuleInit {
     return result.length > 0 ? result[0] : null;
   }
 
+
   async getChatUsers(id: number): Promise<number[] | null> {
     try {
       const userList = await this.db
@@ -1446,6 +1447,45 @@ export class DbService implements OnModuleInit {
     } catch (error) {
       console.log('Error!: ', error);
       return false;
+    }
+  }
+
+  async getChatIdOfDm(
+    jwtToken: string,
+    other_intra_id: number,
+  ): Promise<number | undefined> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      // get list with user_id's other_intr_id
+
+      const chatUsers = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(
+          or(
+            eq(chatsUsers.intra_user_id, user.intra_user_id),
+            eq(chatsUsers.intra_user_id, other_intra_id),
+          ),
+        );
+
+      if (chatUsers.length === 0) {
+        console.log('No chat found!');
+        return undefined;
+      }
+
+      console.log('chatUsers:', chatUsers);
+
+      // search for the same chat_id's
+
+      // check if the chat_id is a dm
+
+      return 0;
+      // return chat[0].chat_id;
+    } catch (error) {
+      console.log('Error: ', error);
+      return 0;
     }
   }
 
