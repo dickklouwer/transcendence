@@ -121,13 +121,14 @@ export default function GroupInvite() {
     return userRight
   }
 
+
+
   function CreateGroupChat() {
 
     const Settings: ChatSettings = {
       isPrivate: isPrivate,
       isDirect: false,
-      userId: selectedUsers,
-      userPermission: fillPermissions(selectedUsers),
+      userPermission: fillChatUsers(selectedUsers),
       title: title,
       password: password === "" ? null : password,
       image: null,

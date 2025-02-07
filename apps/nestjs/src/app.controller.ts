@@ -21,7 +21,7 @@ import {
   InvitedChats,
   ChatsUsers,
   ChatSettings,
-  Permissions,
+  chats,
 } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
@@ -158,7 +158,8 @@ export class AppController {
   @Get(`getChatSettings`)
   async getChatSettings(
     @Headers('authorization') token: string,
-    @Query('chatId') chatId: number,
+    @Query('chatId') chatId: number,    
+    @Res() res: Response,
   ): Promise<ChatSettings> {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const chatSettings = await this.dbservice.getChatSettings(
@@ -171,12 +172,13 @@ export class AppController {
     if (chatSettings === null) {
       throw Error('Failed to fetch chatSettings');
     }
-    if (!chatSettings.userId.includes(user.intra_user_id)) {
-      throw Error('User not in chat');
-    }
 
-    console.log(`BE - getChatSettings[${chatId}]: `, chatSettings.title);
-    return chatSettings;
+    for (let i: number = 0; i < chatSettings.userInfo.length; i++) {
+      const chatUser = chatSettings.userInfo[i];
+      if (chatUser.intra_user_id == user.intra_user_id)
+        return chatSettings
+    }
+    res.status(422).send('User not in chat');
   }
 
   @Post('createChat')
@@ -226,13 +228,19 @@ export class AppController {
       return;
     }
 
+    enum Shifts {
+      ADMIN = 0,
+      OWNER = 1,
+      BANNED = 3,
+    };
+
     let idx = 0;
     // add other users to chat
     for (const user of ChatSettings.userId) {
       userSettings.is_owner =
-        ((ChatSettings.userPermission[idx] >> Permissions.ADMIN) & 1) == 1;
+        ((ChatSettings.userPermission[idx] >> Shifts.ADMIN) & 1) == 1;
       userSettings.is_owner =
-        ((ChatSettings.userPermission[idx] >> Permissions.OWNER) & 1) == 1;
+        ((ChatSettings.userPermission[idx] >> Shifts.OWNER) & 1) == 1;
 
       userSettings.intra_user_id = user;
       userSettings.joined = false;
