@@ -175,9 +175,12 @@ export class AppController {
 
     for (let i: number = 0; i < chatSettings.userInfo.length; i++) {
       const chatUser = chatSettings.userInfo[i];
-      if (chatUser.intra_user_id == user.intra_user_id)
-        return chatSettings
+     if (chatUser.intra_user_id ===+ user.intra_user_id) {
+        res.status(200).send(chatSettings);
+        return ;
+      }
     }
+    console.log("We've not seen user in chatsUsers");
     res.status(422).send('User not in chat');
   }
 

@@ -937,7 +937,6 @@ export class DbService implements OnModuleInit {
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
-      console.log("DB - users: ", users);
 
       const settings: ChatSettings = {
         title: chat[0].title,
@@ -947,7 +946,6 @@ export class DbService implements OnModuleInit {
         image: chat[0].image,
         password: chat[0].password,
       };
-      console.log("DB - settingsz: ", settings);
       return settings;
     } catch (error) {
       console.log('Error: ', error);
