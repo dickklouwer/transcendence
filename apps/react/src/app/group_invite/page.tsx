@@ -117,7 +117,7 @@ export default function GroupInvite() {
     const Settings: ChatSettings = {
       isPrivate: isPrivate,
       isDirect: false,
-      userInfo: ,
+      userInfo: [],
       title: title,
       password: password === "" ? null : password,
       image: null,
