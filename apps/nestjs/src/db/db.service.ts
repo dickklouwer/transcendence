@@ -57,7 +57,21 @@ export class DbService implements OnModuleInit {
     return result.length > 0 ? result[0] : null;
   }
 
-  async getExternalUser(id: number) {
+  async getChatUsers(id: number): Promise<number[] | null> {
+    try {
+      const userList = await this.db
+        .select({ intra_user_id: chatsUsers.intra_user_id })
+        .from(chatsUsers)
+        .where(eq(chatsUsers.chat_id, id));
+
+      return userList.map((user) => user.intra_user_id);
+    } catch (error) {
+      console.error('DB: getChatUsers Error: ', error);
+      return null;
+    }
+  }
+
+  async getExternalUser(id: number): Promise<ExternalUser | null> {
     try {
       const user = await this.db
         .select({
@@ -67,12 +81,21 @@ export class DbService implements OnModuleInit {
           email: users.email,
           state: users.state,
           image: users.image_url,
+          wins: users.wins,
+          losses: users.losses,
         })
         .from(users)
-        .where(eq(users.intra_user_id, id));
-      return user;
+        .where(eq(users.intra_user_id, id))
+        .limit(1);
+
+      console.log(
+        'DB - getExternalUser: ',
+        user[0].user_name,
+        user[0].intra_user_id,
+      );
+      return user[0];
     } catch (error) {
-      console.log('DB: getExternalUser Error: ', error);
+      console.error('DB: getExternalUser Error: ', error);
       return null;
     }
   }
@@ -90,7 +113,6 @@ export class DbService implements OnModuleInit {
         })
         .from(users)
         .where(eq(users.intra_user_id, id));
-      //      console.log('DB: getExternalUser: ', user);
       return user;
     } catch (error) {
       console.log('DB: getExternalUser Error: ', error);
@@ -342,7 +364,6 @@ export class DbService implements OnModuleInit {
           ),
         );
 
-      //      console.log('DB: friendList', friendList);
       return friendList;
     } catch (error) {
       console.log('Error: ', error);
@@ -638,9 +659,11 @@ export class DbService implements OnModuleInit {
     const result: UserChats[] = [];
 
     try {
+      // Check if user exists in DB
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
+      // Check if user is Banned
       await this.db
         .update(chatsUsers)
         .set({ joined: false })
@@ -648,6 +671,7 @@ export class DbService implements OnModuleInit {
           and(eq(chatsUsers.is_banned, true), eq(chatsUsers.joined, true)),
         );
 
+      // Get all chat_ids for the user
       const chat_ids = await this.db
         .select()
         .from(chatsUsers)
@@ -719,6 +743,8 @@ export class DbService implements OnModuleInit {
             ),
           );
 
+        //        console.log('otherUsers:', otherUsers);
+        //        console.log('lastSenderName:', lastSenderName);
         const field: UserChats = {
           chatid: chat_ids[i].chats.chat_id,
           title: chatsInfo[0].isDirect
@@ -883,19 +909,41 @@ export class DbService implements OnModuleInit {
       if (!user) throw Error('Failed to fetch User!');
 
       const chat = await this.db
-        .select()
+        .select({
+          chat_id: chats.chat_id,
+          title: chats.title,
+          is_direct: chats.is_direct,
+          is_public: chats.is_public,
+          image: chats.image,
+          password: chats.password,
+        })
         .from(chats)
-        .where(eq(chats.chat_id, chat_id));
+        .where(eq(chats.chat_id, chat_id))
+        .limit(1);
       if (chat.length === 0) throw Error('Failed to fetch Chat!');
+      const users: ChatsUsers[] = await this.db
+        .select()
+        .from(chatsUsers)
+        .where(eq(chatsUsers.chat_id, chat_id));
+      if (users.length === 0) throw Error('Failed to fetch Chatusers!');
 
-      return {
+      function parseUserIds(chatsUsers: ChatsUsers[]): number[] {
+        const result: number[] = [];
+        for (let i = 0; i < chatsUsers.length; i++) {
+          result.push(chatsUsers[i].intra_user_id);
+        }
+        return result;
+      }
+
+      const settings: ChatSettings = {
         title: chat[0].title,
-        intraId: [],
+        userInfo: users,
         isDirect: chat[0].is_direct,
         isPrivate: !chat[0].is_public,
         image: chat[0].image,
         password: chat[0].password,
       };
+      return settings;
     } catch (error) {
       console.log('Error: ', error);
       return null;

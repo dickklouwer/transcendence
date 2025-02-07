@@ -67,8 +67,8 @@ type ChatInfo = {
 type ChatSettings = {
   isPrivate: boolean;
   isDirect: boolean;
-  intraId: number[];        //required
-  title: string;            //required
+  userInfo: ChatsUsers[],
+  title: string;
   password: string | null;
   image: string | null;
 };
