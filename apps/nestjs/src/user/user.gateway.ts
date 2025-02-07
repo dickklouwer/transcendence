@@ -67,7 +67,7 @@ export class UserGateway
 
     this.clients.forEach((clients, intra_user_id) => {
       if (clients === client) {
-        this.dbService.declineFriendRequest(intra_user_id, friend_id);
+        this.dbService.removeFriend(intra_user_id, friend_id);
       }
     });
   }

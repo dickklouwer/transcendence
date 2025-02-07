@@ -15,6 +15,7 @@ export default function ProfileExternalPage() {
   const [user, setUser] = useState<User>();
   const [externalUser, setExternalUser] = useState<ExternalUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [blocked, setBlocked] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const externalUserIdString = searchParams?.get('id');
 
@@ -30,6 +31,7 @@ export default function ProfileExternalPage() {
       .then((res) => {
         console.log('FE - ExternalUser: ', res);
         setExternalUser(res);
+        setBlocked(res.blocked);
         setLoading(false);
       })
       .catch((error) => {
@@ -129,6 +131,28 @@ export default function ProfileExternalPage() {
   if (!externalUser)
     return <div>Could not load user</div>;
 
+  const setBlockedUser = async () => {
+    console.log('Block User');
+    await fetchPost("/api/blockUser", { blocked_user_id: externalUser.intra_user_id })
+      .then((res) => {
+        setBlocked(true);
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
+      })
+  }
+
+  const removeBlockedUser = async () => {
+    console.log('UnBlock User');
+    await fetchPost("/api/unblockUser", { blocked_user_id: externalUser.intra_user_id })
+      .then((res) => {
+        setBlocked(false);
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
+      })
+  }
+
   //NOTE: Need to see if i can get normal FriendsList working withtout reworking the entire function get @jmeruma
   //      see ./form_components.tsx for ExternalFriendlist component
   //      PS: The DisplayUserStatus component is not working as intended, or i'm not sure what is up.
@@ -165,15 +189,32 @@ export default function ProfileExternalPage() {
               <p className="text-blue-400 break-all ">{externalUser.email}</p>
             </div>
           </div>
-
-          {/* TODO:
-              [] Button Direct Message
-                [] Different location.
-                [] Link to message?chat_id={id}
-          */}
-          <div className="flex justify-center items-center px-2 py-1 m-4 rounded-lg bg-blue-500 hover:bg-blue-700 transition-all duration-150">
+          {blocked == false ?
+          <div>
+            <div className="flex justify-center items-center px-2 py-1 m-4 rounded-lg bg-blue-500 hover:bg-blue-700 transition-all duration-150">
+              <button className="flex justify-center items-center"
+              onClick={() => GoToDirectMessage()}>
+                <svg className="w-8 h-8 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd" />
+                </svg>
+                <h1 className="px-5 text-2xl text-white">Direct Message</h1>
+              </button>
+            </div>
+            <div className="flex justify-center items-center  bg-red-500 hover:bg-red-700 transition-all duration-150 px-2 py-1 m-4 rounded-lg">
+              <button className="flex justify-center items-center"
+                onClick={setBlockedUser}>
+              <svg className="flex w-8 h-8" fill="#ffffff" height="200px" width="200px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> 
+                <path d="M21,5V4h-1V3h-1V2H5v1H4v1H3v1H2v14h1v1h1v1h1v1h14v-1h1v-1h1v-1h1V5H21z M20,17h-3v-2h-2v-2h-2v-2h-2V9H9V7H7V4h10v1h1v1h1 v1h1V17z M6,19v-1H5v-1H4V7h1v2h2v2h2v2h2v2h2v2h2v2h2v1H7v-1H6z"></path> </g></svg>
+                <h1 className="px-5 text-2xl text-white">Block User :(</h1>
+            </button>
+            </div>
+          </div>
+          :
+          <div>
+            <div className="flex justify-center items-center px-2 py-1 m-4 rounded-lg bg-red-500 hover:bg-red-700 transition-all duration-150">
             <button className="flex justify-center items-center"
-            onClick={() => GoToDirectMessage()}>
+            disabled={true}>
               <svg className="w-8 h-8 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 24 24">
                 <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd" />
                 <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd" />
@@ -181,19 +222,16 @@ export default function ProfileExternalPage() {
               <h1 className="px-5 text-2xl text-white">Direct Message</h1>
             </button>
           </div>
-          {/* TODO:
-              [] Button Block User 
-                [] Different location.
-                [] if user is blocked, show unblock button.
-          */}
-          <div className="flex justify-center items-center  bg-red-500 hover:bg-red-700 transition-all duration-150 px-2 py-1 m-4 rounded-lg">
+            <div className="flex justify-center items-center  bg-green-500 hover:bg-green-700 transition-all duration-150 px-2 py-1 m-4 rounded-lg">
             <button className="flex justify-center items-center"
-              onClick={() => console.log('Block User')}>
-            <svg className="flex w-8 h-8" fill="#ffffff" height="200px" width="200px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> 
-              <path d="M21,5V4h-1V3h-1V2H5v1H4v1H3v1H2v14h1v1h1v1h1v1h14v-1h1v-1h1v-1h1V5H21z M20,17h-3v-2h-2v-2h-2v-2h-2V9H9V7H7V4h10v1h1v1h1 v1h1V17z M6,19v-1H5v-1H4V7h1v2h2v2h2v2h2v2h2v2h2v2h2v1H7v-1H6z"></path> </g></svg>
-              <h1 className="px-5 text-2xl text-white">Block User :(</h1>
-          </button>
+              onClick={removeBlockedUser}>
+                <svg className="flex w-8 h-8" fill="#ffffff" height="200px" width="200px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> 
+                <path d="M21,5V4h-1V3h-1V2H5v1H4v1H3v1H2v14h1v1h1v1h1v1h14v-1h1v-1h1v-1h1V5H21z M20,17h-3v-2h-2v-2h-2v-2h-2V9H9V7H7V4h10v1h1v1h1 v1h1V17z M6,19v-1H5v-1H4V7h1v2h2v2h2v2h2v2h2v2h2v2h2v1H7v-1H6z"></path> </g></svg>
+                <h1 className="px-5 text-2xl text-white">UnBlock User :)</h1>
+            </button>
+            </div>
           </div>
+        }
 
 
           <div className="flex justify-center items-center ">
