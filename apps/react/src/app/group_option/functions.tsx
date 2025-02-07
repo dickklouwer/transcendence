@@ -1,4 +1,4 @@
-import { ChatSettings } from '@repo/db';
+import { ChatSettings, ChatsUsers } from '@repo/db';
 
 enum Shifts {
   ADMIN = 0,
@@ -6,14 +6,22 @@ enum Shifts {
   BANNED = 3,
 };
 
+export function findChatsUsers(settings: ChatSettings, id: number): ChatsUsers {
+  let chatUser: ChatsUsers = settings.userInfo[0];
+
+  for (let i: number = 0; i < settings.userInfo.length; i++) {
+    chatUser = settings.userInfo[i];
+    if (chatUser.intra_user_id === id) break;
+  }
+  return chatUser;
+}
+
 export function isOwner(settings: ChatSettings, id: number): boolean {
-  const idx: number = settings.userId.indexOf(id);
-  return ((settings.userPermission[idx] >> Shifts.OWNER & 1) == 1);
+  const user : ChatsUsers = findChatsUsers(settings, id);
+  return (user.is_owner);
 }
 
 export function isAdmin(settings: ChatSettings, id: number): boolean {
-  if (settings === undefined) return false;
-  const idx: number = settings.userId.indexOf(id);
-  return ((settings.userPermission[idx] >> Shifts.ADMIN & 1) == 1);
+  const user : ChatsUsers = findChatsUsers(settings, id);
+  return (user.is_admin);
 }
-

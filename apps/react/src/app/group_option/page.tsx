@@ -1,6 +1,6 @@
 "use client"
 
-import { ChatSettings, ExternalUser } from '@repo/db';
+import { ChatSettings, ExternalUser, ChatsUsers, User } from '@repo/db';
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
@@ -8,29 +8,7 @@ import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { isAdmin, isOwner } from './functions';
-
-// NOTE: @Jisse help me understand this
-// if i import this enum from @repo/db it gives an error saying i'm using an module not allowed clientside
-// this code is causing this error:
-// _________________________________
-//    Module not found: Can't resolve 'net'
-//    > 1 | import net from 'net'
-//        | ^
-//      2 | import tls from 'tls'
-//      3 | import crypto from 'crypto'
-//      4 | import Stream from 'stream'
-//    
-//    Import trace for requested module:
-//    ../../node_modules/postgres/src/index.js
-//    ../../packages/db/dist/index.mjs
-//    ./src/app/group_option/page.tsx
-
-enum Shifts {
-  ADMIN = 0,
-  OWNER = 1,
-  BANNED = 3,
-};
+import { isAdmin, isOwner, findChatsUsers} from './functions';
 
 export default function GroupOptionPage() {
 
@@ -53,24 +31,25 @@ export default function GroupOptionPage() {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
   };
+  var pageUser: User;
 
-  /*
-  */
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true);
         const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
+        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);  
+        fetchGet<User>('/api/getProfile')
+        .then((data) => {pageUser = data})
+        .catch((error) => {
+          console.log('Error: ', error);
+        });
 
         if (users === null) {
           console.error("Error Fetching Chat Settings or Users");
           setIsLoading(false);
           return;
         }
-        console.log("fetchData");
-        console.log("Settings: ", settings);
-        console.log("users: ", users);
 
         setUpdatedChatSettings(settings);
         setChatUsers(users);
@@ -86,7 +65,6 @@ export default function GroupOptionPage() {
   }, [chatId]);
 
 
-  //return (<p>HELLO WE ARE CLOSED</p>)
   if (isLoading) return <p>Loading...</p>
   if (updatedChatSettings === undefined || chatUsers === undefined) {
     return (
@@ -98,7 +76,7 @@ export default function GroupOptionPage() {
       </div>
     );
   }
-  const pageSettings = { ...updatedChatSettings };
+  const pageSettings = {... updatedChatSettings};
 
   /*
     function toggleOwner(id: number) {
@@ -119,19 +97,13 @@ export default function GroupOptionPage() {
   function toggleAdmin(id: number) {
     if (updatedChatSettings === undefined) return;
     const settings: ChatSettings = { ...updatedChatSettings };
-
-    const idx: number = settings.userId.indexOf(id);
+    const user : ChatsUsers = findChatsUsers(settings, id);
     // Clone the object and update the permission
 
-    (settings.userPermission[idx] >> (Shifts.ADMIN)) & 1 ?
-      settings.userPermission[idx] = settings.userPermission[idx] & ~(1 << Shifts.ADMIN) :
-      settings.userPermission[idx] = settings.userPermission[idx] | (1 << Shifts.ADMIN);
+    user.is_admin = !user.is_admin;
 
     setUpdatedChatSettings(settings);
   }
-
-  //console.log("  ChatSettings: ", chatSettings.userPermission);
-  //console.log("U ChatSettings: ", updatedChatSettings.userPermission);
 
   return (
     <div className="flex flex-col w-5/6">
@@ -184,7 +156,7 @@ export default function GroupOptionPage() {
                               Make sure an Admin can't change ownership
                         */}
 
-                    {isOwner(pageSettings, user.intra_user_id) || isAdmin(pageSettings, user.intra_user_id) ?
+                    {isOwner(pageSettings, pageUser.intra_user_id) || isAdmin(pageSettings, user.intra_user_id) ?
                       < div className='flex flex-row justify-around w-2/5 space-x-10'>
                         {isAdmin(updatedChatSettings, user.intra_user_id) ?
                           <button className="flex size-15 p-5 rounded bg-green-800" onClick={
@@ -192,13 +164,13 @@ export default function GroupOptionPage() {
                           <button className="flex size-15 p-5 rounded bg-red-800" onClick={
                             () => toggleAdmin(user.intra_user_id)}></button>
                         }
+                        {/* 
                         {isOwner(updatedChatSettings, user.intra_user_id) ?
                           <button className="flex size-15 p-5 rounded bg-green-800" onClick={
                             () => toggleOwner(user.intra_user_id)}></button> :
                           <button className="flex size-15 p-5 rounded bg-red-800" onClick={
                             () => toggleOwner(user.intra_user_id)}></button>
                         }
-                        {/* 
                         */}
                       </div>
                       :
@@ -220,11 +192,12 @@ export default function GroupOptionPage() {
           </div>
 
 
-          <div className="flex flex-col items-center justify-center ">
+          <div className="flex flex-col items-center justify-center">
             {/* TODO: [x] Title for chat needs to be added
                     [ ] check if all required values are filled in
+            */}
 
-            <div className='flex flex-col w-[25rem] justify-center m-3 '>
+            <div className='flex flex-col w-[25rem] justify-center m-3 bg-slate-800 rounded '>
               <div className="flex flex-row justify-between m-2 my-3">
                 <p>Title:</p>
                 <input
@@ -289,7 +262,6 @@ export default function GroupOptionPage() {
                 < p className="flex justify-right flex-row my-3 "></p>
               }
             </div>
-              */}
 
             {/* Action Buttons */}
             < div className="flex flex-row justify-center">
@@ -308,19 +280,45 @@ export default function GroupOptionPage() {
       </div >
 
       {/* Debug Box
-      < div className="flex flex-col text-left justify-center" >
-        <p>Selected Users: {chatSettings?.userId.join(", ")}</p>
-        <p>Permissions: {chatSettings?.userPermission.join(", ")}</p>
-        <p>Title: {title}</p>
-        <p>password: {password}</p>
-        <p>Has Password: {hasPassword ? "True" : "False"}</p>
-        <p>Show Password : {showPassword ? "True" : "False"}</p>
-        <p>Updated</p>
-        <p>Selected Users: {updatedChatSettings?.userId.join(", ")}</p>
-        <p>Permissions: {updatedChatSettings?.userPermission.join(", ")}</p>
-      </div >
       */}
-
+      < div className="flex flex-col text-left justify-center" >
+        <p>PageSettings:</p>
+        <p>| Title: {title}</p>
+        <p>| password: {password}</p>
+        <p>| Has Password: {hasPassword ? "True" : "False"}</p>
+        <p>| Show Password : {showPassword ? "True" : "False"}</p>
+        <p>| Selected Users: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
+        <p>| Permissions: {joinPerms(pageSettings?.userInfo).join(", ")}</p>
+        <p>_________ </p>
+        <p>| Updated:</p>
+        <p>| Selected Users: {joinUserID(updatedChatSettings?.userInfo).join(", ")}</p>
+        <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
+      </div >
     </div >
   );
+
+  function joinPerms(list: ChatsUsers[])
+  {
+    var arr: number[] = [];
+    for (const user of list)
+    {
+      const perm:number = 0 +
+      (user.is_owner ? 1 : 0) +
+      (user.is_admin ? 2 : 0) +
+      (user.is_banned ? 3 : 0);
+      arr.push(perm);
+    }
+    return (arr);
+  }
+
+  function joinUserID(list: ChatsUsers[])
+  {
+    var arr: number[] = [];
+    for (const user of list)
+    {
+      if (user.intra_user_id == null) continue;
+      arr.push(user.intra_user_id);
+    }
+    return (arr);
+  }
 }
