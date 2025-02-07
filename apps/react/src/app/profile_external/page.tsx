@@ -5,19 +5,28 @@ import { useSearchParams } from 'next/navigation';
 import Image from "next/image";
 import Link from "next/link";
 
-import { fetchGet } from "../fetch_functions";
-import { ExternalUser } from "@repo/db"
+import { fetchGet, fetchPost } from "../fetch_functions";
+import { User, ExternalUser, ChatSettings, ChatsUsers } from "@repo/db"
 import { ExternalFriendsList } from "./form_components";
 import { DisplayUserStatus } from "../profile/page";
+import { useRouter } from 'next/navigation';
 
 export default function ProfileExternalPage() {
+  const [user, setUser] = useState<User>();
   const [externalUser, setExternalUser] = useState<ExternalUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
-  const userId = searchParams?.get('id');
+  const externalUserIdString = searchParams?.get('id');
 
   useEffect(() => {
-    fetchGet<ExternalUser>(`/api/getExternalUser?id=${userId}`)
+      fetchGet<User>('api/profile')
+        .then((user) => {
+            setUser(user);
+        })
+        .catch((error) => {
+            console.log('Error: ', error);
+        });
+    fetchGet<ExternalUser>(`/api/getExternalUser?id=${externalUserIdString}`)
       .then((res) => {
         console.log('FE - ExternalUser: ', res);
         setExternalUser(res);
@@ -27,7 +36,93 @@ export default function ProfileExternalPage() {
         console.log('Error: ', error);
         setLoading(false);
       })
-  }, [userId]);
+  }, [externalUserIdString]);
+
+  function parseUserInfo(users: number[]) : ChatsUsers[]
+  {
+    let list: ChatsUsers[] = [];
+
+    for (const user of users) {
+      const hit : ChatsUsers = {
+        intra_user_id: user,
+        chat_id: 0,
+        chat_user_id: 0,
+        is_owner: false,
+        is_admin: false,
+        is_banned: false,
+        mute_untill: null,
+        joined: false,
+        joined_at: null,
+      };
+      list.push(hit);
+    }
+    return list;
+  }
+
+  function GetUserIds() : number[] {
+    let ownUserId: number | undefined = undefined;
+    let externalUserId: number | undefined = undefined;
+
+    ownUserId = user?.intra_user_id;
+    externalUserId = externalUser?.intra_user_id;
+
+    if (ownUserId === undefined) {
+      console.log("Error: ownUserId is undefined");
+      return [];
+    }
+
+    if (externalUserId === undefined) {
+      console.log("Error: externalUserId is undefined");
+      return [];
+    }
+
+    const users: number[] = [
+      ownUserId,
+      externalUserId
+    ];
+
+    return users;
+  }
+
+  function GoToDirectMessage() {
+    // const Router = useRouter();
+    
+    const users: number[] = GetUserIds();
+
+    if (users.length === 0) {
+      console.log("Error: user not found");
+      return;
+    }
+
+    // TODO: check if chat already exists
+
+    if (false) { // if chat not exists
+      console.log('ChatSettings: ', chatSettings);
+  
+      fetchPost("/api/createChat", { ChatSettings: chatSettings })
+        .then(() => {
+          console.log("Group Chat Created");
+        })
+        .catch((error) => {
+          console.log("Error Creating Group Chat", error);
+  
+        });
+
+      const chatSettings: ChatSettings = {
+        isPrivate: true,
+        isDirect: true,
+        userInfo: parseUserInfo(users),
+        title: "No title",
+        password: null,
+        image: null,
+      };
+    }
+
+
+    // Router.push("/messages?chat_id=");
+
+    console.log('Direct Message button clicked');
+  }
 
   if (loading)
     return <div>Loading...</div>;
@@ -78,7 +173,7 @@ export default function ProfileExternalPage() {
           */}
           <div className="flex justify-center items-center px-2 py-1 m-4 rounded-lg bg-blue-500 hover:bg-blue-700 transition-all duration-150">
             <button className="flex justify-center items-center"
-            onClick={() => console.log('Direct Message')}>
+            onClick={() => GoToDirectMessage()}>
               <svg className="w-8 h-8 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 24 24">
                 <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd" />
                 <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd" />

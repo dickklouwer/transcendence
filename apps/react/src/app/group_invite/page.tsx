@@ -116,7 +116,7 @@ export default function GroupInvite() {
   {
     let list: ChatsUsers[] = [];
 
-    for (const user of selectedUsers) {
+    for (const user of users) {
       const hit : ChatsUsers = {
         intra_user_id: user,
         chat_id: 0,
