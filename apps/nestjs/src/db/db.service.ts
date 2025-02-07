@@ -927,14 +927,6 @@ export class DbService implements OnModuleInit {
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
 
-      function parseUserIds(chatsUsers: ChatsUsers[]): number[] {
-        const result: number[] = [];
-        for (let i = 0; i < chatsUsers.length; i++) {
-          result.push(chatsUsers[i].intra_user_id);
-        }
-        return result;
-      }
-
       const settings: ChatSettings = {
         title: chat[0].title,
         userInfo: users,

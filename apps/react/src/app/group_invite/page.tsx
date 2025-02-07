@@ -112,23 +112,12 @@ export default function GroupInvite() {
     setChannelType(event.target.value === "true" ? true : false);
   };
 
-  function fillPermissions(selectedUsers: number[]): number[] {
-    let userRight: number[] = [];
-
-    for (const user of selectedUsers) {
-      userRight.push(0);
-    }
-    return userRight
-  }
-
-
-
   function CreateGroupChat() {
 
     const Settings: ChatSettings = {
       isPrivate: isPrivate,
       isDirect: false,
-      userPermission: fillChatUsers(selectedUsers),
+      userInfo: ,
       title: title,
       password: password === "" ? null : password,
       image: null,
@@ -139,7 +128,7 @@ export default function GroupInvite() {
       alert("Chat needs a title");
       return;
     }
-    if (Settings.userId.length === 0) {
+    if (Settings.userInfo.length === 0) {
       alert("Chat needs at least one member");
       return;
     }

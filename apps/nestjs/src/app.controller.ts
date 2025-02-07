@@ -227,16 +227,9 @@ export class AppController {
       res.status(422).send(`Failed to add Host[${user}] to chat[${chat_id}]`);
       return;
     }
-
-    enum Shifts {
-      ADMIN = 0,
-      OWNER = 1,
-      BANNED = 3,
-    };
     
     userSettings.is_owner = false;
     userSettings.is_admin = false;
-    userSettings.is_banned = false;
     userSettings.joined = false;
 
     let idx = 0;
