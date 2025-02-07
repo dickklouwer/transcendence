@@ -927,16 +927,6 @@ export class DbService implements OnModuleInit {
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
 
-      function parsePermission(chatsUsers: ChatsUsers[]): number[] {
-        const result: number[] = [];
-        for (let i = 0; i < chatsUsers.length; i++) {
-          result.push(
-            (chatsUsers[i].is_owner ? 2 : 0) + (chatsUsers[i].is_admin ? 1 : 0),
-          );
-        }
-        return result;
-      }
-
       function parseUserIds(chatsUsers: ChatsUsers[]): number[] {
         const result: number[] = [];
         for (let i = 0; i < chatsUsers.length; i++) {
@@ -947,8 +937,7 @@ export class DbService implements OnModuleInit {
 
       const settings: ChatSettings = {
         title: chat[0].title,
-        userId: parseUserIds(users),
-        userPermission: parsePermission(users),
+        userInfo: users,
         isDirect: chat[0].is_direct,
         isPrivate: !chat[0].is_public,
         image: chat[0].image,

@@ -233,17 +233,17 @@ export class AppController {
       OWNER = 1,
       BANNED = 3,
     };
+    
+    userSettings.is_owner = false;
+    userSettings.is_admin = false;
+    userSettings.is_banned = false;
+    userSettings.joined = false;
 
     let idx = 0;
     // add other users to chat
-    for (const user of ChatSettings.userId) {
-      userSettings.is_owner =
-        ((ChatSettings.userPermission[idx] >> Shifts.ADMIN) & 1) == 1;
-      userSettings.is_owner =
-        ((ChatSettings.userPermission[idx] >> Shifts.OWNER) & 1) == 1;
+    for (const user of ChatSettings.userInfo) {
 
-      userSettings.intra_user_id = user;
-      userSettings.joined = false;
+      userSettings.intra_user_id = user.intra_user_id;
       idx++;
 
       status = await this.dbservice.createChatUsers(
