@@ -909,31 +909,35 @@ export class DbService implements OnModuleInit {
       if (!user) throw Error('Failed to fetch User!');
 
       const chat = await this.db
-        .select({
-          chat_id: chats.chat_id,
-          title: chats.title,
-          is_direct: chats.is_direct,
-          is_public: chats.is_public,
-          image: chats.image,
-          password: chats.password,
-        })
-        .from(chats)
-        .where(eq(chats.chat_id, chat_id))
-        .limit(1);
+      .select({
+        chat_id: chats.chat_id,
+        title: chats.title,
+        is_direct: chats.is_direct,
+        is_public: chats.is_public,
+        image: chats.image,
+        password: chats.password,
+      })
+      .from(chats)
+      .where(eq(chats.chat_id, chat_id))
+      .limit(1);
       if (chat.length === 0) throw Error('Failed to fetch Chat!');
+
       const users: ChatsUsers[] = await this.db
-        .select()
+        .select({
+          chat_user_id: chatsUsers.chat_user_id,
+          chat_id: chatsUsers.chat_id,
+          intra_user_id: chatsUsers.intra_user_id,
+          is_owner: chatsUsers.is_owner,
+          is_admin: chatsUsers.is_admin,
+          is_banned: chatsUsers.is_banned,
+          mute_untill: chatsUsers.mute_untill,
+          joined: chatsUsers.joined,
+          joined_at: chatsUsers.joined_at,
+      })
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
-
-      function parseUserIds(chatsUsers: ChatsUsers[]): number[] {
-        const result: number[] = [];
-        for (let i = 0; i < chatsUsers.length; i++) {
-          result.push(chatsUsers[i].intra_user_id);
-        }
-        return result;
-      }
+      console.log("DB - users: ", users);
 
       const settings: ChatSettings = {
         title: chat[0].title,
@@ -943,6 +947,7 @@ export class DbService implements OnModuleInit {
         image: chat[0].image,
         password: chat[0].password,
       };
+      console.log("DB - settingsz: ", settings);
       return settings;
     } catch (error) {
       console.log('Error: ', error);

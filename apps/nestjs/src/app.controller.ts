@@ -228,28 +228,12 @@ export class AppController {
       return;
     }
 
-    enum Shifts {
-      ADMIN = 0,
-      OWNER = 1,
-      BANNED = 3,
-    };
-    
-    userSettings.is_owner = false;
-    userSettings.is_admin = false;
-    userSettings.is_banned = false;
-    userSettings.joined = false;
-
-    let idx = 0;
     // add other users to chat
-    for (const user of ChatSettings.userInfo) {
-
-      userSettings.intra_user_id = user.intra_user_id;
-      idx++;
-
+    for (let user of ChatSettings.userInfo) {
       status = await this.dbservice.createChatUsers(
         token.split(' ')[1],
         chat_id,
-        userSettings,
+        user,
       );
 
       if (!status) {

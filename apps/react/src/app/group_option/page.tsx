@@ -69,6 +69,7 @@ export default function GroupOptionPage() {
           return;
         }
         console.log("fetchData");
+        console.log("Settings: ", settings);
         console.log("users: ", users);
 
         setUpdatedChatSettings(settings);
