@@ -227,22 +227,13 @@ export class AppController {
       res.status(422).send(`Failed to add Host[${user}] to chat[${chat_id}]`);
       return;
     }
-    
-    userSettings.is_owner = false;
-    userSettings.is_admin = false;
-    userSettings.joined = false;
 
-    let idx = 0;
     // add other users to chat
-    for (const user of ChatSettings.userInfo) {
-
-      userSettings.intra_user_id = user.intra_user_id;
-      idx++;
-
+    for (let user of ChatSettings.userInfo) {
       status = await this.dbservice.createChatUsers(
         token.split(' ')[1],
         chat_id,
-        userSettings,
+        user,
       );
 
       if (!status) {

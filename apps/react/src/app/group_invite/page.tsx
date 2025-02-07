@@ -8,7 +8,7 @@ import { userSocket } from "../profile_headers";
 import { useRouter } from 'next/navigation';
 import { fetchGet, fetchPost } from "../fetch_functions";
 import { DisplayUserStatus } from "../profile/page";
-import { ChatSettings, ExternalUser, User } from "@repo/db";
+import { ChatSettings, chatsUsers, ChatsUsers, ExternalUser, User } from "@repo/db";
 
 const InviteList = ({ selectedUsers, setSelectedUsers }: { selectedUsers: number[], setSelectedUsers: React.Dispatch<React.SetStateAction<number[]>> }) => {
 
@@ -112,12 +112,33 @@ export default function GroupInvite() {
     setChannelType(event.target.value === "true" ? true : false);
   };
 
+  function parseUserInfo(users: number[]) : ChatsUsers[]
+  {
+    let list: ChatsUsers[] = [];
+
+    for (const user of selectedUsers) {
+      const hit : ChatsUsers = {
+        intra_user_id: user,
+        chat_id: 0,
+        chat_user_id: 0,
+        is_owner: false,
+        is_admin: false,
+        is_banned: false,
+        mute_untill: null,
+        joined: false,
+        joined_at: null,
+      };
+      list.push(hit);
+    }
+    return list;
+  }
+
   function CreateGroupChat() {
 
     const Settings: ChatSettings = {
       isPrivate: isPrivate,
       isDirect: false,
-      userInfo: [],
+      userInfo: parseUserInfo(selectedUsers),
       title: title,
       password: password === "" ? null : password,
       image: null,
