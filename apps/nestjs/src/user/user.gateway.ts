@@ -103,6 +103,11 @@ export class UserGateway
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    this.clients.forEach((clients, intra_user_id) => {
+      if (clients === client) {
+        this.setUserState({ intra_user_id, state: 'Online' });
+      }
+    });
   }
 
   async setUserState({
