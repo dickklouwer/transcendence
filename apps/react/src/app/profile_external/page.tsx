@@ -115,9 +115,16 @@ export default function ProfileExternalPage() {
         if (chatId > 0) {
           console.log("Chat already exists, chatId: ", chatId);
           Router.push(`/messages?chat_id=${chatId}`);
-        } else {
+        } else if (externalUser?.intra_user_id !== undefined) {
           console.log("Chat does not exist, create one");
-          fetchPost("/api/createChat", { ChatSettings: chatSettings })
+          fetchPost("/api/createChat", { ChatSettings: {
+            isPrivate: true,
+            isDirect: true,
+            userInfo: [externalUser?.intra_user_id],
+            title: "No title",
+            password: null,
+            image: null,
+          } })
             .then((new_chat_id) => {
               console.log("Direct Chat Created");
               console.log("New Chat Id: ", new_chat_id);
