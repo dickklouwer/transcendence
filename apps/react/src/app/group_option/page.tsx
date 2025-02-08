@@ -1,6 +1,6 @@
 "use client"
 
-import { ChatSettings, ExternalUser, ChatsUsers, User } from '@repo/db';
+import { Chats, ExternalUser, ChatsUsers, User } from '@repo/db';
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
@@ -18,10 +18,12 @@ export default function GroupOptionPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [reload, setReload] = useState<boolean>(false);
 
-  const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
+  const [chats, setChats] = useState<Chats>();
   const [chatUsers, setChatUsers] = useState<ExternalUser[]>();
 
   const [isPrivate, setChannelType] = useState<boolean>(true);
+  const [user , setUser] = useState<User>();
+  const [chatUsersList, setChatUsersList] = useState<ChatsUsers[]>([]);
   const [title, setTitle] = useState<string>("");
   const [hasPassword, setHasPassword] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -31,38 +33,45 @@ export default function GroupOptionPage() {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
   };
-  var pageUser: User;
-
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true);
-        const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);  
-        fetchGet<User>('/api/getProfile')
-        .then((data) => {pageUser = data})
+        await fetchGet<Chats>(`/api/getChatSettings?chatId=${chatId}`)
+        .then((data) => {
+          setChats(data);
+        });
+        await fetchGet<ChatsUsers[]>(`/api/getChatUsers?chatId=${chatId}`)
+        .then((data) => {
+          setChatUsersList(data);
+        });
+        await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`)
+        .then((data) => {
+          console.log(data);
+          setChatUsers(data);
+        });  
+        fetchGet<User>('/api/profile')
+        .then((data) => {
+          setUser(data);
+        })
         .catch((error) => {
           console.log('Error: ', error);
         });
 
-        if (users === null) {
+        if (user === null) {
           console.error("Error Fetching Chat Settings or Users");
           setIsLoading(false);
           return;
         }
-
-        setUpdatedChatSettings(settings);
-        setChatUsers(users);
+        setIsLoading(false);
       }
       catch (error) {
         console.error("Error Fetching Chat Settings:", error);
       }
-      finally {
-        setIsLoading(false);
-      }
     }
     fetchData();
-  }, [chatId]);
+    console.log(isLoading, updatedChatSettings, chatUsers);
+  }, []);
 
 
   if (isLoading) return <p>Loading...</p>
@@ -76,8 +85,6 @@ export default function GroupOptionPage() {
       </div>
     );
   }
-  const pageSettings = {... updatedChatSettings};
-
   /*
     function toggleOwner(id: number) {
       if (updatedChatSettings === undefined) return;
@@ -156,7 +163,7 @@ export default function GroupOptionPage() {
                               Make sure an Admin can't change ownership
                         */}
 
-                    {isOwner(pageSettings, pageUser.intra_user_id) || isAdmin(pageSettings, user.intra_user_id) ?
+                    {isOwner(updatedChatSettings, user.intra_user_id) || isAdmin(updatedChatSettings, user.intra_user_id) ?
                       < div className='flex flex-row justify-around w-2/5 space-x-10'>
                         {isAdmin(updatedChatSettings, user.intra_user_id) ?
                           <button className="flex size-15 p-5 rounded bg-green-800" onClick={
@@ -287,8 +294,8 @@ export default function GroupOptionPage() {
         <p>| password: {password}</p>
         <p>| Has Password: {hasPassword ? "True" : "False"}</p>
         <p>| Show Password : {showPassword ? "True" : "False"}</p>
-        <p>| Selected Users: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
-        <p>| Permissions: {joinPerms(pageSettings?.userInfo).join(", ")}</p>
+        <p>| Selected Users: {joinUserID(updatedChatSettings?.userInfo).join(", ")}</p>
+        <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
         <p>_________ </p>
         <p>| Updated:</p>
         <p>| Selected Users: {joinUserID(updatedChatSettings?.userInfo).join(", ")}</p>

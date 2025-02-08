@@ -905,12 +905,12 @@ declare const userSelect: z.ZodObject<{
     wins: z.ZodNumber;
     losses: z.ZodNumber;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
-    password: string | null;
     intra_user_id: number;
     user_name: string;
     nick_name: string | null;
     token: string | null;
     email: string;
+    password: string | null;
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game";
@@ -918,12 +918,12 @@ declare const userSelect: z.ZodObject<{
     wins: number;
     losses: number;
 }, {
-    password: string | null;
     intra_user_id: number;
     user_name: string;
     nick_name: string | null;
     token: string | null;
     email: string;
+    password: string | null;
     two_factor_secret: string | null;
     is_two_factor_enabled: boolean | null;
     state: "Online" | "Offline" | "In-Game";
@@ -958,15 +958,15 @@ declare const messagesInsert: z.ZodObject<{
     sent_at: z.ZodDate;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
     chat_id: number;
-    message: string;
     message_id: number;
     sender_id: number;
+    message: string;
     sent_at: Date;
 }, {
     chat_id: number;
-    message: string;
     message_id: number;
     sender_id: number;
+    message: string;
     sent_at: Date;
 }>;
 declare const chatSelect: z.ZodObject<{
@@ -978,19 +978,19 @@ declare const chatSelect: z.ZodObject<{
     image: z.ZodNullable<z.ZodString>;
     created_at: z.ZodNullable<z.ZodDate>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
+    password: string | null;
     chat_id: number;
     is_direct: boolean | null;
     title: string | null;
     is_public: boolean | null;
-    password: string | null;
     image: string | null;
     created_at: Date | null;
 }, {
+    password: string | null;
     chat_id: number;
     is_direct: boolean | null;
     title: string | null;
     is_public: boolean | null;
-    password: string | null;
     image: string | null;
     created_at: Date | null;
 }>;
@@ -1005,9 +1005,9 @@ declare const chatsUsersSelect: z.ZodObject<{
     joined: z.ZodBoolean;
     joined_at: z.ZodNullable<z.ZodDate>;
 }, z.UnknownKeysParam, z.ZodTypeAny, {
-    chat_user_id: number;
-    chat_id: number | null;
     intra_user_id: number | null;
+    chat_id: number | null;
+    chat_user_id: number;
     is_owner: boolean;
     is_admin: boolean;
     is_banned: boolean;
@@ -1015,9 +1015,9 @@ declare const chatsUsersSelect: z.ZodObject<{
     joined: boolean;
     joined_at: Date | null;
 }, {
-    chat_user_id: number;
-    chat_id: number | null;
     intra_user_id: number | null;
+    chat_id: number | null;
+    chat_user_id: number;
     is_owner: boolean;
     is_admin: boolean;
     is_banned: boolean;
@@ -1123,13 +1123,5 @@ type ChatInfo = {
     title: string | null;
     image: string | null;
 };
-type ChatSettings = {
-    isPrivate: boolean;
-    isDirect: boolean;
-    userInfo: ChatsUsers[];
-    title: string;
-    password: string | null;
-    image: string | null;
-};
 
-export { type Blocked, type ChatMessages, type ChatSettings, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, blocked, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };
+export { type Blocked, type ChatMessages, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, blocked, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };

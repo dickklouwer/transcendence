@@ -65,14 +65,5 @@ type ChatInfo = {
   image: string | null;
 };
 
-type ChatSettings = {
-  isPrivate: boolean;
-  isDirect: boolean;
-  userInfo: ChatsUsers[],
-  title: string;
-  password: string | null;
-  image: string | null;
-};
-
-export type { User, UserChats, ChatSettings, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatInfo as DmInfo, ChatsUsers, Chats, Messages, MessageStatus, Blocked };
+export type { User, UserChats, InvitedChats, ExternalUser, Friends, MultiplayerMatches, ChatMessages, ChatInfo as DmInfo, ChatsUsers, Chats, Messages, MessageStatus, Blocked };
 export { users, friends, messages, messageStatus, chats, games, chatsUsers, blocked };

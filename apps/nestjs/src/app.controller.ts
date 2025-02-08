@@ -20,8 +20,7 @@ import {
   UserChats,
   InvitedChats,
   ChatsUsers,
-  ChatSettings,
-  chats,
+  Chats,
 } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
@@ -155,12 +154,12 @@ export class AppController {
     return isBanned;
   }
 
-  @Get('getChatSettings')
+  @Get('getChat')
   async getChatSettings(
     @Headers('authorization') token: string,
     @Query('chatId') chatId: number,
     @Res() res: Response,
-  ): Promise<ChatSettings> {
+  ): Promise<Chats> {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const chatSettings = await this.dbservice.getChatSettings(
       token.split(' ')[1],
@@ -173,20 +172,26 @@ export class AppController {
       throw Error('Failed to fetch chatSettings');
     }
 
-    for (let i: number = 0; i < chatSettings.userInfo.length; i++) {
-      const chatUser = chatSettings.userInfo[i];
-      if (chatUser.intra_user_id == user.intra_user_id) return chatSettings;
-    }
-    console.log("We've not seen user in chatsUsers");
-    res.status(422).send('User not in chat');
+    await this.dbservice
+      .getMessagesFromDataBase(token.split(' ')[1], chatId)
+      .then((messages) => {
+        if (!messages) {
+          res.status(404).send('user not in chat');
+          return;
+        }
+      });
+
+    res.status(200).send(chatSettings);
+    return;
   }
 
   @Post('createChat')
   async createChat(
     @Headers('authorization') token: string,
-    @Body('ChatSettings') ChatSettings: ChatSettings,
+    @Body('ChatSettings') chatSettings: Chats,
+    @Body('ChatUsers') chatUsers: ChatsUsers[],
     @Res() res: Response,
-  ) {
+  ): Promise<boolean> {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     if (!user) {
       res.status(422).send('Failed to get user');
@@ -197,30 +202,18 @@ export class AppController {
 
     const chat_id = await this.dbservice.createChat(
       token.split(' ')[1],
-      ChatSettings,
+      chatSettings,
     );
     if (chat_id === 0) {
       res.status(422).send('Failed to create chat');
       return;
     }
 
-    const userSettings: ChatsUsers = {
-      intra_user_id: user.intra_user_id,
-      chat_id: chat_id,
-      chat_user_id: 0,
-      is_owner: true,
-      is_admin: true,
-      is_banned: false,
-      mute_untill: null,
-      joined: true,
-      joined_at: null,
-    };
-
     // add host to chat
     let status = await this.dbservice.createChatUsers(
       token.split(' ')[1],
       chat_id,
-      userSettings,
+      chatUsers,
     );
     // NOTE: if Host can't be added only then remove the Chat from the chats table
     if (!status) {
@@ -228,27 +221,7 @@ export class AppController {
       return;
     }
 
-    userSettings.is_owner = false;
-    userSettings.is_admin = false;
-    userSettings.is_banned = false;
-    userSettings.joined = false;
-
-    // add other users to chat
-    for (const user of ChatSettings.userInfo) {
-      userSettings.intra_user_id = user.intra_user_id;
-
-      status = await this.dbservice.createChatUsers(
-        token.split(' ')[1],
-        chat_id,
-        user,
-      );
-
-      if (!status) {
-        res.status(422).send(`Failed to add user[${user}] to chat[${chat_id}]`);
-        return;
-      }
-    }
-    res.status(201).send(res);
+    res.status(201).send(status);
   }
 
   @Post('joinChat')
@@ -510,13 +483,12 @@ export class AppController {
           externalUser.intra_user_id,
         )
       ) {
-        externalUser.blocked = true;
+        externalUser.blocked = false;
       }
       externalUsers.push(externalUser);
     }
-//    console.log('BE - getExternalUsersFromChat: ', externalUsers);
     res.status(200).send(externalUsers);
-    return externalUsers;
+    return;
   }
 
   @Get('getExternalUsers')

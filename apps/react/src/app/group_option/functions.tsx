@@ -6,14 +6,13 @@ enum Shifts {
   BANNED = 3,
 };
 
-export function findChatsUsers(settings: ChatSettings, id: number): ChatsUsers {
-  let chatUser: ChatsUsers = settings.userInfo[0];
-
+export function findChatsUsers(settings: ChatSettings, id: number): ChatsUsers | undefined {
   for (let i: number = 0; i < settings.userInfo.length; i++) {
-    chatUser = settings.userInfo[i];
-    if (chatUser.intra_user_id === id) break;
+    const chatUser = settings.userInfo[i];
+    if (chatUser.intra_user_id === id) 
+      return chatUser;
   }
-  return chatUser;
+  return undefined;
 }
 
 export function isOwner(settings: ChatSettings, id: number): boolean {

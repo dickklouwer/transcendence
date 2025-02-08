@@ -22,7 +22,7 @@ import type {
   ChatsUsers,
   DmInfo,
   MessageStatus,
-  ChatSettings,
+  Chats,
 } from '@repo/db';
 import { eq, or, not, and, desc, sql, isNull, count } from 'drizzle-orm';
 import * as bycrypt from 'bcrypt';
@@ -902,10 +902,7 @@ export class DbService implements OnModuleInit {
   // TODO: function get ChatsUsers based on chat_id
 
   // /*
-  async createChat(
-    jwtToken: string,
-    ChatSettings: ChatSettings,
-  ): Promise<number> {
+  async createChat(jwtToken: string, ChatSettings: Chats): Promise<number> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
 
@@ -922,8 +919,8 @@ export class DbService implements OnModuleInit {
         .insert(chats)
         .values({
           title: ChatSettings.title,
-          is_direct: ChatSettings.isDirect,
-          is_public: !ChatSettings.isPrivate,
+          is_direct: ChatSettings.is_direct,
+          is_public: ChatSettings.is_public,
           image: ChatSettings.image,
           password: pwdHashed,
         })
@@ -937,55 +934,31 @@ export class DbService implements OnModuleInit {
     }
   }
 
-  async getChatSettings(
-    jwtToken: string,
-    chat_id: number,
-  ): Promise<ChatSettings | null> {
+  async getChatSettings(jwtToken: string, chat_id: number): Promise<Chats> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
       const chat = await this.db
-        .select({
-          chat_id: chats.chat_id,
-          title: chats.title,
-          is_direct: chats.is_direct,
-          is_public: chats.is_public,
-          image: chats.image,
-          password: chats.password,
-        })
+        .select()
         .from(chats)
-        .where(eq(chats.chat_id, chat_id))
-        .limit(1);
-      if (chat.length === 0) throw Error('Failed to fetch Chat!');
+        .where(eq(chats.chat_id, chat_id));
 
-      const users: ChatsUsers[] = await this.db
-        .select({
-          chat_user_id: chatsUsers.chat_user_id,
-          chat_id: chatsUsers.chat_id,
-          intra_user_id: chatsUsers.intra_user_id,
-          is_owner: chatsUsers.is_owner,
-          is_admin: chatsUsers.is_admin,
-          is_banned: chatsUsers.is_banned,
-          mute_untill: chatsUsers.mute_untill,
-          joined: chatsUsers.joined,
-          joined_at: chatsUsers.joined_at,
-        })
+      return chat[0];
+    } catch (error) {
+      console.log('Error: ', error);
+      return null;
+    }
+  }
+
+  async getChatUsersFromDataBase(chat_id: number): Promise<ChatsUsers[]> {
+    try {
+      const chatUsers = await this.db
+        .select()
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, chat_id));
-      if (users.length === 0) throw Error('Failed to fetch Chatusers!');
-      console.log('DB - users: ', users);
 
-      const settings: ChatSettings = {
-        title: chat[0].title,
-        userInfo: users,
-        isDirect: chat[0].is_direct,
-        isPrivate: !chat[0].is_public,
-        image: chat[0].image,
-        password: chat[0].password,
-      };
-      console.log('DB - settingsz: ', settings);
-      return settings;
+      return chatUsers;
     } catch (error) {
       console.log('Error: ', error);
       return null;
@@ -995,25 +968,26 @@ export class DbService implements OnModuleInit {
   async createChatUsers(
     jwtToken: string,
     chatId: number,
-    UserInfo: ChatsUsers,
+    UserInfo: ChatsUsers[],
   ): Promise<boolean> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      await this.db.insert(chatsUsers).values({
-        intra_user_id: UserInfo.intra_user_id,
-        chat_id: chatId,
-        is_owner: UserInfo.is_owner,
-        is_admin: UserInfo.is_admin,
-        is_banned: false,
-        joined: UserInfo.joined,
-      });
-      console.log(
-        `DB - created ChatsUser (${UserInfo.joined ? 'Host' : 'User'}): `,
-        UserInfo.intra_user_id,
-      );
-
+      for (let i = 0; i < UserInfo.length; i++) {
+        await this.db.insert(chatsUsers).values({
+          intra_user_id: UserInfo[i].intra_user_id,
+          chat_id: chatId,
+          is_owner: UserInfo[i].is_owner,
+          is_admin: UserInfo[i].is_admin,
+          is_banned: false,
+          joined: UserInfo[i].joined,
+        });
+        console.log(
+          `DB - created ChatsUser (${UserInfo[i].joined ? 'Host' : 'User'}): `,
+          UserInfo[i].intra_user_id,
+        );
+      }
       return true;
     } catch (error) {
       console.log('Error: ', error);
