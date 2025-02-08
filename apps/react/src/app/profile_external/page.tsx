@@ -107,16 +107,26 @@ export default function ProfileExternalPage() {
     };
 
     console.log("chatSettings: ", chatSettings);
+    console.log("users: ", users);
 
-    fetchGet<number | undefined>(`/api/getChatIdOfDm?${users[1]}`)
+    fetchGet<number>(`/api/getChatIdOfDm?external_user_id=${users[1]}`)
       .then((chatId) => {
         console.log("ChatId: ", chatId);
-        if (chatId !== undefined) {
-          console.log("Chat already exists");
+        if (chatId > 0) {
+          console.log("Chat already exists, chatId: ", chatId);
           Router.push(`/messages?chat_id=${chatId}`);
         } else {
           console.log("Chat does not exist, create one");
-          // fetchPost("/api/createChat", { ChatSettings: chatSettings })
+          fetchPost("/api/createChat", { ChatSettings: chatSettings })
+            .then((new_chat_id) => {
+              console.log("Direct Chat Created");
+              console.log("New Chat Id: ", new_chat_id);
+              // Router.push(`/messages?chat_id=${new_chat_id}`);
+            })
+            .catch((error) => {
+              console.log("Error Creating Direct Chat", error);
+            });
+          // fetchPost(`/api/createChat`, { ChatSettings: chatSettings })
           //   .then((new_chat_id) => {
           //     console.log("Group Chat Created");
           //     Router.push(`/messages?chat_id=${new_chat_id}`);
@@ -263,22 +273,3 @@ export default function ProfileExternalPage() {
     </div>
   );
 }
-
-/*
- <div className="">
- </div>
-
-
-<div className="flex-grow min-w-0 mb-4">
-  {nicknameContext.nickname === undefined ? (
-  <h1 className="text-2xl">{user.user_name}</h1>
-  ) : (
-  <h1 className="text-2xl break-words w-auto">
-    {nicknameContext.nickname} aka ({user.user_name}
-    )
-  </h1>
-  )}
-  <p className="text-blue-400 break-all ">{user.email}</p>
-</div>
-*/
-

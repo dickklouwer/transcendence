@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
   users,
   friends,
@@ -57,7 +57,6 @@ export class DbService implements OnModuleInit {
       .where(eq(users.intra_user_id, id));
     return result.length > 0 ? result[0] : null;
   }
-
 
   async getChatUsers(id: number): Promise<number[] | null> {
     try {
@@ -1496,36 +1495,67 @@ export class DbService implements OnModuleInit {
   async getChatIdOfDm(
     jwtToken: string,
     other_intra_id: number,
-  ): Promise<number | undefined> {
+  ): Promise<number> {
     try {
+      // console.log('DB - groepChatUsers');
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      // get list with user_id's other_intr_id
-
-      const chatUsers = await this.db
-        .select()
+      const chat_data = await this.db
+        .select({
+          chat_id: chatsUsers.chat_id,
+          intra_user_id: chatsUsers.intra_user_id,
+        })
         .from(chatsUsers)
+        .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(
-          or(
-            eq(chatsUsers.intra_user_id, user.intra_user_id),
-            eq(chatsUsers.intra_user_id, other_intra_id),
+          and(
+            or(
+              eq(chatsUsers.intra_user_id, user.intra_user_id),
+              eq(chatsUsers.intra_user_id, other_intra_id),
+            ),
+            eq(chats.is_direct, true),
           ),
         );
 
-      if (chatUsers.length === 0) {
-        console.log('No chat found!');
-        return undefined;
+      // console.log('chat_data:', chat_data);
+
+      if (chat_data.length === 0) {
+        return -1;
       }
 
-      console.log('chatUsers:', chatUsers);
+      const userIds = new Set([Number(other_intra_id), user.intra_user_id]);
+      // const userIds1 = new Set([other_intra_id, user.intra_user_id]);
 
-      // search for the same chat_id's
+      // console.log('userIds:', userIds);
+      // console.log('userIds1:', userIds1);
+      // console.log('user_intra_id: ', user.intra_user_id);
+      // console.log('other_intra_id: ', other_intra_id);
 
-      // check if the chat_id is a dm
+      const groupedChats = chat_data.reduce(
+        (acc, { chat_id, intra_user_id }) => {
+          acc[chat_id] = acc[chat_id] || new Set();
+          acc[chat_id].add(intra_user_id);
+          return acc;
+        },
+        {} as Record<number, Set<number>>,
+      );
 
-      return 0;
-      // return chat[0].chat_id;
+      const validChatIds = Object.entries(groupedChats)
+        .filter(
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          ([_, users]) =>
+            userIds.size === users.size &&
+            [...userIds].every((id) => users.has(id)),
+        )
+        .map(([chat_id]) => Number(chat_id));
+
+      console.log(validChatIds);
+
+      if (validChatIds.length === 0) {
+        return -1;
+      }
+      return validChatIds[0];
     } catch (error) {
       console.log('Error: ', error);
       return 0;

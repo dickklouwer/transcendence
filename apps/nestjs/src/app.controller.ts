@@ -21,7 +21,6 @@ import {
   InvitedChats,
   ChatsUsers,
   ChatSettings,
-  chats,
 } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
@@ -166,6 +165,10 @@ export class AppController {
       token.split(' ')[1],
       chatId,
     );
+
+    console.log('BE - getChatSettings: ', user);
+    console.log('BE - getChatSettings: ', chatSettings);
+
     if (!user) {
       throw Error('Failed to fetch user');
     }
@@ -233,6 +236,8 @@ export class AppController {
     userSettings.is_banned = false;
     userSettings.joined = false;
 
+    console.log('BE - ChatSettings:', ChatSettings);
+
     // add other users to chat
     for (const user of ChatSettings.userInfo) {
       userSettings.intra_user_id = user.intra_user_id;
@@ -248,7 +253,7 @@ export class AppController {
         return;
       }
     }
-    res.status(201).send(res);
+    res.status(201).send({ message: 'Chat created successfully' });
   }
 
   @Post('joinChat')
@@ -496,7 +501,9 @@ export class AppController {
   async getChatIdOfDm(
     @Headers('authorization') token: string,
     @Query('external_user_id') external_user_id: number,
-  ): Promise<number | undefined> {
+  ): Promise<number> {
+    console.log('BE - getChatIdOfDm external_user_id: ', external_user_id);
+
     const chat_id = await this.dbservice.getChatIdOfDm(
       token.split(' ')[1],
       external_user_id,
@@ -527,7 +534,7 @@ export class AppController {
       }
       externalUsers.push(externalUser);
     }
-//    console.log('BE - getExternalUsersFromChat: ', externalUsers);
+    // console.log('BE - getExternalUsersFromChat: ', externalUsers);
     res.status(200).send(externalUsers);
     return externalUsers;
   }
