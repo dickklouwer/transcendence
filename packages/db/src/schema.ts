@@ -41,6 +41,12 @@ export const friends = mySchema.table('friends', {
 	invite_game: boolean('invite_game').default(false),
 });
 
+export const blocked = mySchema.table('blocks', {
+	block_id: serial('block_id').primaryKey(),
+	user_id: integer('user_id').notNull().references(() => users.intra_user_id),
+	blocked_user_id: integer('blocked_user_id').notNull().references(() => users.intra_user_id),
+});
+
 export const games = mySchema.table('games', {
 	game_id: serial('game_id').primaryKey(),
 	player1_id: integer('player1_id').references(() => users.intra_user_id),
@@ -105,7 +111,9 @@ export const messagesInsert = createSelectSchema(messages);
 export const chatSelect = createSelectSchema(chats);
 export const chatsUsersSelect = createSelectSchema(chatsUsers);
 export const messageStatusInsert = createSelectSchema(messageStatus);
+export const blockedSelect = createSelectSchema(blocked);
 
+export type Blocked = z.infer<typeof blockedSelect>;
 export type User = z.infer<typeof userSelect>;
 export type Friends = z.infer<typeof friendsSelect>;
 export type Chats = z.infer<typeof chatSelect>;

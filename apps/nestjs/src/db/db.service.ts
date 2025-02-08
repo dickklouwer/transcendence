@@ -9,6 +9,7 @@ import {
   chatsUsers,
   createQueryClient,
   createDrizzleClient,
+  blocked,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type {
@@ -94,7 +95,11 @@ export class DbService implements OnModuleInit {
         user[0].user_name,
         user[0].intra_user_id,
       );
-      return user[0];
+
+      return {
+        ...user[0],
+        blocked: false,
+      };
     } catch (error) {
       console.error('DB: getExternalUser Error: ', error);
       return null;
@@ -142,6 +147,38 @@ export class DbService implements OnModuleInit {
       console.log('User 2FA status updated');
     } catch (error) {
       console.error('Error updating 2FA status:', error);
+    }
+  }
+
+  async setBlockedUser(userId: number, blockedUserId: number) {
+    try {
+      await this.db.insert(blocked).values({
+        user_id: userId,
+        blocked_user_id: blockedUserId,
+      });
+      console.log('User blocked');
+      return true;
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      return false;
+    }
+  }
+
+  async removeBlockedUser(userId: number, blockedUserId: number) {
+    try {
+      await this.db
+        .delete(blocked)
+        .where(
+          and(
+            eq(blocked.user_id, userId),
+            eq(blocked.blocked_user_id, blockedUserId),
+          ),
+        );
+      console.log('User unblocked');
+      return true;
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      return false;
     }
   }
 
@@ -210,7 +247,7 @@ export class DbService implements OnModuleInit {
 
   async getLeaderboardFromDataBase() {
     try {
-      const res: ExternalUser[] = await this.db
+      const res = await this.db
         .select({
           intra_user_id: users.intra_user_id,
           user_name: users.user_name,
@@ -231,7 +268,10 @@ export class DbService implements OnModuleInit {
         `);
 
       // console.log(sql<number>`sum(${users.wins} / ${users.losses})`);
-      return res;
+      return res.map((user) => ({
+        ...user,
+        blocked: false,
+      }));
     } catch (error) {
       console.log('Error: ', error);
       return null;
@@ -505,10 +545,7 @@ export class DbService implements OnModuleInit {
     }
   }
 
-  async declineFriendRequest(
-    user_id: number,
-    friend_id: number,
-  ): Promise<boolean> {
+  async removeFriend(user_id: number, friend_id: number): Promise<boolean> {
     try {
       await this.db
         .delete(friends)
@@ -910,17 +947,17 @@ export class DbService implements OnModuleInit {
       if (!user) throw Error('Failed to fetch User!');
 
       const chat = await this.db
-      .select({
-        chat_id: chats.chat_id,
-        title: chats.title,
-        is_direct: chats.is_direct,
-        is_public: chats.is_public,
-        image: chats.image,
-        password: chats.password,
-      })
-      .from(chats)
-      .where(eq(chats.chat_id, chat_id))
-      .limit(1);
+        .select({
+          chat_id: chats.chat_id,
+          title: chats.title,
+          is_direct: chats.is_direct,
+          is_public: chats.is_public,
+          image: chats.image,
+          password: chats.password,
+        })
+        .from(chats)
+        .where(eq(chats.chat_id, chat_id))
+        .limit(1);
       if (chat.length === 0) throw Error('Failed to fetch Chat!');
 
       const users: ChatsUsers[] = await this.db
@@ -934,10 +971,11 @@ export class DbService implements OnModuleInit {
           mute_untill: chatsUsers.mute_untill,
           joined: chatsUsers.joined,
           joined_at: chatsUsers.joined_at,
-      })
+        })
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
+      console.log('DB - users: ', users);
 
       const settings: ChatSettings = {
         title: chat[0].title,
@@ -947,6 +985,7 @@ export class DbService implements OnModuleInit {
         image: chat[0].image,
         password: chat[0].password,
       };
+      console.log('DB - settingsz: ', settings);
       return settings;
     } catch (error) {
       console.log('Error: ', error);
@@ -1320,16 +1359,20 @@ export class DbService implements OnModuleInit {
     receiverId: number,
   ): Promise<boolean> {
     try {
-      const result = await this.db.select().from(users);
-      result;
+      const result = await this.db
+        .select()
+        .from(blocked)
+        .where(eq(blocked.user_id, senderId));
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].blocked_user_id === receiverId) {
+          console.log('User is blocked');
+          return true;
+        }
+      }
+      return false;
     } catch (error) {
       console.log('Error: ', error);
     }
-    // TODO: Implement
-    // if (senderId === 278 && receiverId === 77718) {
-    //   return true; // Bas is blocked by Bram
-    // }
-    return false;
   }
 
   async saveMessage(payload: ChatMessages): Promise<ChatMessages> {

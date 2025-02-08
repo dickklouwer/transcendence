@@ -35,6 +35,11 @@ var friends = mySchema.table("friends", {
   is_approved: boolean("is_approved").notNull().default(false),
   invite_game: boolean("invite_game").default(false)
 });
+var blocked = mySchema.table("blocks", {
+  block_id: serial("block_id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.intra_user_id),
+  blocked_user_id: integer("blocked_user_id").notNull().references(() => users.intra_user_id)
+});
 var games = mySchema.table("games", {
   game_id: serial("game_id").primaryKey(),
   player1_id: integer("player1_id").references(() => users.intra_user_id),
@@ -91,6 +96,7 @@ var messagesInsert = createSelectSchema(messages);
 var chatSelect = createSelectSchema(chats);
 var chatsUsersSelect = createSelectSchema(chatsUsers);
 var messageStatusInsert = createSelectSchema(messageStatus);
+var blockedSelect = createSelectSchema(blocked);
 
 // src/index.ts
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -98,6 +104,7 @@ import postgres from "postgres";
 var createQueryClient = (input) => postgres(input);
 var createDrizzleClient = (client) => drizzle(client);
 export {
+  blocked,
   chats,
   chatsUsers,
   createDrizzleClient,

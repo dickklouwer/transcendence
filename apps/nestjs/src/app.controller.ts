@@ -29,7 +29,7 @@ import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(private dbservice: DbService) { }
+  constructor(private dbservice: DbService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -155,19 +155,10 @@ export class AppController {
     return isBanned;
   }
 
-  @Post('updateChatSettings')
-  async updateChatSettings(
-    @Headers('authorization') token: string,
-    @Body('ChatSettings') ChatSettings: ChatSettings,
-    @Res() res: Response
-  ) {
-        
-  }
-
-  @Get(`getChatSettings`)
+  @Get('getChatSettings')
   async getChatSettings(
     @Headers('authorization') token: string,
-    @Query('chatId') chatId: number,    
+    @Query('chatId') chatId: number,
     @Res() res: Response,
   ): Promise<ChatSettings> {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
@@ -184,10 +175,7 @@ export class AppController {
 
     for (let i: number = 0; i < chatSettings.userInfo.length; i++) {
       const chatUser = chatSettings.userInfo[i];
-     if (chatUser.intra_user_id === user.intra_user_id) {
-        res.status(200).send(chatSettings);
-        return ;
-      }
+      if (chatUser.intra_user_id == user.intra_user_id) return chatSettings;
     }
     console.log("We've not seen user in chatsUsers");
     res.status(422).send('User not in chat');
@@ -240,8 +228,15 @@ export class AppController {
       return;
     }
 
+    userSettings.is_owner = false;
+    userSettings.is_admin = false;
+    userSettings.is_banned = false;
+    userSettings.joined = false;
+
     // add other users to chat
-    for (let user of ChatSettings.userInfo) {
+    for (const user of ChatSettings.userInfo) {
+      userSettings.intra_user_id = user.intra_user_id;
+
       status = await this.dbservice.createChatUsers(
         token.split(' ')[1],
         chat_id,
@@ -273,6 +268,65 @@ export class AppController {
     }
 
     res.status(200).send(response);
+  }
+
+  @Post('blockUser')
+  async blockUser(
+    @Headers('authorization') token: string,
+    @Body('blocked_user_id') blocked_user_id: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const user = await this.dbservice.getUserFromDataBase(
+        token.split(' ')[1],
+      );
+      if (!user) {
+        res.status(422).send('Failed to get user');
+        return;
+      }
+      await this.dbservice.removeFriend(user.intra_user_id, blocked_user_id);
+      const response = await this.dbservice.setBlockedUser(
+        user.intra_user_id,
+        blocked_user_id,
+      );
+
+      if (!response) {
+        res.status(422).send('Failed to block user');
+        return;
+      }
+      res.status(200).send(response);
+    } catch {
+      res.status(422).send('Failed to block user');
+    }
+  }
+
+  @Post('unblockUser')
+  async unblockUser(
+    @Headers('authorization') token: string,
+    @Body('blocked_user_id') blocked_user_id: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const user = await this.dbservice.getUserFromDataBase(
+        token.split(' ')[1],
+      );
+      if (!user) {
+        res.status(422).send('Failed to get user');
+        return;
+      }
+      const response = await this.dbservice.removeBlockedUser(
+        user.intra_user_id,
+        blocked_user_id,
+      );
+
+      if (!response) {
+        res.status(422).send('Failed to unblock user');
+        return;
+      }
+      res.status(200).send(response);
+    } catch {
+      res.status(422).send('Failed to unblock user');
+    }
   }
 
   @Post('setChatPassword')
@@ -453,14 +507,24 @@ export class AppController {
 
   @Get('getExternalUsersFromChat')
   async getExternalUsersFromChat(
+    @Headers('authorization') token: string,
     @Query('chatId') chatId: number,
     @Res() res: Response,
   ): Promise<ExternalUser[]> {
+    const id = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const users = await this.dbservice.getChatUsers(chatId);
     const externalUsers: ExternalUser[] = [];
     for (const user of users) {
       const externalUser = await this.dbservice.getExternalUser(user);
       if (!externalUser) res.status(404).send('No users found');
+      if (
+        this.dbservice.checkIfUserIsBlocked(
+          id.intra_user_id,
+          externalUser.intra_user_id,
+        )
+      ) {
+        externalUser.blocked = true;
+      }
       externalUsers.push(externalUser);
     }
 //    console.log('BE - getExternalUsersFromChat: ', externalUsers);
@@ -473,30 +537,50 @@ export class AppController {
     @Headers('authorization') token: string,
     @Res() res: Response,
   ): Promise<ExternalUser[]> {
+    const id = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const users = await this.dbservice.getAllExternalUsers(token.split(' ')[1]);
 
+    for (let i: number = 0; i < users.length; i++) {}
     if (!users) {
       res.status(404).send('No users found');
       return;
     }
-    res.status(200).send(users);
+    const result = await Promise.all(
+      users.map(async (user) => {
+        return {
+          ...user,
+          blocked: await this.dbservice.checkIfUserIsBlocked(
+            id.intra_user_id,
+            user.intra_user_id,
+          ),
+        };
+      }),
+    );
+    res.status(200).send(result);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('getExternalUser')
   async searchExternal(
+    @Headers('authorization') token: string,
     @Query('id') id: number,
     @Res() res: Response,
   ): Promise<ExternalUser> {
-    const user = await this.dbservice.getExternalUser(id);
+    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
+    const externalUser = await this.dbservice.getExternalUser(id);
 
-    if (!user) {
+    if (!externalUser) {
       res.status(404).send('No users found');
       return;
     }
-    console.log('BE - getExternalUser: ', user.user_name, user.intra_user_id);
-    res.status(200).send(user);
-    return user;
+    console.log('BE - getExternalUser: ', externalUser);
+    res.status(200).send({
+      ...externalUser,
+      blocked: await this.dbservice.checkIfUserIsBlocked(
+        user.intra_user_id,
+        externalUser.intra_user_id,
+      ),
+    });
   }
 
   @UseGuards(JwtAuthGuard)
