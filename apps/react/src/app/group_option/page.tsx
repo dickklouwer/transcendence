@@ -8,7 +8,7 @@ import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { isAdmin, isOwner, findChatsUsers } from './functions';
+import { isAdmin, isOwner, isEditor, findChatsUsers } from './functions';
 
 export default function GroupOptionPage() {
 
@@ -18,16 +18,17 @@ export default function GroupOptionPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [reload, setReload] = useState<boolean>(false);
 
+  const [pageUser, setPageUser] = useState<User>();
   const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
   const [pageSettings, setPageChatSettings] = useState<ChatSettings>();
   const [chatUsers, setChatUsers] = useState<ExternalUser[]>();
 
-  const [pageUser, setPageUser] = useState<User>();
-  const [isPrivate, setChannelType] = useState<boolean>(true);
   const [title, setTitle] = useState<string>("");
+  const [isPrivate, setChannelType] = useState<boolean>(true);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
+  const [showOldPassword, setShowOldPassword] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [password, setPassword] = useState<string>("");
+  const [oldPassword, setOldPassword] = useState<string>("");
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
@@ -37,25 +38,20 @@ export default function GroupOptionPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        fetchGet<User>('api/profile')
-          .then((user) => {
-            setPageUser(user);
-          })
-          .catch((error) => {
-            console.log('Error: ', error);
-          });
         setIsLoading(true);
         const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
         const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
-
-        if (users === null) {
-          console.error("Error Fetching Chat Settings or Users");
-          setIsLoading(false);
-          return;
-        }
+        fetchGet<User>('api/profile')
+          .then((user) => { setPageUser(user); })
+          .catch((error) => {
+            console.log('Error: ', error);
+          });
 
         setUpdatedChatSettings(settings);
         setPageChatSettings(JSON.parse(JSON.stringify(settings)));
+        setTitle(settings.title);
+        setChannelType(settings.is_private);
+
         setChatUsers(users);
       }
       catch (error) {
@@ -100,6 +96,10 @@ export default function GroupOptionPage() {
     setUpdatedChatSettings(settings);
   }
 
+  function UpdateSettings() {
+
+  }
+
   return (
     <div className="flex flex-col w-5/6">
       {/* HEADER */}
@@ -109,7 +109,7 @@ export default function GroupOptionPage() {
 
           {/* Friendlist */}
           {/* TODO: Still need to be able to add, kick and ban user to the chat */}
-          <div className="flex flex-col">
+          <div className="flex flex-col bg-slate-900 rounded p-2">
             <h1 className="flex justify-center" >Chat Users</h1>
             <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
               <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
@@ -188,93 +188,88 @@ export default function GroupOptionPage() {
             */}
 
             <div className='flex flex-col w-[25rem] justify-center m-3 bg-slate-800 rounded '>
-              <div className="flex flex-row justify-between m-2 my-3">
-                <p>Title:</p>
+              <div className="flex flex-row justify-between m-2">
+                <p className="p-1">Title:</p>
                 <input
-                  className="bg-slate-600 rounded w-4/5"
+                  className="bg-slate-600 rounded w-4/5 p-1"
                   type="text"
                   id="TitleField"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />
               </div>
-              <div className="flex flex-row items-center m-2 my-3 ">
-                <p className="flex flex-grow justify-start">Private:</p>
+              <div className="flex flex-row items-center m-2 ">
+                <p className="flex flex-grow justify-start p-1">Private:</p>
                 <input type="radio" name="channelType" value="true"
                   checked={isPrivate}
                   onChange={handleRadioChange}
-                  className="flex items-center w-5 h-5 " />
+                  className="flex items-center w-5 h-5 "
+                  readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
+                />
               </div>
-              <div className="flex flex-row items-center m-2 my-3">
-                <p className="flex flex-grow justify-start">Public:</p>
+              <div className="flex flex-row items-center m-2">
+                <p className="flex flex-grow justify-start p-1">Public:</p>
                 <input type="radio" name="channelType" value="false"
                   checked={!isPrivate}
                   onChange={handleRadioChange}
-                  className="flex items-center w-5 h-5 " />
+                  className="flex items-center w-5 h-5 "
+                  readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
+                />
               </div>
 
-              <div className="flex flex-row justify-between items-center m-2 my-3">
-                <p>Password:</p>
+              {/* Password */}
+              <div className="flex flex-row justify-between items-center m-2">
+                <p className="p-1">Password:</p>
                 <input type="checkbox" name="hasPassword"
                   checked={hasPassword}
                   onChange={() => setHasPassword(!hasPassword)}
-                  className="flex w-5 h-5" />
+                  className="flex w-5 h-5"
+                  readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
+                />
               </div>
-              {hasPassword ?
-                <div className="flex flex-col justify-between m-2 my-3">
-                  <div className="flex justify-between flex-row m-2 my-3">
-                    <div onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? "hide" : "show"}
-                    </div>
-                    <input
-                      className="bg-slate-600 rounded w-4/5"
-                      type={showPassword ? "text" : "password"}
-                      id="passwordField"
-                      defaultValue={password}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+              { 
+              <div className="flex flex-col justify-between m-2" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                <div className="flex justify-between flex-row" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                  <div onClick={() => setShowOldPassword(!showOldPassword)} style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                    {showOldPassword ? "hide" : "show"}
                   </div>
-                  <div className="flex justify-between flex-row m-2 my-3">
-                    <div onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? "hide" : "show"}
-                    </div>
-                    <input
-                      className="bg-slate-600 rounded w-4/5"
-                      type={showPassword ? "text" : "password"}
-                      id="passwordField"
-                      defaultValue={password}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                </div> :
-                < p className="flex justify-right flex-row my-3 "></p>
+                  <input
+                    className="bg-slate-600 rounded w-4/5 p-1"
+                    type={showOldPassword ? "text" : "password"}
+                    id="OldPasswordField"
+                    placeholder=" Old Password"
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    style={{ visibility: hasPassword ? "visible" : "hidden" }}
+                  />
+                </div>
+              </div> 
               }
             </div>
 
             {/* Action Buttons */}
             < div className="flex flex-row justify-center">
-              {/* Cancel Button should just go back
+              {/* Cancel Button should just go back */}
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 " href="/chats">
                 Back
               </Link>
-              <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " onClick={() => UpdateSettings()} href="/chats">
-                Apply
-              </Link>
-              */}
               {/* Create Button should create chat and go back to chats */}
+              { isEditor(pageSettings, pageUser.intra_user_id) &&
+                <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " onClick={() => UpdateSettings()} href="/chats">
+                  Apply
+                </Link>
+              }
             </div>
           </div>
         </div >
       </div >
 
-      {/* Debug Box
-      */}
+      {/* Debug Box */}
       < div className="flex flex-col text-left justify-center" >
         <p>PageSettings:</p>
         <p>| Title: {title}</p>
-        <p>| password: {password}</p>
+        <p>| Old Password: {oldPassword}</p>
+        {/*<p>| New Password: {newPassword}</p>*/}
         <p>| Has Password: {hasPassword ? "True" : "False"}</p>
         <p>| Show Password : {showPassword ? "True" : "False"}</p>
         <p>| Selected Users: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
@@ -285,7 +280,7 @@ export default function GroupOptionPage() {
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
       </div >
     </div >
-  );
+  ); // End of return
 
   function joinPerms(list: ChatsUsers[]) {
     var arr: number[] = [];

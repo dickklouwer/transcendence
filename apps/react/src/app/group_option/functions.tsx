@@ -6,6 +6,7 @@ enum Shifts {
   BANNED = 3,
 };
 
+// find the correct ChatsUsers in from the ChatSettings
 export function findChatsUsers(settings: ChatSettings, id: number): ChatsUsers {
   let chatUser: ChatsUsers = settings.userInfo[0];
 
@@ -16,12 +17,25 @@ export function findChatsUsers(settings: ChatSettings, id: number): ChatsUsers {
   return chatUser;
 }
 
+// check if user is owner
 export function isOwner(settings: ChatSettings, id: number): boolean {
   const user : ChatsUsers = findChatsUsers(settings, id);
   return (user.is_owner);
 }
 
+// check if user is admin
 export function isAdmin(settings: ChatSettings, id: number): boolean {
   const user : ChatsUsers = findChatsUsers(settings, id);
   return (user.is_admin);
+}
+
+export function isBanned(settings: ChatSettings, id: number): boolean {
+  const user : ChatsUsers = findChatsUsers(settings, id);
+  return (user.shift === Shifts.BANNED);
+}
+
+// Check if user is allowed to edit group
+export function isEditor(settings: ChatSettings, id: number): boolean {
+  if (isOwner(settings, id) || isAdmin(settings, id)) return true;
+  return false;
 }
