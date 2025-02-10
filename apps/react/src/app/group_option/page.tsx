@@ -8,7 +8,7 @@ import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { isAdmin, isOwner, findChatsUsers} from './functions';
+import { isAdmin, isOwner, findChatsUsers } from './functions';
 
 export default function GroupOptionPage() {
 
@@ -19,8 +19,10 @@ export default function GroupOptionPage() {
   const [reload, setReload] = useState<boolean>(false);
 
   const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
+  const [pageSettings, setPageChatSettings] = useState<ChatSettings>();
   const [chatUsers, setChatUsers] = useState<ExternalUser[]>();
 
+  const [pageUser, setPageUser] = useState<User>();
   const [isPrivate, setChannelType] = useState<boolean>(true);
   const [title, setTitle] = useState<string>("");
   const [hasPassword, setHasPassword] = useState<boolean>(false);
@@ -31,19 +33,20 @@ export default function GroupOptionPage() {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
   };
-  var pageUser: User;
 
   useEffect(() => {
     async function fetchData() {
       try {
+        fetchGet<User>('api/profile')
+          .then((user) => {
+            setPageUser(user);
+          })
+          .catch((error) => {
+            console.log('Error: ', error);
+          });
         setIsLoading(true);
         const settings: ChatSettings = await fetchGet<ChatSettings>(`/api/getChatSettings?chatId=${chatId}`);
-        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);  
-        fetchGet<User>('/api/getProfile')
-        .then((data) => {pageUser = data})
-        .catch((error) => {
-          console.log('Error: ', error);
-        });
+        const users: ExternalUser[] = await fetchGet<ExternalUser[]>(`/api/getExternalUsersFromChat?chatId=${chatId}`);
 
         if (users === null) {
           console.error("Error Fetching Chat Settings or Users");
@@ -52,6 +55,7 @@ export default function GroupOptionPage() {
         }
 
         setUpdatedChatSettings(settings);
+        setPageChatSettings(JSON.parse(JSON.stringify(settings)));
         setChatUsers(users);
       }
       catch (error) {
@@ -64,9 +68,8 @@ export default function GroupOptionPage() {
     fetchData();
   }, [chatId]);
 
-
   if (isLoading) return <p>Loading...</p>
-  if (updatedChatSettings === undefined || chatUsers === undefined) {
+  if (updatedChatSettings === undefined || chatUsers === undefined || pageUser === undefined) {
     return (
       <div>
         <p>Invalid Data</p>
@@ -76,30 +79,22 @@ export default function GroupOptionPage() {
       </div>
     );
   }
-  const pageSettings = {... updatedChatSettings};
 
-  /*
-    function toggleOwner(id: number) {
-      if (updatedChatSettings === undefined) return;
-  
-      const idx: number = updatedChatSettings.userId.indexOf(id);
-      // Clone the object and update the permission
-  
-      updatedChatSettings.userPermission[idx] >> (Permissions.OWNER) & 1 ?
-        updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] & ~(1 << Permissions.OWNER) :
-        updatedChatSettings.userPermission[idx] = updatedChatSettings.userPermission[idx] | 1 << Permissions.OWNER;
-  
-      setUpdatedChatSettings(updatedChatSettings);
-      forceReload();
-    }
-  */
+  function toggleOwner(id: number) {
+    if (updatedChatSettings === undefined) return;
+    const settings: ChatSettings = { ...updatedChatSettings };
+
+    const user: ChatsUsers = findChatsUsers(settings, id);
+    user.is_owner = !user.is_owner;
+
+    setUpdatedChatSettings(settings);
+  }
 
   function toggleAdmin(id: number) {
     if (updatedChatSettings === undefined) return;
     const settings: ChatSettings = { ...updatedChatSettings };
-    const user : ChatsUsers = findChatsUsers(settings, id);
-    // Clone the object and update the permission
 
+    const user: ChatsUsers = findChatsUsers(settings, id);
     user.is_admin = !user.is_admin;
 
     setUpdatedChatSettings(settings);
@@ -150,13 +145,12 @@ export default function GroupOptionPage() {
                       </div>
                     </div>
 
-                    {/* WARNING: before implementing this ternary find a way to get 
-                                 the intra_user_id of the person using the page
+                    {/*
                         NOTE: Can this be done in a function? 
                               Make sure an Admin can't change ownership
                         */}
 
-                    {isOwner(pageSettings, pageUser.intra_user_id) || isAdmin(pageSettings, user.intra_user_id) ?
+                    {isOwner(pageSettings, pageUser.intra_user_id) || isAdmin(pageSettings, pageUser.intra_user_id) ?
                       < div className='flex flex-row justify-around w-2/5 space-x-10'>
                         {isAdmin(updatedChatSettings, user.intra_user_id) ?
                           <button className="flex size-15 p-5 rounded bg-green-800" onClick={
@@ -164,25 +158,21 @@ export default function GroupOptionPage() {
                           <button className="flex size-15 p-5 rounded bg-red-800" onClick={
                             () => toggleAdmin(user.intra_user_id)}></button>
                         }
-                        {/* 
                         {isOwner(updatedChatSettings, user.intra_user_id) ?
                           <button className="flex size-15 p-5 rounded bg-green-800" onClick={
                             () => toggleOwner(user.intra_user_id)}></button> :
                           <button className="flex size-15 p-5 rounded bg-red-800" onClick={
                             () => toggleOwner(user.intra_user_id)}></button>
                         }
-                        */}
                       </div>
                       :
                       < div className='flex flex-row justify-around w-2/5 space-x-10'>
                         {isAdmin(updatedChatSettings, user.intra_user_id) ?
                           <div className="flex size-15 p-5 rounded bg-green-800" ></div> :
                           <div className="flex size-15 p-5 rounded bg-red-800"></div>}
-                        {/* 
                         {isOwner(updatedChatSettings, user.intra_user_id) ?
                           <div className="flex size-15 p-5 rounded bg-green-800"></div> :
                           <div className="flex size-15 p-5 rounded bg-red-800"></div>}
-                        */}
                       </div>
                     }
                   </div>
@@ -297,25 +287,21 @@ export default function GroupOptionPage() {
     </div >
   );
 
-  function joinPerms(list: ChatsUsers[])
-  {
+  function joinPerms(list: ChatsUsers[]) {
     var arr: number[] = [];
-    for (const user of list)
-    {
-      const perm:number = 0 +
-      (user.is_owner ? 1 : 0) +
-      (user.is_admin ? 2 : 0) +
-      (user.is_banned ? 3 : 0);
+    for (const user of list) {
+      const perm: number = 0 +
+        (user.is_owner ? 1 : 0) +
+        (user.is_admin ? 2 : 0) +
+        (user.is_banned ? 3 : 0);
       arr.push(perm);
     }
     return (arr);
   }
 
-  function joinUserID(list: ChatsUsers[])
-  {
+  function joinUserID(list: ChatsUsers[]) {
     var arr: number[] = [];
-    for (const user of list)
-    {
+    for (const user of list) {
       if (user.intra_user_id == null) continue;
       arr.push(user.intra_user_id);
     }
