@@ -29,11 +29,6 @@ export function isAdmin(settings: ChatSettings, id: number): boolean {
   return (user.is_admin);
 }
 
-export function isBanned(settings: ChatSettings, id: number): boolean {
-  const user : ChatsUsers = findChatsUsers(settings, id);
-  return (user.shift === Shifts.BANNED);
-}
-
 // Check if user is allowed to edit group
 export function isEditor(settings: ChatSettings, id: number): boolean {
   if (isOwner(settings, id) || isAdmin(settings, id)) return true;

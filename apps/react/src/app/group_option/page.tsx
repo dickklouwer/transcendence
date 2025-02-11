@@ -16,7 +16,6 @@ export default function GroupOptionPage() {
   const chatId = searchParams?.get('chatId');
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [reload, setReload] = useState<boolean>(false);
 
   const [pageUser, setPageUser] = useState<User>();
   const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
@@ -97,7 +96,7 @@ export default function GroupOptionPage() {
   }
 
   function UpdateSettings() {
-
+    
   }
 
   return (
@@ -136,21 +135,18 @@ export default function GroupOptionPage() {
                           <DisplayUserStatus state={user.state} width={15} height={15} />
                         </div>
                         <div className="min-w-0 p-1 break-all">
-                          {user.nick_name === null ? (
-                            <h1 className="text-1xl">{user.user_name}</h1>
-                          ) : (
-                            <h1 className="text-1xl">{user.nick_name}</h1>
-                          )}
+                          {user.nick_name === null ? 
+                          ( <h1 className="text-1xl">{user.user_name}</h1> )
+                          :
+                          ( <h1 className="text-1xl">{user.nick_name}</h1> )}
                         </div>
                       </div>
                     </div>
 
-                    {/*
-                        NOTE: Can this be done in a function? 
+                    {/* NOTE: Can this be done in a function? 
                               Make sure an Admin can't change ownership
-                        */}
-
-                    {isOwner(pageSettings, pageUser.intra_user_id) || isAdmin(pageSettings, pageUser.intra_user_id) ?
+                    */}
+                    {isEditor(pageSettings, pageUser.intra_user_id) ?
                       < div className='flex flex-row justify-around w-2/5 space-x-10'>
                         {isAdmin(updatedChatSettings, user.intra_user_id) ?
                           <button className="flex size-15 p-5 rounded bg-green-800" onClick={
@@ -181,14 +177,13 @@ export default function GroupOptionPage() {
             </div>
           </div>
 
-
           <div className="flex flex-col items-center justify-center">
             {/* TODO: [x] Title for chat needs to be added
                     [ ] check if all required values are filled in
             */}
 
-            <div className='flex flex-col w-[25rem] justify-center m-3 bg-slate-800 rounded '>
-              <div className="flex flex-row justify-between m-2">
+            <div className='flex flex-col w-[25rem] justify-center bg-slate-800 rounded p-1'>
+              <div className="flex flex-row justify-between">
                 <p className="p-1">Title:</p>
                 <input
                   className="bg-slate-600 rounded w-4/5 p-1"
@@ -199,7 +194,7 @@ export default function GroupOptionPage() {
                   readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />
               </div>
-              <div className="flex flex-row items-center m-2 ">
+              <div className="flex flex-row items-center p-1">
                 <p className="flex flex-grow justify-start p-1">Private:</p>
                 <input type="radio" name="channelType" value="true"
                   checked={isPrivate}
@@ -208,7 +203,7 @@ export default function GroupOptionPage() {
                   readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />
               </div>
-              <div className="flex flex-row items-center m-2">
+              <div className="flex flex-row items-center ">
                 <p className="flex flex-grow justify-start p-1">Public:</p>
                 <input type="radio" name="channelType" value="false"
                   checked={!isPrivate}
@@ -219,7 +214,7 @@ export default function GroupOptionPage() {
               </div>
 
               {/* Password */}
-              <div className="flex flex-row justify-between items-center m-2">
+              <div className="flex flex-row justify-between items-center">
                 <p className="p-1">Password:</p>
                 <input type="checkbox" name="hasPassword"
                   checked={hasPassword}
@@ -229,9 +224,9 @@ export default function GroupOptionPage() {
                 />
               </div>
               { 
-              <div className="flex flex-col justify-between m-2" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
-                <div className="flex justify-between flex-row" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
-                  <div onClick={() => setShowOldPassword(!showOldPassword)} style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+              <div className="flex flex-col justify-between" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                <div className="flex justify-between flex-row items-center" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                  <div className=" p-1" onClick={() => setShowOldPassword(!showOldPassword)} style={{ visibility: hasPassword ? "visible" : "hidden" }}>
                     {showOldPassword ? "hide" : "show"}
                   </div>
                   <input
@@ -271,7 +266,7 @@ export default function GroupOptionPage() {
         <p>| Old Password: {oldPassword}</p>
         {/*<p>| New Password: {newPassword}</p>*/}
         <p>| Has Password: {hasPassword ? "True" : "False"}</p>
-        <p>| Show Password : {showPassword ? "True" : "False"}</p>
+        <p>| Show Password: {showPassword ? "True" : "False"}</p>
         <p>| Selected Users: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
         <p>| Permissions: {joinPerms(pageSettings?.userInfo).join(", ")}</p>
         <p>_________ </p>
@@ -282,24 +277,25 @@ export default function GroupOptionPage() {
     </div >
   ); // End of return
 
-  function joinPerms(list: ChatsUsers[]) {
-    var arr: number[] = [];
-    for (const user of list) {
-      const perm: number = 0 +
-        (user.is_owner ? 1 : 0) +
-        (user.is_admin ? 2 : 0) +
-        (user.is_banned ? 3 : 0);
-      arr.push(perm);
+  {/* Debug Functions */}
+    function joinPerms(list: ChatsUsers[]) {
+      var arr: number[] = [];
+      for (const user of list) {
+        const perm: number = 0 +
+          (user.is_owner ? 1 : 0) +
+          (user.is_admin ? 2 : 0) +
+          (user.is_banned ? 3 : 0);
+        arr.push(perm);
+      }
+      return (arr);
     }
-    return (arr);
-  }
 
-  function joinUserID(list: ChatsUsers[]) {
-    var arr: number[] = [];
-    for (const user of list) {
-      if (user.intra_user_id == null) continue;
-      arr.push(user.intra_user_id);
+    function joinUserID(list: ChatsUsers[]) {
+      var arr: number[] = [];
+      for (const user of list) {
+        if (user.intra_user_id == null) continue;
+        arr.push(user.intra_user_id);
+      }
+      return (arr);
     }
-    return (arr);
-  }
 }
