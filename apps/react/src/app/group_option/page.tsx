@@ -252,7 +252,8 @@ export default function GroupOptionPage() {
             {/* Action Buttons */}
             < div className="flex flex-row justify-center">
               {/* Cancel Button should just go back */}
-              <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 " href="/chats">
+              <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 "
+                    href={`/messages?chat_id=${chatId}`}>
                 Back
               </Link>
               {/* Create Button should update chat and go back to the messages */}
