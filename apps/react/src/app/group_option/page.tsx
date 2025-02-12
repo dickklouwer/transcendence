@@ -175,10 +175,8 @@ export default function GroupOptionPage() {
           </div>
 
           <div className="flex flex-col items-center justify-center">
-            {/* TODO: [x] Title for chat needs to be added
-                    [ ] check if all required values are filled in
-            */}
 
+            {/* Chat Title */}
             <div className='flex flex-col w-[25rem] justify-center bg-slate-800 rounded p-1'>
               <div className="flex flex-row justify-between">
                 <p className="p-1">Title:</p>
@@ -191,6 +189,8 @@ export default function GroupOptionPage() {
                   readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />
               </div>
+
+              {/* Chat Type - Radio Button - public/private */}
               <div className="flex flex-row items-center p-1">
                 <p className="flex flex-grow justify-start p-1">Private:</p>
                 <input type="radio" name="channelType" value="true"
@@ -255,9 +255,10 @@ export default function GroupOptionPage() {
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 " href="/chats">
                 Back
               </Link>
-              {/* Create Button should create chat and go back to chats */}
+              {/* Create Button should update chat and go back to the messages */}
               { isEditor(pageSettings, pageUser.intra_user_id) &&
-                <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " onClick={() => UpdateSettings()} href="/chats">
+                <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 "
+                      onClick={() => UpdateSettings()} href={`/messages?chat_id=${chatId}`}>
                   Apply
                 </Link>
               }
