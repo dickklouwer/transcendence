@@ -26,8 +26,9 @@ export default function GroupOptionPage() {
   const [isPrivate, setChannelType] = useState<boolean>(true);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
   const [showOldPassword, setShowOldPassword] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [oldPassword, setOldPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
@@ -49,7 +50,7 @@ export default function GroupOptionPage() {
         setUpdatedChatSettings(settings);
         setPageChatSettings(JSON.parse(JSON.stringify(settings)));
         setTitle(settings.title);
-        setChannelType(settings.is_private);
+        setChannelType(settings.isPrivate);
 
         setChatUsers(users);
       }
@@ -96,7 +97,20 @@ export default function GroupOptionPage() {
   }
 
   function UpdateSettings() {
-    
+    //TODO: validate given input.
+
+    const addedUsers: number[] = [1, 2, 3];
+
+    fetchPost("api/updateChat", {
+        updatedChatSettings : updatedChatSettings,
+        addedUsers : addedUsers ,
+        oldPWD: oldPassword,
+        newPWD: newPassword,
+      })
+    .then(() => {{}})
+    .catch((error) => {
+      console.log("Error Creating Group Chat", error);
+    });
   }
 
   return (
@@ -109,7 +123,7 @@ export default function GroupOptionPage() {
           {/* Friendlist */}
           {/* TODO: Still need to be able to add, kick and ban user to the chat */}
           <div className="flex flex-col bg-slate-900 rounded p-2">
-            <h1 className="flex justify-center" >Chat Users</h1>
+            <h1 className="flex justify-center">Chat Users</h1>
             <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
               <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
                 <p className="flex justify-center text-1xl w-3/5">User</p>
@@ -136,41 +150,24 @@ export default function GroupOptionPage() {
                         </div>
                         <div className="min-w-0 p-1 break-all">
                           {user.nick_name === null ? 
-                          ( <h1 className="text-1xl">{user.user_name}</h1> )
-                          :
-                          ( <h1 className="text-1xl">{user.nick_name}</h1> )}
+                            ( <h1 className="text-1xl">{user.user_name}</h1> ) :
+                            ( <h1 className="text-1xl">{user.nick_name}</h1> )
+                          }
                         </div>
                       </div>
                     </div>
-
-                    {/* NOTE: Can this be done in a function? 
-                              Make sure an Admin can't change ownership
-                    */}
-                    {isEditor(pageSettings, pageUser.intra_user_id) ?
-                      < div className='flex flex-row justify-around w-2/5 space-x-10'>
-                        {isAdmin(updatedChatSettings, user.intra_user_id) ?
-                          <button className="flex size-15 p-5 rounded bg-green-800" onClick={
-                            () => toggleAdmin(user.intra_user_id)}></button> :
-                          <button className="flex size-15 p-5 rounded bg-red-800" onClick={
-                            () => toggleAdmin(user.intra_user_id)}></button>
-                        }
-                        {isOwner(updatedChatSettings, user.intra_user_id) ?
-                          <button className="flex size-15 p-5 rounded bg-green-800" onClick={
-                            () => toggleOwner(user.intra_user_id)}></button> :
-                          <button className="flex size-15 p-5 rounded bg-red-800" onClick={
-                            () => toggleOwner(user.intra_user_id)}></button>
-                        }
-                      </div>
-                      :
-                      < div className='flex flex-row justify-around w-2/5 space-x-10'>
-                        {isAdmin(updatedChatSettings, user.intra_user_id) ?
-                          <div className="flex size-15 p-5 rounded bg-green-800" ></div> :
-                          <div className="flex size-15 p-5 rounded bg-red-800"></div>}
-                        {isOwner(updatedChatSettings, user.intra_user_id) ?
-                          <div className="flex size-15 p-5 rounded bg-green-800"></div> :
-                          <div className="flex size-15 p-5 rounded bg-red-800"></div>}
-                      </div>
-                    }
+                    <div className='flex flex-row justify-around w-2/5 space-x-10'>
+                        <button
+                          className={`flex size-15 p-5 rounded ${isAdmin(updatedChatSettings, user.intra_user_id) ? "bg-green-800": "bg-red-800"}`}
+                          onClick={() => toggleAdmin(user.intra_user_id)}
+                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)} >
+                        </button>
+                        <button
+                          className={`flex size-15 p-5 rounded ${isOwner(updatedChatSettings, user.intra_user_id) ? "bg-green-800": "bg-red-800"}`}
+                          onClick={() => toggleOwner(user.intra_user_id)}
+                          disabled={!isOwner(updatedChatSettings, pageUser.intra_user_id)} >
+                        </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -223,10 +220,9 @@ export default function GroupOptionPage() {
                   readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />
               </div>
-              { 
-              <div className="flex flex-col justify-between" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+              <div className="flex flex-col justify-between">
                 <div className="flex justify-between flex-row items-center" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
-                  <div className=" p-1" onClick={() => setShowOldPassword(!showOldPassword)} style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                  <div className=" p-1" onClick={() => setShowOldPassword(!showOldPassword)}>
                     {showOldPassword ? "hide" : "show"}
                   </div>
                   <input
@@ -238,8 +234,19 @@ export default function GroupOptionPage() {
                     style={{ visibility: hasPassword ? "visible" : "hidden" }}
                   />
                 </div>
+                <div className="flex justify-between flex-row items-center" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                  <div className=" p-1" onClick={() => setShowNewPassword(!showNewPassword)}>
+                    {showNewPassword ? "hide" : "show"}
+                  </div>
+                  <input
+                    className="bg-slate-600 rounded w-4/5 p-1"
+                    type={showNewPassword ? "text" : "password"}
+                    id="NewPasswordField"
+                    placeholder=" New Password"
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
               </div> 
-              }
             </div>
 
             {/* Action Buttons */}
@@ -262,15 +269,14 @@ export default function GroupOptionPage() {
       {/* Debug Box */}
       < div className="flex flex-col text-left justify-center" >
         <p>PageSettings:</p>
-        <p>| Title: {title}</p>
-        <p>| Old Password: {oldPassword}</p>
-        {/*<p>| New Password: {newPassword}</p>*/}
-        <p>| Has Password: {hasPassword ? "True" : "False"}</p>
-        <p>| Show Password: {showPassword ? "True" : "False"}</p>
-        <p>| Selected Users: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
+        <p>| ChatUsers: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
         <p>| Permissions: {joinPerms(pageSettings?.userInfo).join(", ")}</p>
         <p>_________ </p>
         <p>| Updated:</p>
+        <p>| Title: {title}</p>
+        <p>| Has Password: {hasPassword ? "True" : "False"}</p>
+        <p>| Old Password: {showOldPassword ? "Show" : "Hide"} {oldPassword}</p>
+        <p>| Old Password: {showNewPassword ? "Show" : "Hide"} {newPassword}</p>
         <p>| Selected Users: {joinUserID(updatedChatSettings?.userInfo).join(", ")}</p>
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
       </div >

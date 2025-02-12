@@ -143,7 +143,7 @@ export default function GroupInvite() {
       image: null,
     };
 
-    // TODO: Find Alternative to alert
+    //TODO: Find Alternative to alert
     if (Settings.title === "") {
       alert("Chat needs a title");
       return;
