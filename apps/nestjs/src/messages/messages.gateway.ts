@@ -178,6 +178,28 @@ export class MessagesGateway
       return;
     }
 
+    const isDirectMessage = await this.dbService.checkIfDirectMessage(
+      payload.chat_id,
+    );
+    this.logger.log(`isDirectMessage: ${isDirectMessage}`);
+    if (isDirectMessage) {
+      const isBlocked = await this.dbService.checkIfUserIsBlocked(
+        payload.sender_id,
+        payload.chat_id,
+      );
+      if (isBlocked) {
+        this.logger.log(
+          `Client ${client.id} is blocked in chat_id: ${payload.chat_id}`,
+        );
+        client.emit('messageFromServer', {
+          ...payload,
+          message: '',
+          is_blocked: true,
+        });
+        return;
+      }
+    }
+
     const fullMessage: ChatMessages = await this.dbService.saveMessage(payload);
 
     const room = this.rooms.get(fullMessage.chat_id);
@@ -196,6 +218,10 @@ export class MessagesGateway
         this.dbService.updateMessageStatusReceived(user.intra_id);
         if (!isBlocked) {
           user.socket.emit('messageFromServer', fullMessage);
+        } else {
+          this.logger.log(
+            `Client ${user.intra_id} get no update from blocked user ${payload.sender_id} in chat_id: ${fullMessage.chat_id}`,
+          );
         }
       });
     }

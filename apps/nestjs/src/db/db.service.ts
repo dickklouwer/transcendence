@@ -9,7 +9,7 @@ import {
   chatsUsers,
   createQueryClient,
   createDrizzleClient,
-  blocked,
+  blocks,
 } from '@repo/db';
 import type { FortyTwoUser } from 'src/auth/auth.service';
 import type {
@@ -151,7 +151,7 @@ export class DbService implements OnModuleInit {
 
   async setBlockedUser(userId: number, blockedUserId: number) {
     try {
-      await this.db.insert(blocked).values({
+      await this.db.insert(blocks).values({
         user_id: userId,
         blocked_user_id: blockedUserId,
       });
@@ -166,11 +166,11 @@ export class DbService implements OnModuleInit {
   async removeBlockedUser(userId: number, blockedUserId: number) {
     try {
       await this.db
-        .delete(blocked)
+        .delete(blocks)
         .where(
           and(
-            eq(blocked.user_id, userId),
-            eq(blocked.blocked_user_id, blockedUserId),
+            eq(blocks.user_id, userId),
+            eq(blocks.blocked_user_id, blockedUserId),
           ),
         );
       console.log('User unblocked');
@@ -1353,17 +1353,31 @@ export class DbService implements OnModuleInit {
     }
   }
 
+  async checkIfDirectMessage(chat_id: number): Promise<boolean> {
+    try {
+      const result = await this.db
+        .select()
+        .from(chats)
+        .where(eq(chats.chat_id, chat_id));
+
+      return result[0].is_direct;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async checkIfUserIsBlocked(
-    senderId: number,
+    blockedId: number,
     receiverId: number,
   ): Promise<boolean> {
     try {
       const result = await this.db
         .select()
-        .from(blocked)
-        .where(eq(blocked.user_id, senderId));
+        .from(blocks)
+        .where(eq(blocks.blocked_user_id, blockedId));
       for (let i = 0; i < result.length; i++) {
-        if (result[i].blocked_user_id === receiverId) {
+        if (result[i].user_id === receiverId) {
           console.log('User is blocked');
           return true;
         }
