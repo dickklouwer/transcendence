@@ -289,7 +289,7 @@ declare const friends: drizzle_orm_pg_core.PgTableWithColumns<{
     };
     dialect: "pg";
 }>;
-declare const blocked: drizzle_orm_pg_core.PgTableWithColumns<{
+declare const blocks: drizzle_orm_pg_core.PgTableWithColumns<{
     name: "blocks";
     schema: "pong";
     columns: {
@@ -1047,7 +1047,7 @@ declare const messageStatusInsert: z.ZodObject<{
     receivet_at: Date | null;
     read_at: Date | null;
 }>;
-declare const blockedSelect: z.ZodObject<{
+declare const blocksSelect: z.ZodObject<{
     block_id: z.ZodNumber;
     user_id: z.ZodNumber;
     blocked_user_id: z.ZodNumber;
@@ -1060,7 +1060,7 @@ declare const blockedSelect: z.ZodObject<{
     user_id: number;
     blocked_user_id: number;
 }>;
-type Blocked = z.infer<typeof blockedSelect>;
+type Blocks = z.infer<typeof blocksSelect>;
 type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
 type Chats = z.infer<typeof chatSelect>;
@@ -1132,4 +1132,4 @@ type ChatSettings = {
     image: string | null;
 };
 
-export { type Blocked, type ChatMessages, type ChatSettings, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, blocked, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };
+export { type Blocks, type ChatMessages, type ChatSettings, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, blocks, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };

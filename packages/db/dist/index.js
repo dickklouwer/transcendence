@@ -29,7 +29,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.ts
 var src_exports = {};
 __export(src_exports, {
-  blocked: () => blocked,
+  blocks: () => blocks,
   chats: () => chats,
   chatsUsers: () => chatsUsers,
   createDrizzleClient: () => createDrizzleClient,
@@ -72,7 +72,7 @@ var friends = mySchema.table("friends", {
   is_approved: (0, import_pg_core.boolean)("is_approved").notNull().default(false),
   invite_game: (0, import_pg_core.boolean)("invite_game").default(false)
 });
-var blocked = mySchema.table("blocks", {
+var blocks = mySchema.table("blocks", {
   block_id: (0, import_pg_core.serial)("block_id").primaryKey(),
   user_id: (0, import_pg_core.integer)("user_id").notNull().references(() => users.intra_user_id),
   blocked_user_id: (0, import_pg_core.integer)("blocked_user_id").notNull().references(() => users.intra_user_id)
@@ -133,7 +133,7 @@ var messagesInsert = (0, import_drizzle_zod.createSelectSchema)(messages);
 var chatSelect = (0, import_drizzle_zod.createSelectSchema)(chats);
 var chatsUsersSelect = (0, import_drizzle_zod.createSelectSchema)(chatsUsers);
 var messageStatusInsert = (0, import_drizzle_zod.createSelectSchema)(messageStatus);
-var blockedSelect = (0, import_drizzle_zod.createSelectSchema)(blocked);
+var blocksSelect = (0, import_drizzle_zod.createSelectSchema)(blocks);
 
 // src/index.ts
 var import_postgres_js = require("drizzle-orm/postgres-js");
@@ -142,7 +142,7 @@ var createQueryClient = (input) => (0, import_postgres.default)(input);
 var createDrizzleClient = (client) => (0, import_postgres_js.drizzle)(client);
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  blocked,
+  blocks,
   chats,
   chatsUsers,
   createDrizzleClient,
