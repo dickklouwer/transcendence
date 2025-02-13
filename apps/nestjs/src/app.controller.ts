@@ -97,7 +97,7 @@ export class AppController {
       token.split(' ')[1],
       nickname,
     );
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('user')
@@ -316,7 +316,7 @@ export class AppController {
         res.status(422).send('Failed to block user');
         return;
       }
-      res.status(200).send(response);
+      res.status(201).send(response);
     } catch {
       res.status(422).send('Failed to block user');
     }
@@ -345,7 +345,7 @@ export class AppController {
         res.status(422).send('Failed to unblock user');
         return;
       }
-      res.status(200).send(response);
+      res.status(201).send(response);
     } catch {
       res.status(422).send('Failed to unblock user');
     }
@@ -364,7 +364,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('chatHasPassword')
@@ -625,7 +625,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('getFriendsNotApproved')
