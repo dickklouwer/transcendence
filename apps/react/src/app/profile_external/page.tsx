@@ -128,7 +128,6 @@ export default function ProfileExternalPage() {
         } else if (externalUser?.intra_user_id !== undefined) {
           console.log("Chat does not exist, create one");
           fetchPost("/api/createChat", { ChatSettings: {
-          // fetchPost<ChatSettings, Response>("/api/createChat", {
             isPrivate: true,
             isDirect: true,
             userInfo: parseUserInfo([users[1]]),
@@ -139,11 +138,12 @@ export default function ProfileExternalPage() {
             .then((res) => {
               const result = res as { chat_id: number; message: string; };
               if (result.chat_id === undefined) {
-                console.log("Error: chat_id is undefined");
-                return;
+                console.log("Error: chat_id is undefined", res);
+                Router.push(`/messages?chat_id=-1`);
+              } else {
+                console.log("Direct Chat Created with chat_id: ", result.chat_id);
+                Router.push(`/messages?chat_id=${result.chat_id}`);
               }
-              console.log("Direct Chat Created with chat_id: ", result.chat_id);
-              Router.push(`/messages?chat_id=${result.chat_id}`);
             })
             .catch((error) => {
               console.log(`Error Creating Direct Chat`, error);
