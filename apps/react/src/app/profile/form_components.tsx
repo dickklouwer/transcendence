@@ -301,31 +301,31 @@ export const FriendsList = () => {
                 {friendsList.length === 0 && <p className="text-center text-1xl whitespace-nowrap">No friends :(</p>}
                 {friendsList.map((user) => (
                     <div key={user.intra_user_id} className="">
-                        <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded-md">
-                            <div className="flex items-center space-x-4">
-                                <div className="relative">
-                                    <Link href={{ pathname: '/profile_external', query: { id: user.intra_user_id } }}>
-                                        <Image
-                                            src={user.image}
-                                            alt="Profile Image"
-                                            className="w-11 h-11 rounded-full"
-                                            width={100}
-                                            height={100}
-                                        />
-                                    </Link>
-                                    <DisplayUserStatus state={user.state} width={15} height={15} />
-                                </div>
-                                <div className="min-w-0 p-1 break-all">
-                                    {user.nick_name === null ?
-                                        <h1 className="text-1xl">{user.user_name}</h1> :
-                                        <div>
-                                            <h1 className="text-1xl">{user.nick_name}</h1>
-                                        </div>
-                                    }
-                                    <p className="text-blue-400 break-all">{user.email}</p>
+                        <Link href={{ pathname: '/profile_external', query: { id: user.intra_user_id } }}>
+                            <div className="flex flex-col w-[38rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded-md">
+                                <div className="flex items-center space-x-4">
+                                    <div className="relative">
+                                            <Image
+                                                src={user.image}
+                                                alt="Profile Image"
+                                                className="w-11 h-11 rounded-full"
+                                                width={100}
+                                                height={100}
+                                            />
+                                        <DisplayUserStatus state={user.state} width={15} height={15} />
+                                    </div>
+                                    <div className="min-w-0 p-1 break-all">
+                                        {user.nick_name === null ?
+                                            <h1 className="text-1xl">{user.user_name}</h1> :
+                                            <div>
+                                                <h1 className="text-1xl">{user.nick_name}</h1>
+                                            </div>
+                                        }
+                                        <p className="text-blue-400 break-all">{user.email}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     </div>
                 ))}
             </div>
