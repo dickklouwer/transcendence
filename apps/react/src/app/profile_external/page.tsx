@@ -10,12 +10,15 @@ import { User, ExternalUser, ChatSettings, ChatsUsers } from "@repo/db"
 import { ExternalFriendsList } from "./form_components";
 import { DisplayUserStatus } from "../profile/page";
 import { useRouter } from 'next/navigation';
+import { userSocket } from "../profile_headers";
 
 export default function ProfileExternalPage() {
   const [user, setUser] = useState<User>();
   const [externalUser, setExternalUser] = useState<ExternalUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [blocked, setBlocked] = useState<boolean>(false);
+  const [reload, setReload] = useState<boolean>(false);
+
   const searchParams = useSearchParams();
   const externalUserIdString = searchParams?.get('id');
   const Router = useRouter();
@@ -39,7 +42,13 @@ export default function ProfileExternalPage() {
         console.log('Error: ', error);
         setLoading(false);
       })
-  }, [externalUserIdString]);
+      userSocket.on('statusChange', () => {
+          setReload(prev => !prev);
+      });
+    return () => {
+      userSocket.off('statusChange');
+    }
+  }, [externalUserIdString, reload]);
 
   function parseUserInfo(users: number[]) : ChatsUsers[]
   {
@@ -203,7 +212,7 @@ export default function ProfileExternalPage() {
                 height={100}
                 className="min-w-24 min-h-24 max-w-24 max-h-24 rounded-full object-cover"
               />
-              <DisplayUserStatus state={'Online'} width={20} height={20} />
+              <DisplayUserStatus state={externalUser.state} width={20} height={20} />
             </div>
             <div className="">
               {externalUser.nick_name !== null ?
