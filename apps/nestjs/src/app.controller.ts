@@ -184,6 +184,7 @@ export class AppController {
     res.status(422).send('User not in chat');
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('createChat')
   async createChat(
     @Headers('authorization') token: string,
@@ -192,7 +193,10 @@ export class AppController {
   ) {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     if (!user) {
-      res.status(422).send('Failed to get user');
+      res.status(422).send({
+        chat_id: -1,
+        message: 'Failed to get user',
+      });
       return;
     }
 
@@ -203,7 +207,10 @@ export class AppController {
       ChatSettings,
     );
     if (chat_id === 0) {
-      res.status(422).send('Failed to create chat');
+      res.status(422).send({
+        chat_id: -1,
+        message: 'Failed to create chat',
+      });
       return;
     }
 
@@ -227,7 +234,10 @@ export class AppController {
     );
     // NOTE: if Host can't be added only then remove the Chat from the chats table
     if (!status) {
-      res.status(422).send(`Failed to add Host[${user}] to chat[${chat_id}]`);
+      res.status(422).send({
+        chat_id: -1,
+        message: `Failed to add Host[${user}] to chat[${chat_id}]`,
+      });
       return;
     }
 
@@ -249,11 +259,17 @@ export class AppController {
       );
 
       if (!status) {
-        res.status(422).send(`Failed to add user[${user}] to chat[${chat_id}]`);
+        res.status(422).send({
+          chat_id: -1,
+          message: `Failed to add user[${user}] to chat[${chat_id}]`,
+        });
         return;
       }
     }
-    res.status(201).send({ message: 'Chat created successfully' });
+    res.status(201).send({
+      chat_id: chat_id,
+      message: 'Chat created successfully',
+    });
   }
 
   @Post('joinChat')
@@ -421,6 +437,7 @@ export class AppController {
     return dmInfo;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('updateStatusReceivedMessages')
   async updateStatusReceivedMessages(
     @Body('chat_id') chat_id: number,
@@ -437,7 +454,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('getNumberOfUnreadChats')

@@ -64,7 +64,7 @@ export async function fetchPost<B, T> (url: string, body: B): Promise<T> {
         body: JSON.stringify(body),
         })
 
-        if(response.status !== 200)
+        if(response.status !== 201)
         throw `Unauthorized ${response.status}`;
 
         const data = await response.json();

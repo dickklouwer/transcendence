@@ -92,6 +92,8 @@ export default function ProfileExternalPage() {
     
     const users: number[] = GetUserIds();
 
+    console.log("users: ", users);
+
     if (users.length === 0) {
       console.log("Error: user not found");
       return;
@@ -100,14 +102,22 @@ export default function ProfileExternalPage() {
     const chatSettings: ChatSettings = {
       isPrivate: true,
       isDirect: true,
-      userInfo: parseUserInfo(users),
+      userInfo: parseUserInfo([users[1]]),
       title: "No title",
       password: null,
       image: null,
     };
 
-    console.log("chatSettings: ", chatSettings);
-    console.log("users: ", users);
+    // console.log("chatSettings old: ", chatSettings);
+    // console.log("chatSettings new: ", { ChatSettings: {
+    //   isPrivate: true,
+    //   isDirect: true,
+    //   userInfo: [users[1]],
+    //   title: "No title",
+    //   password: null,
+    //   image: null,
+    // } });
+    // console.log("users: ", users);
 
     fetchGet<number>(`/api/getChatIdOfDm?external_user_id=${users[1]}`)
       .then((chatId) => {
@@ -118,29 +128,26 @@ export default function ProfileExternalPage() {
         } else if (externalUser?.intra_user_id !== undefined) {
           console.log("Chat does not exist, create one");
           fetchPost("/api/createChat", { ChatSettings: {
+          // fetchPost<ChatSettings, Response>("/api/createChat", {
             isPrivate: true,
             isDirect: true,
-            userInfo: [externalUser?.intra_user_id],
+            userInfo: parseUserInfo([users[1]]),
             title: "No title",
             password: null,
             image: null,
-          } })
-            .then((new_chat_id) => {
-              console.log("Direct Chat Created");
-              console.log("New Chat Id: ", new_chat_id);
-              // Router.push(`/messages?chat_id=${new_chat_id}`);
+          }})
+            .then((res) => {
+              const result = res as { chat_id: number; message: string; };
+              if (result.chat_id === undefined) {
+                console.log("Error: chat_id is undefined");
+                return;
+              }
+              console.log("Direct Chat Created with chat_id: ", result.chat_id);
+              Router.push(`/messages?chat_id=${result.chat_id}`);
             })
             .catch((error) => {
-              console.log("Error Creating Direct Chat", error);
+              console.log(`Error Creating Direct Chat`, error);
             });
-          // fetchPost(`/api/createChat`, { ChatSettings: chatSettings })
-          //   .then((new_chat_id) => {
-          //     console.log("Group Chat Created");
-          //     Router.push(`/messages?chat_id=${new_chat_id}`);
-          //   })
-          //   .catch((error) => {
-          //     console.log("Error Creating Group Chat", error);
-          //   });
         }
       })
       .catch((error) => {
