@@ -272,6 +272,7 @@ export class AppController {
     });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('joinChat')
   async joinChat(
     @Headers('authorization') token: string,
@@ -288,7 +289,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Post('blockUser')
@@ -481,7 +482,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('getAmountGameInvites')
