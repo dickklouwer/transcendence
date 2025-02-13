@@ -909,17 +909,17 @@ export class DbService implements OnModuleInit {
       if (!user) throw Error('Failed to fetch User!');
 
       const chat = await this.db
-      .select({
-        chat_id: chats.chat_id,
-        title: chats.title,
-        is_direct: chats.is_direct,
-        is_public: chats.is_public,
-        image: chats.image,
-        password: chats.password,
-      })
-      .from(chats)
-      .where(eq(chats.chat_id, chat_id))
-      .limit(1);
+        .select({
+          chat_id: chats.chat_id,
+          title: chats.title,
+          is_direct: chats.is_direct,
+          is_public: chats.is_public,
+          image: chats.image,
+          password: chats.password,
+        })
+        .from(chats)
+        .where(eq(chats.chat_id, chat_id))
+        .limit(1);
       if (chat.length === 0) throw Error('Failed to fetch Chat!');
 
       const users: ChatsUsers[] = await this.db
@@ -933,7 +933,7 @@ export class DbService implements OnModuleInit {
           mute_untill: chatsUsers.mute_untill,
           joined: chatsUsers.joined,
           joined_at: chatsUsers.joined_at,
-      })
+        })
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
@@ -950,6 +950,32 @@ export class DbService implements OnModuleInit {
     } catch (error) {
       console.log('Error: ', error);
       return null;
+    }
+  }
+
+  async updateChatSettings(
+    jwtToken: string,
+    chat_id: number,
+    settings: ChatSettings,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db
+        .update(chats)
+        .set({
+          title: settings.title,
+          is_public: settings.isPrivate,
+        })
+        .where(eq(chatsUsers.chat_id, chat_id));
+
+      for (const chatUser of settings.userInfo)
+        this.updateChatUsers(jwtToken, chat_id, chatUser);
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
     }
   }
 
@@ -972,6 +998,39 @@ export class DbService implements OnModuleInit {
       });
       console.log(
         `DB - created ChatsUser (${UserInfo.joined ? 'Host' : 'User'}): `,
+        UserInfo.intra_user_id,
+      );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async updateChatUsers(
+    jwtToken: string,
+    chatId: number,
+    UserInfo: ChatsUsers,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db
+        .update(chatsUsers)
+        .set({
+          is_owner: UserInfo.is_owner,
+          is_admin: UserInfo.is_admin,
+          is_banned: UserInfo.is_banned,
+        })
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chatId),
+            eq(chatsUsers.intra_user_id, UserInfo.intra_user_id)
+          ));
+      console.log(
+        `DB - updated ChatsUser: `,
         UserInfo.intra_user_id,
       );
 

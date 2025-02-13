@@ -8,7 +8,7 @@ import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { isAdmin, isOwner, isEditor, findChatsUsers } from './functions';
+import { isAdmin, isOwner, isEditor, findChatsUsers, OptionInviteList } from './functions';
 
 export default function GroupOptionPage() {
 
@@ -17,6 +17,7 @@ export default function GroupOptionPage() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  {/* Settings that should be set */ }
   const [pageUser, setPageUser] = useState<User>();
   const [updatedChatSettings, setUpdatedChatSettings] = useState<ChatSettings>();
   const [pageSettings, setPageChatSettings] = useState<ChatSettings>();
@@ -25,10 +26,13 @@ export default function GroupOptionPage() {
   const [title, setTitle] = useState<string>("");
   const [isPrivate, setChannelType] = useState<boolean>(true);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
+
+  {/* Settings we don't want to set from  */ }
   const [showOldPassword, setShowOldPassword] = useState<boolean>(false);
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [oldPassword, setOldPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
+  const [addedUsers, setAddedUsers] = useState<number[]>([]);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
@@ -51,6 +55,7 @@ export default function GroupOptionPage() {
         setPageChatSettings(JSON.parse(JSON.stringify(settings)));
         setTitle(settings.title);
         setChannelType(settings.isPrivate);
+        setHasPassword(settings.password !== null);
 
         setChatUsers(users);
       }
@@ -96,84 +101,101 @@ export default function GroupOptionPage() {
     setUpdatedChatSettings(settings);
   }
 
-  function UpdateSettings() {
-    //TODO: validate given input.
 
-    const addedUsers: number[] = [1, 2, 3];
+  function UpdateSettings() {
 
     fetchPost("api/updateChat", {
-        updatedChatSettings : updatedChatSettings,
-        addedUsers : addedUsers ,
-        oldPWD: oldPassword,
-        newPWD: newPassword,
-      })
-    .then(() => {{}})
-    .catch((error) => {
-      console.log("Error Creating Group Chat", error);
-    });
+      chatId: chatId,
+      oldPWD: oldPassword,
+      newPWD: newPassword,
+      updatedChatSettings: updatedChatSettings,
+      addedUsers: addedUsers,
+    })
+      .then(() => { { } })
+      .catch((error) => {
+        console.log("Error Creating Group Chat", error);
+      });
+    
   }
 
   return (
-    <div className="flex flex-col w-5/6">
+    <div className="flex flex-col">
       {/* HEADER */}
       <div className="flex flex-col items-center flex-grow space-x-4">
         <h1 >Options Group Channel</h1>
         <div className="flex flex-row justify-center space-x-4">
 
-          {/* Friendlist */}
-          {/* TODO: Still need to be able to add, kick and ban user to the chat */}
-          <div className="flex flex-col bg-slate-900 rounded p-2">
-            <h1 className="flex justify-center">Chat Users</h1>
-            <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
-              <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
-                <p className="flex justify-center text-1xl w-3/5">User</p>
-                <div className='flex justify-around w-2/5'>
-                  <p className="text-xs">Admin</p>
-                  <p className="text-xs">Owner</p>
+          <div className="flex flex-col">
+            <div className="flex flex-col bg-slate-900 rounded p-2">
+              {/* ChatUsers List */}
+              {/* TODO: Still need to be able to add, kick and ban user to the chat */}
+              <h1 className="flex justify-center">Chat Users</h1>
+              <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
+                <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
+                  <p className="flex justify-center text-1xl w-3/5">User</p>
+                  <div className='flex justify-around w-2/5'>
+                    <p className="text-xs">Admin</p>
+                    <p className="text-xs">Owner</p>
+                  </div>
                 </div>
-              </div>
-              {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
-              {chatUsers.map((user) => (
-                <div key={user.intra_user_id}>
-                  <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-slate-950 rounded">
-                    <div className="flex flex-col">
-                      <div className="flex items-center space-x-4">
-                        <div className="relative">
-                          <Image
-                            src={user.image}
-                            alt="Profile Image"
-                            className="w-11 h-11 rounded-full"
-                            width={100}
-                            height={100}
-                          />
-                          <DisplayUserStatus state={user.state} width={15} height={15} />
-                        </div>
-                        <div className="min-w-0 p-1 break-all">
-                          {user.nick_name === null ? 
-                            ( <h1 className="text-1xl">{user.user_name}</h1> ) :
-                            ( <h1 className="text-1xl">{user.nick_name}</h1> )
-                          }
+                {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
+                {chatUsers.map((user) => (
+                  <div key={user.intra_user_id}>
+                    <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-slate-950 rounded">
+                      <div className="flex flex-col">
+                        <div className="flex items-center space-x-4">
+                          <div className="relative">
+                            <Image
+                              src={user.image}
+                              alt="Profile Image"
+                              className="w-11 h-11 rounded-full"
+                              width={100}
+                              height={100}
+                            />
+                            <DisplayUserStatus state={user.state} width={15} height={15} />
+                          </div>
+                          <div className="min-w-0 p-1 break-all">
+                            {user.nick_name === null ?
+                              (<h1 className="text-1xl">{user.user_name}</h1>) :
+                              (<h1 className="text-1xl">{user.nick_name}</h1>)
+                            }
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className='flex flex-row justify-around w-2/5 space-x-10'>
+                      <div className='flex flex-row justify-around w-2/5 space-x-10'>
                         <button
-                          className={`flex size-15 p-5 rounded ${isAdmin(updatedChatSettings, user.intra_user_id) ? "bg-green-800": "bg-red-800"}`}
+                          className={`flex size-15 p-5 w-1/5 rounded ${isAdmin(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleAdmin(user.intra_user_id)}
                           disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)} >
                         </button>
                         <button
-                          className={`flex size-15 p-5 rounded ${isOwner(updatedChatSettings, user.intra_user_id) ? "bg-green-800": "bg-red-800"}`}
+                          className={`flex size-15 p-5 w-1/5 rounded ${isOwner(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleOwner(user.intra_user_id)}
                           disabled={!isOwner(updatedChatSettings, pageUser.intra_user_id)} >
                         </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
+            { isEditor(pageSettings, pageUser.intra_user_id) &&
+              <div className="flex flex-col bg-slate-900 rounded p-2 my-3">
+                <h1 className="flex justify-center">Invite List</h1>
+                <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
+                  <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
+                    <p className="flex justify-center text-1xl w-3/5">User</p>
+                    <div className='flex justify-around w-1/5'>
+                      <p className="text-xs">Add User</p>
+                    </div>
+                  </div>
+                  {/* Invite Users List */}
+                  <OptionInviteList selectedUsers={addedUsers} chatUsers={joinUserID(pageSettings?.userInfo)} setSelectedUsers={setAddedUsers} />
+                </div>
+              </div>
+            }
+          </div>
           <div className="flex flex-col items-center justify-center">
 
             {/* Chat Title */}
@@ -215,26 +237,29 @@ export default function GroupOptionPage() {
                 <p className="p-1">Password:</p>
                 <input type="checkbox" name="hasPassword"
                   checked={hasPassword}
-                  onChange={() => setHasPassword(!hasPassword)}
+                  onChange={() => setHasPassword(!hasPassword) }
                   className="flex w-5 h-5"
                   readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />
               </div>
-              <div className="flex flex-col justify-between">
-                <div className="flex justify-between flex-row items-center" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
-                  <div className=" p-1" onClick={() => setShowOldPassword(!showOldPassword)}>
-                    {showOldPassword ? "hide" : "show"}
+              <div className="flex flex-col justify-between"
+                style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                {
+                  pageSettings?.password?.length &&  // only show oldpwd when required
+                  <div className="flex justify-between flex-row items-center">
+                    <div className=" p-1" onClick={() => setShowOldPassword(!showOldPassword)}>
+                      {showOldPassword ? "hide" : "show"}
+                    </div>
+                    <input
+                      className="bg-slate-600 rounded w-4/5 p-1"
+                      type={showOldPassword ? "text" : "password"}
+                      id="OldPasswordField"
+                      placeholder=" Old Password"
+                      onChange={(e) => setOldPassword(e.target.value)}
+                    />
                   </div>
-                  <input
-                    className="bg-slate-600 rounded w-4/5 p-1"
-                    type={showOldPassword ? "text" : "password"}
-                    id="OldPasswordField"
-                    placeholder=" Old Password"
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    style={{ visibility: hasPassword ? "visible" : "hidden" }}
-                  />
-                </div>
-                <div className="flex justify-between flex-row items-center" style={{ visibility: hasPassword ? "visible" : "hidden" }}>
+                }
+                <div className="flex justify-between flex-row items-center">
                   <div className=" p-1" onClick={() => setShowNewPassword(!showNewPassword)}>
                     {showNewPassword ? "hide" : "show"}
                   </div>
@@ -246,20 +271,20 @@ export default function GroupOptionPage() {
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </div>
-              </div> 
+              </div>
             </div>
 
             {/* Action Buttons */}
             < div className="flex flex-row justify-center">
               {/* Cancel Button should just go back */}
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 "
-                    href={`/messages?chat_id=${chatId}`}>
+                href={`/messages?chat_id=${chatId}`}>
                 Back
               </Link>
               {/* Create Button should update chat and go back to the messages */}
-              { isEditor(pageSettings, pageUser.intra_user_id) &&
+              {isEditor(pageSettings, pageUser.intra_user_id) &&
                 <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 "
-                      onClick={() => UpdateSettings()} href={`/messages?chat_id=${chatId}`}>
+                  onClick={() => UpdateSettings()} href={`/messages?chat_id=${chatId}`}>
                   Apply
                 </Link>
               }
@@ -280,30 +305,31 @@ export default function GroupOptionPage() {
         <p>| Old Password: {showOldPassword ? "Show" : "Hide"} {oldPassword}</p>
         <p>| Old Password: {showNewPassword ? "Show" : "Hide"} {newPassword}</p>
         <p>| Selected Users: {joinUserID(updatedChatSettings?.userInfo).join(", ")}</p>
+        <p>| Added Users: {addedUsers}</p>
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
       </div >
     </div >
   ); // End of return
 
-  {/* Debug Functions */}
-    function joinPerms(list: ChatsUsers[]) {
-      var arr: number[] = [];
-      for (const user of list) {
-        const perm: number = 0 +
-          (user.is_owner ? 1 : 0) +
-          (user.is_admin ? 2 : 0) +
-          (user.is_banned ? 3 : 0);
-        arr.push(perm);
-      }
-      return (arr);
+  {/* Debug Functions */ }
+  function joinPerms(list: ChatsUsers[]): number[] {
+    var arr: number[] = [];
+    for (const user of list) {
+      const perm: number = 0 +
+        (user.is_owner ? 1 : 0) +
+        (user.is_admin ? 2 : 0) +
+        (user.is_banned ? 3 : 0);
+      arr.push(perm);
     }
+    return (arr);
+  }
 
-    function joinUserID(list: ChatsUsers[]) {
-      var arr: number[] = [];
-      for (const user of list) {
-        if (user.intra_user_id == null) continue;
-        arr.push(user.intra_user_id);
-      }
-      return (arr);
+  function joinUserID(list: ChatsUsers[]): number[] {
+    var arr: number[] = [];
+    for (const user of list) {
+      if (user.intra_user_id == null) continue;
+      arr.push(user.intra_user_id);
     }
+    return (arr);
+  }
 }

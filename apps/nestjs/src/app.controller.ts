@@ -155,15 +155,6 @@ export class AppController {
     return isBanned;
   }
 
-  @Post('updateChatSettings')
-  async updateChatSettings(
-    @Headers('authorization') token: string,
-    @Body('ChatSettings') ChatSettings: ChatSettings,
-    @Res() res: Response
-  ) {
-        
-  }
-
   @Get(`getChatSettings`)
   async getChatSettings(
     @Headers('authorization') token: string,
@@ -250,10 +241,66 @@ export class AppController {
 
       if (!status) {
         res.status(422).send(`Failed to add user[${user}] to chat[${chat_id}]`);
-        return;
       }
     }
     res.status(201).send(res);
+  }
+
+  @Post('updateChatSettings')
+  async updateChatSettings(
+    @Headers('authorization') token: string,
+    @Body('chatId') chatId: number,
+    @Body('oldPWD') oldPWD: string,
+    @Body('newPWD') newPWD: string,
+    @Body('updatedChatSettings') updatedChatSettings : ChatSettings,
+    @Body('addedUsers') addedUsers: number[],
+    @Res() res: Response
+  ) {
+    // [x] updatepassword
+    // [x] change settings.
+    // [x] add new users to ChatSettings
+    // [x] change chatUserPermissions ChatSettings
+    const hasPassword = await this.dbservice.chatHasPassword(
+      token.split(' ')[1],
+      chatId
+    )
+
+    if (!hasPassword && newPWD.length == 0) {}
+    else if (!hasPassword && !newPWD.length)
+      this.dbservice.setChatPassword(chatId, newPWD);
+    else if (hasPassword && await this.dbservice.isValidChatPassword(
+          token.split(' ')[1],
+          chatId,
+          oldPWD ))
+      this.dbservice.setChatPassword(chatId, newPWD);
+    else
+    {
+      res.status(401).send(`Invalid Password`)
+      return
+    }
+
+    await this.dbservice.updateChatSettings(
+      token.split(' ')[1],
+      chatId,
+      updatedChatSettings,
+    );
+
+    for (let user of addedUsers) {
+      const chatUser: ChatsUsers = { intra_user_id: user, chat_id: chatId, chat_user_id: 0,
+          is_owner: false, is_admin: true, is_banned: false, mute_untill: null, joined: false,
+          joined_at: null,
+      };
+
+      const status = await this.dbservice.createChatUsers(
+        token.split(' ')[1],
+        chatId,
+        chatUser,
+      );
+
+      if (!status) {
+        res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
+      }
+    }
   }
 
   @Post('joinChat')
