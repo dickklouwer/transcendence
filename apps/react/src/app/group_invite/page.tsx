@@ -96,7 +96,6 @@ const InviteList = ({ selectedUsers, setSelectedUsers }: { selectedUsers: number
   );
 };
 
-
 export default function GroupInvite() {
   const Router = useRouter();
 
@@ -144,7 +143,7 @@ export default function GroupInvite() {
       image: null,
     };
 
-    // TODO: Find Alternative to alert
+    //TODO: Find Alternative to alert
     if (Settings.title === "") {
       alert("Chat needs a title");
       return;
@@ -158,20 +157,10 @@ export default function GroupInvite() {
       return;
     }
 
-    console.log("FE - ChatSettings: ", Settings);
-
     fetchPost("/api/createChat", { ChatSettings: Settings })
-      .then(() => {
-        {/*
-        NOTE: figure out why this log shows up in client console
-              |
-              POST http://f1r3s17.codam.nl:4433/api/createChat
-              500 | Internal Server Error | 23ms
-      */}
-      })
+      .then(() => {{}})
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
-
       });
     Router.push("/chats"); //NOTE: maybe move this to then on createChat
   }
