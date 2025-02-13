@@ -80,12 +80,13 @@ export class UserGateway
   }
 
   @SubscribeMessage('setUserStateToIn-Game')
-  handleSetUserState(client: Socket) {
-    this.clients.forEach((clients, intra_user_id) => {
-      if (clients === client) {
-        this.setUserState({ intra_user_id, state: 'In-Game' });
-      }
-    });
+  handleSetUserState(client: Socket, intra_user_id: number) {
+    if (this.clients.has(intra_user_id)) {
+      this.setUserState({ intra_user_id, state: 'In-Game' });
+      this.logger.log(`User state changed to In-Game: ${intra_user_id}`);
+    } else {
+      this.logger.warn(`Attempted to set user state for unregistered user: ${intra_user_id}`);
+    }
   }
 
   afterInit() {
