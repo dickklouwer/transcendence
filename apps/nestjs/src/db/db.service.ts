@@ -979,6 +979,33 @@ export class DbService implements OnModuleInit {
     }
   }
 
+  async remov(
+    jwtToken: string,
+    chatId: number,
+    chatUser: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db.delete(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chatId),
+            eq(chatsUsers.intra_user_id, chatUser)
+          ),
+        );
+      console.log(
+        `DB - removed ChatsUser (${user}) from ${chatId}: `,
+      );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async createChatUsers(
     jwtToken: string,
     chatId: number,

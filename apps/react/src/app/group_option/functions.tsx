@@ -36,6 +36,12 @@ export function isAdmin(settings: ChatSettings, id: number): boolean {
   return (user.is_admin);
 }
 
+// check if user is banned
+export function isBanned(settings: ChatSettings, id: number): boolean {
+  const user: ChatsUsers = findChatsUsers(settings, id);
+  return (user.is_banned);
+}
+
 // Check if user is allowed to edit group
 export function isEditor(settings: ChatSettings, id: number): boolean {
   if (isOwner(settings, id) || isAdmin(settings, id)) return true;
@@ -117,8 +123,7 @@ export const OptionInviteList = (
 
                 {/* Toggle Button */}
                 <button
-                  className={`flex size-15 p-5 w-1/5 rounded ${isInvited(friend.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
-                  onClick={() => toggleInvite(friend.intra_user_id)} >
+                  className={`flex size-15 p-5 w-1/5 rounded ${isInvited(friend.intra_user_id) ? "bg-green-800" : "bg-red-800"}`} onClick={() => toggleInvite(friend.intra_user_id)} >
                 </button>
               </div>
             </div>

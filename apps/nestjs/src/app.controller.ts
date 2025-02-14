@@ -158,7 +158,7 @@ export class AppController {
   @Get(`getChatSettings`)
   async getChatSettings(
     @Headers('authorization') token: string,
-    @Query('chatId') chatId: number,    
+    @Query('chatId') chatId: number,
     @Res() res: Response,
   ): Promise<ChatSettings> {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
@@ -175,9 +175,9 @@ export class AppController {
 
     for (let i: number = 0; i < chatSettings.userInfo.length; i++) {
       const chatUser = chatSettings.userInfo[i];
-     if (chatUser.intra_user_id === user.intra_user_id) {
+      if (chatUser.intra_user_id === user.intra_user_id) {
         res.status(200).send(chatSettings);
-        return ;
+        return;
       }
     }
     console.log("We've not seen user in chatsUsers");
@@ -252,8 +252,9 @@ export class AppController {
     @Body('chatId') chatId: number,
     @Body('oldPWD') oldPWD: string,
     @Body('newPWD') newPWD: string,
-    @Body('updatedChatSettings') updatedChatSettings : ChatSettings,
+    @Body('updatedChatSettings') updatedChatSettings: ChatSettings,
     @Body('addedUsers') addedUsers: number[],
+    @Body('removedUsers') removedUsers: number[],
     @Res() res: Response
   ) {
     // [x] updatepassword
@@ -265,16 +266,15 @@ export class AppController {
       chatId
     )
 
-    if (!hasPassword && newPWD.length == 0) {}
+    if (!hasPassword && newPWD.length == 0) { }
     else if (!hasPassword && !newPWD.length)
       this.dbservice.setChatPassword(chatId, newPWD);
     else if (hasPassword && await this.dbservice.isValidChatPassword(
-          token.split(' ')[1],
-          chatId,
-          oldPWD ))
+      token.split(' ')[1],
+      chatId,
+      oldPWD))
       this.dbservice.setChatPassword(chatId, newPWD);
-    else
-    {
+    else {
       res.status(401).send(`Invalid Password`)
       return
     }
@@ -285,10 +285,20 @@ export class AppController {
       updatedChatSettings,
     );
 
+    for (let user of removedUsers) {
+      const status = await this.dbservice.removeChatUsers(
+        token.split(' ')[1],
+        chatId,
+        user,
+      );
+
+    }
+
     for (let user of addedUsers) {
-      const chatUser: ChatsUsers = { intra_user_id: user, chat_id: chatId, chat_user_id: 0,
-          is_owner: false, is_admin: true, is_banned: false, mute_untill: null, joined: false,
-          joined_at: null,
+      const chatUser: ChatsUsers = {
+        intra_user_id: user, chat_id: chatId, chat_user_id: 0,
+        is_owner: false, is_admin: true, is_banned: false, mute_untill: null, joined: false,
+        joined_at: null,
       };
 
       const status = await this.dbservice.createChatUsers(
@@ -497,7 +507,7 @@ export class AppController {
       if (!externalUser) res.status(404).send('No users found');
       externalUsers.push(externalUser);
     }
-//    console.log('BE - getExternalUsersFromChat: ', externalUsers);
+    //    console.log('BE - getExternalUsersFromChat: ', externalUsers);
     res.status(200).send(externalUsers);
     return externalUsers;
   }

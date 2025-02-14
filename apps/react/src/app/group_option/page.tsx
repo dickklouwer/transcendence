@@ -8,7 +8,7 @@ import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { isAdmin, isOwner, isEditor, findChatsUsers, OptionInviteList } from './functions';
+import { isAdmin, isOwner, isBanned, isEditor, findChatsUsers, OptionInviteList } from './functions';
 
 export default function GroupOptionPage() {
 
@@ -33,6 +33,7 @@ export default function GroupOptionPage() {
   const [oldPassword, setOldPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [addedUsers, setAddedUsers] = useState<number[]>([]);
+  const [removedUsers, setRemovedUsers] = useState<number[]>([]);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
@@ -101,21 +102,44 @@ export default function GroupOptionPage() {
     setUpdatedChatSettings(settings);
   }
 
+  function toggleBanned(id: number) {
+    if (updatedChatSettings === undefined) return;
+    const settings: ChatSettings = { ...updatedChatSettings };
+
+    const user: ChatsUsers = findChatsUsers(settings, id);
+    user.is_banned = !user.is_banned;
+
+    setUpdatedChatSettings(settings);
+  }
+
+  const isKicked = (id: number) => {
+    return removedUsers.includes(id);
+  };
+
+  const toggleKick = (id: number) => {
+    if (isKicked(id)) {
+      // Remove user from the selected list
+      setRemovedUsers((prev) => prev.filter((userId) => userId !== id));
+    } else {
+      // Add user to the selected list
+      setRemovedUsers((prev) => [...prev, id]);
+    }
+  };
 
   function UpdateSettings() {
 
-    fetchPost("api/updateChat", {
+    fetchPost("api/updateChatSettings", {
       chatId: chatId,
       oldPWD: oldPassword,
       newPWD: newPassword,
       updatedChatSettings: updatedChatSettings,
       addedUsers: addedUsers,
+      removedUsers: removedUsers,
     })
       .then(() => { { } })
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
       });
-
   }
 
   return (
@@ -126,16 +150,18 @@ export default function GroupOptionPage() {
         <div className="flex flex-row justify-center space-x-4">
 
           <div className="flex flex-col">
-            <div className="flex flex-col bg-slate-900 rounded p-2">
+            <div className="flex flex-col bg-slate-900 w-[50rem] rounded p-2">
               {/* ChatUsers List */}
               {/* TODO: Still need to be able to add, kick and ban user to the chat */}
               <h1 className="flex justify-center">Chat Users</h1>
-              <div className="flex flex-col gap-4 max-h-100 w-[50rem] overflow-y-auto">
+              <div className="flex flex-col gap-4 overflow-y-auto">
                 <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
                   <p className="flex justify-center text-1xl w-3/5">User</p>
-                  <div className='flex justify-around w-2/5'>
+                  <div className='flex justify-between w-2/5'>
                     <p className="text-xs">Admin</p>
                     <p className="text-xs">Owner</p>
+                    <p className="text-xs">Kick</p>
+                    <p className="text-xs">Ban</p>
                   </div>
                 </div>
                 {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
@@ -163,15 +189,27 @@ export default function GroupOptionPage() {
                         </div>
                       </div>
                       <div className='flex flex-row justify-around w-2/5 space-x-10'>
-                        <button
-                          className={`flex size-15 p-5 w-1/5 rounded ${isAdmin(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
+                        <button // Admin
+                          className={`flex size-15 p-5 w-1/10 rounded ${isAdmin(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleAdmin(user.intra_user_id)}
-                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)} >
+                          disabled={!isEditor(pageSettings, pageUser.intra_user_id)} >
                         </button>
-                        <button
-                          className={`flex size-15 p-5 w-1/5 rounded ${isOwner(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
+                        <button // Owner
+                          className={`flex size-15 p-5 w-1/10 rounded ${isOwner(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleOwner(user.intra_user_id)}
-                          disabled={!isOwner(updatedChatSettings, pageUser.intra_user_id)} >
+                          disabled={!isOwner(pageSettings, pageUser.intra_user_id)} >
+                        </button>
+                        <button // Kick
+                          className={`flex size-15 p-5 w-1/10 rounded ${isKicked(user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
+                          onClick={() => toggleKick(user.intra_user_id)}
+                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)}
+                          style={{ visibility: user.intra_user_id !== pageUser.intra_user_id ? "visible" : "hidden" }}>
+                        </button>
+                        <button // Ban
+                          className={`flex size-15 p-5 w-1/10 rounded ${isBanned(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
+                          onClick={() => toggleBanned(user.intra_user_id)}
+                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)}
+                          style={{ visibility: user.intra_user_id !== pageUser.intra_user_id ? "visible" : "hidden" }}>
                         </button>
                       </div>
                     </div>
@@ -183,7 +221,7 @@ export default function GroupOptionPage() {
             {isEditor(pageSettings, pageUser.intra_user_id) &&
               <div className="flex flex-col bg-slate-900 rounded p-2 my-3">
                 <h1 className="flex justify-center">Invite List</h1>
-                <div className="flex flex-col gap-4 max-h-100 w-[50rem] overflow-y-auto">
+                <div className="flex flex-col gap-4 overflow-y-auto">
                   <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
                     <p className="flex justify-center text-1xl w-3/5">User</p>
                     <div className='flex justify-around w-1/5'>
@@ -303,9 +341,10 @@ export default function GroupOptionPage() {
         <p>| Title: {title}</p>
         <p>| Has Password: {hasPassword ? "True" : "False"}</p>
         <p>| Old Password: {showOldPassword ? "Show" : "Hide"} {oldPassword}</p>
-        <p>| Old Password: {showNewPassword ? "Show" : "Hide"} {newPassword}</p>
+        <p>| New Password: {showNewPassword ? "Show" : "Hide"} {newPassword}</p>
         <p>| Selected Users: {joinUserID(updatedChatSettings?.userInfo).join(", ")}</p>
-        <p>| Added Users: {addedUsers}</p>
+        <p>| Added Users: {addedUsers.join(", ")}</p>
+        <p>| Removed Users: {removedUsers.join(", ")}</p>
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
       </div >
     </div >
