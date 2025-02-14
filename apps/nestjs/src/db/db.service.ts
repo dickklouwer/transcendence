@@ -962,13 +962,17 @@ export class DbService implements OnModuleInit {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
+      console.log('DB - updateChatSettings - ChatSettings: ', settings);
+
       await this.db
         .update(chats)
         .set({
           title: settings.title,
-          is_public: settings.isPrivate,
+          is_public: !settings.isPrivate,
         })
-        .where(eq(chatsUsers.chat_id, chat_id));
+        .where(eq(chats.chat_id, chat_id));
+
+      console.log('DB - updated Chat: ', chat_id);
 
       for (const chatUser of settings.userInfo)
         this.updateChatUsers(jwtToken, chat_id, chatUser);
@@ -979,7 +983,7 @@ export class DbService implements OnModuleInit {
     }
   }
 
-  async remov(
+  async removeChatUsers(
     jwtToken: string,
     chatId: number,
     chatUser: number,
@@ -996,7 +1000,7 @@ export class DbService implements OnModuleInit {
           ),
         );
       console.log(
-        `DB - removed ChatsUser (${user}) from ${chatId}: `,
+        `DB - removed ChatsUser (${user.intra_user_id}) from ${chatId}: `,
       );
 
       return true;
@@ -1044,6 +1048,8 @@ export class DbService implements OnModuleInit {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
+      //console.log('DB - updateChatUsers - UserInfo: ', UserInfo);
+
       await this.db
         .update(chatsUsers)
         .set({
@@ -1056,10 +1062,7 @@ export class DbService implements OnModuleInit {
             eq(chatsUsers.chat_id, chatId),
             eq(chatsUsers.intra_user_id, UserInfo.intra_user_id)
           ));
-      console.log(
-        `DB - updated ChatsUser: `,
-        UserInfo.intra_user_id,
-      );
+      console.log(`DB - updated ChatsUser: `, UserInfo.intra_user_id);
 
       return true;
     } catch (error) {

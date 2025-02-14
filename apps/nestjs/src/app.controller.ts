@@ -272,13 +272,17 @@ export class AppController {
     else if (hasPassword && await this.dbservice.isValidChatPassword(
       token.split(' ')[1],
       chatId,
-      oldPWD))
-      this.dbservice.setChatPassword(chatId, newPWD);
+      oldPWD)) {
+      if (newPWD.length == 0) { }
+      else this.dbservice.setChatPassword(chatId, newPWD);
+    }
     else {
       res.status(401).send(`Invalid Password`)
       return
     }
 
+    console.log('BE - title: ', updatedChatSettings.title);
+    console.log('BE - private: ', updatedChatSettings.isPrivate);
     await this.dbservice.updateChatSettings(
       token.split(' ')[1],
       chatId,
@@ -291,13 +295,13 @@ export class AppController {
         chatId,
         user,
       );
-
+      if (!status) res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
     }
 
     for (let user of addedUsers) {
       const chatUser: ChatsUsers = {
         intra_user_id: user, chat_id: chatId, chat_user_id: 0,
-        is_owner: false, is_admin: true, is_banned: false, mute_untill: null, joined: false,
+        is_owner: false, is_admin: false, is_banned: false, mute_untill: null, joined: false,
         joined_at: null,
       };
 
@@ -307,9 +311,7 @@ export class AppController {
         chatUser,
       );
 
-      if (!status) {
-        res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
-      }
+      if (!status) res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
     }
   }
 

@@ -35,6 +35,7 @@ export default function GroupOptionPage() {
   const [addedUsers, setAddedUsers] = useState<number[]>([]);
   const [removedUsers, setRemovedUsers] = useState<number[]>([]);
 
+  //TODO: isn't working atm e.target.value is set "true"/"false"
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
@@ -152,7 +153,6 @@ export default function GroupOptionPage() {
           <div className="flex flex-col">
             <div className="flex flex-col bg-slate-900 w-[50rem] rounded p-2">
               {/* ChatUsers List */}
-              {/* TODO: Still need to be able to add, kick and ban user to the chat */}
               <h1 className="flex justify-center">Chat Users</h1>
               <div className="flex flex-col gap-4 overflow-y-auto">
                 <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
@@ -336,9 +336,10 @@ export default function GroupOptionPage() {
         <p>PageSettings:</p>
         <p>| ChatUsers: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
         <p>| Permissions: {joinPerms(pageSettings?.userInfo).join(", ")}</p>
-        <p>_________ </p>
-        <p>| Updated:</p>
+        <p>_</p>
+        <p>Updated:</p>
         <p>| Title: {title}</p>
+        <p>| isPrivate: {isPrivate}</p>
         <p>| Has Password: {hasPassword ? "True" : "False"}</p>
         <p>| Old Password: {showOldPassword ? "Show" : "Hide"} {oldPassword}</p>
         <p>| New Password: {showNewPassword ? "Show" : "Hide"} {newPassword}</p>
