@@ -115,7 +115,7 @@ export default function GroupOptionPage() {
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
       });
-    
+
   }
 
   return (
@@ -130,7 +130,7 @@ export default function GroupOptionPage() {
               {/* ChatUsers List */}
               {/* TODO: Still need to be able to add, kick and ban user to the chat */}
               <h1 className="flex justify-center">Chat Users</h1>
-              <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
+              <div className="flex flex-col gap-4 max-h-100 w-[50rem] overflow-y-auto">
                 <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
                   <p className="flex justify-center text-1xl w-3/5">User</p>
                   <div className='flex justify-around w-2/5'>
@@ -180,10 +180,10 @@ export default function GroupOptionPage() {
               </div>
             </div>
 
-            { isEditor(pageSettings, pageUser.intra_user_id) &&
+            {isEditor(pageSettings, pageUser.intra_user_id) &&
               <div className="flex flex-col bg-slate-900 rounded p-2 my-3">
                 <h1 className="flex justify-center">Invite List</h1>
-                <div className="flex flex-col gap-4 max-h-100 w-[40rem] overflow-y-auto">
+                <div className="flex flex-col gap-4 max-h-100 w-[50rem] overflow-y-auto">
                   <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
                     <p className="flex justify-center text-1xl w-3/5">User</p>
                     <div className='flex justify-around w-1/5'>
@@ -237,7 +237,7 @@ export default function GroupOptionPage() {
                 <p className="p-1">Password:</p>
                 <input type="checkbox" name="hasPassword"
                   checked={hasPassword}
-                  onChange={() => setHasPassword(!hasPassword) }
+                  onChange={() => setHasPassword(!hasPassword)}
                   className="flex w-5 h-5"
                   readOnly={!isEditor(pageSettings, pageUser.intra_user_id)}
                 />

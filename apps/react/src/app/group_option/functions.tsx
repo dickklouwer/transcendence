@@ -44,54 +44,54 @@ export function isEditor(settings: ChatSettings, id: number): boolean {
 
 export const OptionInviteList = (
   { selectedUsers, chatUsers, setSelectedUsers }:
-  { selectedUsers: number[], chatUsers: number[], setSelectedUsers: React.Dispatch<React.SetStateAction<number[]>> }) => {
+    { selectedUsers: number[], chatUsers: number[], setSelectedUsers: React.Dispatch<React.SetStateAction<number[]>> }) => {
 
-    const [friendsList, setFriendsList] = useState<ExternalUser[]>([]);
-    const [reload, setReload] = useState<boolean>(false);
-  
-    useEffect(() => {
-      try {
-        fetchGet<ExternalUser[]>("/api/getApprovedFriends")
-          .then((data) => {
-            setFriendsList(data);
-          });
-          
-        userSocket.on('statusChange', () => {
-          setReload((prev) => !prev);
+  const [friendsList, setFriendsList] = useState<ExternalUser[]>([]);
+  const [reload, setReload] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      fetchGet<ExternalUser[]>("/api/getApprovedFriends")
+        .then((data) => {
+          setFriendsList(data);
         });
-      } catch (error) {
-        console.error("Error Getting Friends:", error);
-      }
-  
-      return () => {
-        userSocket.off('statusChange');
-      };
-    }, [reload]);
-  
-    const isInvited = (id: number) => {
-      return selectedUsers.includes(id);
+
+      userSocket.on('statusChange', () => {
+        setReload((prev) => !prev);
+      });
+    } catch (error) {
+      console.error("Error Getting Friends:", error);
+    }
+
+    return () => {
+      userSocket.off('statusChange');
     };
-  
-    const toggleInvite = (id: number) => {
-      if (isInvited(id)) {
-        // Remove user from the selected list
-        setSelectedUsers((prev) => prev.filter((userId) => userId !== id));
-      } else {
-        // Add user to the selected list
-        setSelectedUsers((prev) => [...prev, id]);
-      }
-    };
-  
-    return (
-      <div className="container mx-auto">
-        <div className="flex flex-col gap-4 max-h-100 overflow-y-auto">
-          {friendsList.length === 0 && <p className="text-center text-1xl whitespace-nowrap">No friends :(</p>}
-          {friendsList
-            .filter(friend => !chatUsers.includes(friend.intra_user_id))
-            .map((friend) => (
+  }, [reload]);
+
+  const isInvited = (id: number) => {
+    return selectedUsers.includes(id);
+  };
+
+  const toggleInvite = (id: number) => {
+    if (isInvited(id)) {
+      // Remove user from the selected list
+      setSelectedUsers((prev) => prev.filter((userId) => userId !== id));
+    } else {
+      // Add user to the selected list
+      setSelectedUsers((prev) => [...prev, id]);
+    }
+  };
+
+  return (
+    <div className="container mx-auto">
+      <div className="flex flex-col gap-4 max-h-100 overflow-y-auto">
+        {friendsList.length === 0 && <p className="text-center text-1xl whitespace-nowrap">No friends :(</p>}
+        {friendsList
+          .filter(friend => !chatUsers.includes(friend.intra_user_id))
+          .map((friend) => (
             <div key={friend.intra_user_id}>
-              <div className="flex flex-row justify-between items-center w-[40rem] p-2 px-4 space-x-2 bg-slate-950 border-white rounded">
-  
+              <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-slate-950 border-white rounded">
+
                 {/* Friend Info */}
                 <div className="flex flex-col">
                   <div className="flex items-center space-x-4">
@@ -117,13 +117,13 @@ export const OptionInviteList = (
 
                 {/* Toggle Button */}
                 <button
-                  className={`flex size-15 p-5 w-1/5 rounded ${isInvited(friend.intra_user_id) ? "bg-green-800": "bg-red-800"}`}
+                  className={`flex size-15 p-5 w-1/5 rounded ${isInvited(friend.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                   onClick={() => toggleInvite(friend.intra_user_id)} >
                 </button>
               </div>
             </div>
           ))}
-        </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
