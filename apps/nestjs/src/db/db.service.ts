@@ -721,23 +721,6 @@ export class DbService implements OnModuleInit {
         );
 
       for (let i = 0; i < chat_ids.length; i++) {
-        // const chatsInfo = await this.db
-        //   .select({
-        //     isDirect: chats.is_direct,
-        //     pass: chats.password,
-        //     lastMessage: messages.message,
-        //     time_sent: messages.sent_at,
-        //     time_created: chats.created_at,
-        //     groep_title: chats.title,
-        //     groep_image: chats.image,
-        //   })
-        //   .from(chats)
-        //   .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
-        //   .fullJoin(users, eq(messages.sender_id, users.intra_user_id))
-        //   .where(eq(chats.chat_id, chat_ids[i].chats.chat_id))
-        //   .orderBy(desc(messages.sent_at) ?? desc(chats.created_at))
-        //   .limit(1);
-
         const chatsInfo = await this.db
           .select({
             chat_id: chats.chat_id,
@@ -749,59 +732,12 @@ export class DbService implements OnModuleInit {
             groep_title: chats.title,
             groep_image: chats.image,
             sender_id: users.intra_user_id,
-            block_blocked_user_id: blocks.blocked_user_id,
-            block_user_id: blocks.user_id,
           })
           .from(chats)
           .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
           .fullJoin(users, eq(messages.sender_id, users.intra_user_id))
-          .fullJoin(blocks, eq(users.intra_user_id, blocks.blocked_user_id))
           .where(eq(chats.chat_id, chat_ids[i].chats.chat_id))
           .orderBy(desc(messages.sent_at) ?? desc(chats.created_at));
-
-        console.log('Load chats => chatsInfo:', chatsInfo);
-
-        
-
-// {
-//   chat_id: 34,
-//   isDirect: false,
-//   pass: null,
-//   lastMessage: 'Hi 3',
-//   time_sent: 2025-02-13T15:51:29.716Z,
-//   time_created: 2025-02-13T13:41:02.232Z,
-//   groep_title: 'BBD',
-//   groep_image: null,
-//   sender_id: 278,
-//   block_blocked_user_id: 278,
-//   block_user_id: 77718
-// },
-// {
-//   chat_id: 34,
-//   isDirect: false,
-//   pass: null,
-//   lastMessage: 'Hi 2',
-//   time_sent: 2025-02-13T15:51:17.861Z,
-//   time_created: 2025-02-13T13:41:02.232Z,
-//   groep_title: 'BBD',
-//   groep_image: null,
-//   sender_id: 372,
-//   block_blocked_user_id: null,
-//   block_user_id: null
-// },
-// {
-//   chat_id: 34,
-//   isDirect: false,
-//   pass: null,
-//   lastMessage: 'Hi 1',
-//   time_sent: 2025-02-13T15:50:59.998Z,
-//   time_created: 2025-02-13T13:41:02.232Z,
-//   groep_title: 'BBD',
-//   groep_image: null,
-//   sender_id: 77718,
-//   block_blocked_user_id: null,
-//   block_user_id: null
-// }
 
         const otherUsers = await this.db
           .select({
@@ -848,8 +784,8 @@ export class DbService implements OnModuleInit {
         if (chatsInfo.length === 0) {
           continue;
         }
-               console.log('otherUsers:', otherUsers);
-               console.log('lastSenderName:', lastSenderName);
+        console.log('otherUsers:', otherUsers);
+        console.log('lastSenderName:', lastSenderName);
         const field: UserChats = {
           chatid: chat_ids[i].chats.chat_id,
           title: chatsInfo[0].isDirect
