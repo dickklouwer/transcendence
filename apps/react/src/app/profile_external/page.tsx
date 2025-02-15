@@ -286,12 +286,6 @@ export default function ProfileExternalPage() {
             </div>
           </div>
         </div>
-
-        <div className="bg-slate-900 rounded-lg p-8 max-w-2xl  w-1/2">
-          <h1 className="text-2xl text-center">Match History</h1>
-          <p className="w-auto text-center whitespace-nowrap pb-4 ">&#60;--------------&#62;</p>
-        </div>
-
       </div>
     </div>
   );
