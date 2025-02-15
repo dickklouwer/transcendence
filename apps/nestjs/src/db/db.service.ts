@@ -1280,7 +1280,7 @@ export class DbService implements OnModuleInit {
         .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(eq(chatsUsers.chat_id, chat_id));
 
-      if (chatInfo.length >= 0 && chatInfo[0].is_direct) {
+      if (chatInfo.length >= 0 && chatInfo[0].is_direct != true) {
         return {
           isDm: false,
           intraId: null,
