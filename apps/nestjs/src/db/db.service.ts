@@ -756,29 +756,52 @@ export class DbService implements OnModuleInit {
           .fullJoin(messages, eq(chats.chat_id, messages.chat_id))
           .fullJoin(users, eq(messages.sender_id, users.intra_user_id))
           .fullJoin(blocks, eq(users.intra_user_id, blocks.blocked_user_id))
-          .where(
-            and(
-              eq(chats.chat_id, chat_ids[i].chats.chat_id),
-              // ne(blocks.blocked_user_id, messages.sender_id),
-            ),
-          )
+          .where(eq(chats.chat_id, chat_ids[i].chats.chat_id))
           .orderBy(desc(messages.sent_at) ?? desc(chats.created_at));
 
         console.log('Load chats => chatsInfo:', chatsInfo);
 
-        // {
-        //   chat_id: 34,
-        //   isDirect: false,
-        //   pass: null,
-        //   lastMessage: 'Hi 3',
-        //   time_sent: 2025-02-13T15:51:29.716Z,
-        //   time_created: 2025-02-13T13:41:02.232Z,
-        //   groep_title: 'BBD',
-        //   groep_image: null,
-        //   sender_id: 278,
-        //   block_blocked_user_id: 278,
-        //   block_user_id: 77718
-        // },
+        
+
+// {
+//   chat_id: 34,
+//   isDirect: false,
+//   pass: null,
+//   lastMessage: 'Hi 3',
+//   time_sent: 2025-02-13T15:51:29.716Z,
+//   time_created: 2025-02-13T13:41:02.232Z,
+//   groep_title: 'BBD',
+//   groep_image: null,
+//   sender_id: 278,
+//   block_blocked_user_id: 278,
+//   block_user_id: 77718
+// },
+// {
+//   chat_id: 34,
+//   isDirect: false,
+//   pass: null,
+//   lastMessage: 'Hi 2',
+//   time_sent: 2025-02-13T15:51:17.861Z,
+//   time_created: 2025-02-13T13:41:02.232Z,
+//   groep_title: 'BBD',
+//   groep_image: null,
+//   sender_id: 372,
+//   block_blocked_user_id: null,
+//   block_user_id: null
+// },
+// {
+//   chat_id: 34,
+//   isDirect: false,
+//   pass: null,
+//   lastMessage: 'Hi 1',
+//   time_sent: 2025-02-13T15:50:59.998Z,
+//   time_created: 2025-02-13T13:41:02.232Z,
+//   groep_title: 'BBD',
+//   groep_image: null,
+//   sender_id: 77718,
+//   block_blocked_user_id: null,
+//   block_user_id: null
+// }
 
         const otherUsers = await this.db
           .select({
