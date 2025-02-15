@@ -1,7 +1,7 @@
 "use client";
 
 // PongGame.js
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, use } from 'react';
 import io from 'socket.io-client';
 import { User } from '@repo/db';
 import { GameManager } from './gameManager';
