@@ -5,5 +5,6 @@ import { DbService } from './db.service';
   imports: [],
   controllers: [],
   providers: [DbService],
+  exports: [DbService], // Export DbService so it can be used in other modules
 })
 export class DbModule {}

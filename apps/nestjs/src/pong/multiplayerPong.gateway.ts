@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { UserGateway } from '../user/user.gateway';
 import {
   users,
   createQueryClient,
@@ -54,8 +55,7 @@ interface Player {
   allowEIO3: true,
 })
 export class MultiplayerPongGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MultiplayerPongGateway');
   private gameInterval: NodeJS.Timeout;
@@ -64,6 +64,17 @@ export class MultiplayerPongGateway
   private rooms: Map<string, Room> = new Map(); // Maps room ID to Room object
   private clientRoomMap: Map<string, string> = new Map(); // Maps client ID to room ID
   private privateRooms: Map<string, Room> = new Map(); // Maps room ID to Room object
+
+  db: ReturnType<typeof createDrizzleClient>;
+
+  constructor(private readonly userGateway: UserGateway) {
+    if (!process.env.DATABASE_URL_LOCAL) {
+      throw Error('Env DATABASE_URL_LOCAL is undefined');
+    }
+
+    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
+  }
+
 
   private createPlayer(client: Socket | null): Player {
     return {
@@ -129,6 +140,9 @@ export class MultiplayerPongGateway
 
     const otherClient = room.players.find((p) => p.client?.id !== client.id)?.client;
 
+    this.userGateway.setUserState({ intra_user_id: room.players[0].client.data.intra_id, state: 'Online' });
+    this.userGateway.setUserState({ intra_user_id: room.players[1].client.data.intra_id, state: 'Online' });
+
     if (room?.players && room.players.length === 2 && room.players[0]?.client?.id && room.players[1]?.client?.id) {
       const player1Score = room.players[0].score;
       const player2Score = room.players[1].score;
@@ -168,7 +182,7 @@ export class MultiplayerPongGateway
 
     this.clientRoomMap.delete(client.id);
   }
-  
+
   @SubscribeMessage('registerUsers')
   handleRegistration(
     client: Socket,
@@ -188,7 +202,10 @@ export class MultiplayerPongGateway
       return;
     }
 
+    // Set user status to "In-Game"
+    this.userGateway.setUserState({ intra_user_id: payload.intra_id, state: 'In-Game' });
     // Store data in client before doing anything
+
     client.data.intra_id = payload.intra_id;
     client.data.user_name = payload.user_name;
 
@@ -569,6 +586,11 @@ export class MultiplayerPongGateway
           right: room.players[1].score,
         });
         this.server.to(room.roomID).emit('gameover');
+        
+        // Set user status back to "Online"
+        this.userGateway.setUserState({ intra_user_id: room.players[0].client.data.intra_id, state: 'Online' });
+        this.userGateway.setUserState({ intra_user_id: room.players[1].client.data.intra_id, state: 'Online' });
+
       }
       this.resetGame(room);
     }
@@ -583,14 +605,14 @@ export class MultiplayerPongGateway
       });
   }
 
-  db: ReturnType<typeof createDrizzleClient>;
-  constructor() {
-    if (!process.env.DATABASE_URL_LOCAL) {
-      throw Error('Env DATABASE_URL_LOCAL is undefined');
-    }
+  // db: ReturnType<typeof createDrizzleClient>;
+  // constructor() {
+  //   if (!process.env.DATABASE_URL_LOCAL) {
+  //     throw Error('Env DATABASE_URL_LOCAL is undefined');
+  //   }
 
-    this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
-  }
+  //   this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
+  // }
   async insertGameScore(
     player1: number,
     player2: number,

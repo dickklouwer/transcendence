@@ -289,6 +289,61 @@ declare const friends: drizzle_orm_pg_core.PgTableWithColumns<{
     };
     dialect: "pg";
 }>;
+declare const blocked: drizzle_orm_pg_core.PgTableWithColumns<{
+    name: "blocks";
+    schema: "pong";
+    columns: {
+        block_id: drizzle_orm_pg_core.PgColumn<{
+            name: "block_id";
+            tableName: "blocks";
+            dataType: "number";
+            columnType: "PgSerial";
+            data: number;
+            driverParam: number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        user_id: drizzle_orm_pg_core.PgColumn<{
+            name: "user_id";
+            tableName: "blocks";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+        blocked_user_id: drizzle_orm_pg_core.PgColumn<{
+            name: "blocked_user_id";
+            tableName: "blocks";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 declare const games: drizzle_orm_pg_core.PgTableWithColumns<{
     name: "games";
     schema: "pong";
@@ -992,6 +1047,20 @@ declare const messageStatusInsert: z.ZodObject<{
     receivet_at: Date | null;
     read_at: Date | null;
 }>;
+declare const blockedSelect: z.ZodObject<{
+    block_id: z.ZodNumber;
+    user_id: z.ZodNumber;
+    blocked_user_id: z.ZodNumber;
+}, z.UnknownKeysParam, z.ZodTypeAny, {
+    block_id: number;
+    user_id: number;
+    blocked_user_id: number;
+}, {
+    block_id: number;
+    user_id: number;
+    blocked_user_id: number;
+}>;
+type Blocked = z.infer<typeof blockedSelect>;
 type User = z.infer<typeof userSelect>;
 type Friends = z.infer<typeof friendsSelect>;
 type Chats = z.infer<typeof chatSelect>;
@@ -1025,6 +1094,7 @@ type ExternalUser = {
     image: string;
     wins: number;
     losses: number;
+    blocked: boolean;
 };
 type MultiplayerMatches = {
     player1_id: number;
@@ -1062,4 +1132,4 @@ type ChatSettings = {
     image: string | null;
 };
 
-export { type ChatMessages, type ChatSettings, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };
+export { type Blocked, type ChatMessages, type ChatSettings, type Chats, type ChatsUsers, type ChatInfo as DmInfo, type ExternalUser, type Friends, type InvitedChats, type MessageStatus, type Messages, type MultiplayerMatches, type User, type UserChats, blocked, chats, chatsUsers, createDrizzleClient, createQueryClient, friends, games, messageStatus, messages, users };

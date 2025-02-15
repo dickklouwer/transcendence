@@ -21,7 +21,6 @@ import {
   InvitedChats,
   ChatsUsers,
   ChatSettings,
-  chats,
 } from '@repo/db';
 import { DbService } from './db/db.service';
 import { Response } from 'express';
@@ -29,7 +28,7 @@ import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(private dbservice: DbService) { }
+  constructor(private dbservice: DbService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -98,7 +97,7 @@ export class AppController {
       token.split(' ')[1],
       nickname,
     );
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('user')
@@ -155,7 +154,7 @@ export class AppController {
     return isBanned;
   }
 
-  @Get(`getChatSettings`)
+  @Get('getChatSettings')
   async getChatSettings(
     @Headers('authorization') token: string,
     @Query('chatId') chatId: number,
@@ -166,6 +165,10 @@ export class AppController {
       token.split(' ')[1],
       chatId,
     );
+
+    console.log('BE - getChatSettings: ', user);
+    console.log('BE - getChatSettings: ', chatSettings);
+
     if (!user) {
       throw Error('Failed to fetch user');
     }
@@ -184,6 +187,7 @@ export class AppController {
     res.status(422).send('User not in chat');
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('createChat')
   async createChat(
     @Headers('authorization') token: string,
@@ -192,7 +196,10 @@ export class AppController {
   ) {
     const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     if (!user) {
-      res.status(422).send('Failed to get user');
+      res.status(422).send({
+        chat_id: -1,
+        message: 'Failed to get user',
+      });
       return;
     }
 
@@ -203,7 +210,10 @@ export class AppController {
       ChatSettings,
     );
     if (chat_id === 0) {
-      res.status(422).send('Failed to create chat');
+      res.status(422).send({
+        chat_id: -1,
+        message: 'Failed to create chat',
+      });
       return;
     }
 
@@ -227,12 +237,24 @@ export class AppController {
     );
     // NOTE: if Host can't be added only then remove the Chat from the chats table
     if (!status) {
-      res.status(422).send(`Failed to add Host[${user}] to chat[${chat_id}]`);
+      res.status(422).send({
+        chat_id: -1,
+        message: `Failed to add Host[${user}] to chat[${chat_id}]`,
+      });
       return;
     }
 
+    userSettings.is_owner = false;
+    userSettings.is_admin = false;
+    userSettings.is_banned = false;
+    userSettings.joined = false;
+
+    console.log('BE - ChatSettings:', ChatSettings);
+
     // add other users to chat
-    for (let user of ChatSettings.userInfo) {
+    for (const user of ChatSettings.userInfo) {
+      userSettings.intra_user_id = user.intra_user_id;
+
       status = await this.dbservice.createChatUsers(
         token.split(' ')[1],
         chat_id,
@@ -240,12 +262,16 @@ export class AppController {
       );
 
       if (!status) {
-        res.status(422).send(`Failed to add user[${user}] to chat[${chat_id}]`);
+        res.status(422).send({
+          chat_id: -1,
+          message: `Failed to add user[${user}] to chat[${chat_id}]`,
+        });
       }
     }
     res.status(201).send(res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('updateChatSettings')
   async updateChatSettings(
     @Headers('authorization') token: string,
@@ -318,6 +344,7 @@ export class AppController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('joinChat')
   async joinChat(
     @Headers('authorization') token: string,
@@ -334,7 +361,66 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
+  }
+
+  @Post('blockUser')
+  async blockUser(
+    @Headers('authorization') token: string,
+    @Body('blocked_user_id') blocked_user_id: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const user = await this.dbservice.getUserFromDataBase(
+        token.split(' ')[1],
+      );
+      if (!user) {
+        res.status(422).send('Failed to get user');
+        return;
+      }
+      await this.dbservice.removeFriend(user.intra_user_id, blocked_user_id);
+      const response = await this.dbservice.setBlockedUser(
+        user.intra_user_id,
+        blocked_user_id,
+      );
+
+      if (!response) {
+        res.status(422).send('Failed to block user');
+        return;
+      }
+      res.status(201).send(response);
+    } catch {
+      res.status(422).send('Failed to block user');
+    }
+  }
+
+  @Post('unblockUser')
+  async unblockUser(
+    @Headers('authorization') token: string,
+    @Body('blocked_user_id') blocked_user_id: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const user = await this.dbservice.getUserFromDataBase(
+        token.split(' ')[1],
+      );
+      if (!user) {
+        res.status(422).send('Failed to get user');
+        return;
+      }
+      const response = await this.dbservice.removeBlockedUser(
+        user.intra_user_id,
+        blocked_user_id,
+      );
+
+      if (!response) {
+        res.status(422).send('Failed to unblock user');
+        return;
+      }
+      res.status(201).send(response);
+    } catch {
+      res.status(422).send('Failed to unblock user');
+    }
   }
 
   @Post('setChatPassword')
@@ -350,7 +436,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('chatHasPassword')
@@ -424,6 +510,7 @@ export class AppController {
     return dmInfo;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('updateStatusReceivedMessages')
   async updateStatusReceivedMessages(
     @Body('chat_id') chat_id: number,
@@ -440,7 +527,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('getNumberOfUnreadChats')
@@ -467,7 +554,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('getAmountGameInvites')
@@ -500,19 +587,44 @@ export class AppController {
     return response;
   }
 
+  @Get('getChatIdOfDm')
+  async getChatIdOfDm(
+    @Headers('authorization') token: string,
+    @Query('external_user_id') external_user_id: number,
+  ): Promise<number> {
+    console.log('BE - getChatIdOfDm external_user_id: ', external_user_id);
+
+    const chat_id = await this.dbservice.getChatIdOfDm(
+      token.split(' ')[1],
+      external_user_id,
+    );
+
+    return chat_id;
+  }
+
   @Get('getExternalUsersFromChat')
   async getExternalUsersFromChat(
+    @Headers('authorization') token: string,
     @Query('chatId') chatId: number,
     @Res() res: Response,
   ): Promise<ExternalUser[]> {
+    const id = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const users = await this.dbservice.getChatUsers(chatId);
     const externalUsers: ExternalUser[] = [];
     for (const user of users) {
       const externalUser = await this.dbservice.getExternalUser(user);
       if (!externalUser) res.status(404).send('No users found');
+      if (
+        this.dbservice.checkIfUserIsBlocked(
+          id.intra_user_id,
+          externalUser.intra_user_id,
+        )
+      ) {
+        externalUser.blocked = true;
+      }
       externalUsers.push(externalUser);
     }
-    //    console.log('BE - getExternalUsersFromChat: ', externalUsers);
+    // console.log('BE - getExternalUsersFromChat: ', externalUsers);
     res.status(200).send(externalUsers);
     return externalUsers;
   }
@@ -522,30 +634,50 @@ export class AppController {
     @Headers('authorization') token: string,
     @Res() res: Response,
   ): Promise<ExternalUser[]> {
+    const id = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const users = await this.dbservice.getAllExternalUsers(token.split(' ')[1]);
 
+    for (let i: number = 0; i < users.length; i++) {}
     if (!users) {
       res.status(404).send('No users found');
       return;
     }
-    res.status(200).send(users);
+    const result = await Promise.all(
+      users.map(async (user) => {
+        return {
+          ...user,
+          blocked: await this.dbservice.checkIfUserIsBlocked(
+            id.intra_user_id,
+            user.intra_user_id,
+          ),
+        };
+      }),
+    );
+    res.status(200).send(result);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('getExternalUser')
   async searchExternal(
+    @Headers('authorization') token: string,
     @Query('id') id: number,
     @Res() res: Response,
   ): Promise<ExternalUser> {
-    const user = await this.dbservice.getExternalUser(id);
+    const user = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
+    const externalUser = await this.dbservice.getExternalUser(id);
 
-    if (!user) {
+    if (!externalUser) {
       res.status(404).send('No users found');
       return;
     }
-    console.log('BE - getExternalUser: ', user.user_name, user.intra_user_id);
-    res.status(200).send(user);
-    return user;
+    console.log('BE - getExternalUser: ', externalUser);
+    res.status(200).send({
+      ...externalUser,
+      blocked: await this.dbservice.checkIfUserIsBlocked(
+        user.intra_user_id,
+        externalUser.intra_user_id,
+      ),
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -565,7 +697,7 @@ export class AppController {
       return;
     }
 
-    res.status(200).send(response);
+    res.status(201).send(response);
   }
 
   @Get('getFriendsNotApproved')
