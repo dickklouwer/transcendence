@@ -1060,6 +1060,63 @@ export class DbService implements OnModuleInit {
     }
   }
 
+  async updateChatSettings(
+    jwtToken: string,
+    chat_id: number,
+    settings: ChatSettings,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+//      console.log('DB - updateChatSettings - ChatSettings: ', settings);
+
+      await this.db
+        .update(chats)
+        .set({
+          title: settings.title,
+          is_public: !settings.isPrivate,
+        })
+        .where(eq(chats.chat_id, chat_id));
+
+      console.log('DB - updated Chat: ', chat_id);
+
+      for (const chatUser of settings.userInfo)
+        this.updateChatUsers(jwtToken, chat_id, chatUser);
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+    }
+  }
+
+  async removeChatUsers(
+    jwtToken: string,
+    chatId: number,
+    chatUser: number,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      await this.db.delete(chatsUsers)
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chatId),
+            eq(chatsUsers.intra_user_id, chatUser)
+          ),
+        );
+      console.log(
+        `DB - removed ChatsUser (${user.intra_user_id}) from ${chatId}: `,
+      );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async createChatUsers(
     jwtToken: string,
     chatId: number,
@@ -1081,6 +1138,38 @@ export class DbService implements OnModuleInit {
         `DB - created ChatsUser (${UserInfo.joined ? 'Host' : 'User'}): `,
         UserInfo.intra_user_id,
       );
+
+      return true;
+    } catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
+  async updateChatUsers(
+    jwtToken: string,
+    chatId: number,
+    UserInfo: ChatsUsers,
+  ): Promise<boolean> {
+    try {
+      const user = await this.getUserFromDataBase(jwtToken);
+      if (!user) throw Error('Failed to fetch User!');
+
+      //console.log('DB - updateChatUsers - UserInfo: ', UserInfo);
+
+      await this.db
+        .update(chatsUsers)
+        .set({
+          is_owner: UserInfo.is_owner,
+          is_admin: UserInfo.is_admin,
+          is_banned: UserInfo.is_banned,
+        })
+        .where(
+          and(
+            eq(chatsUsers.chat_id, chatId),
+            eq(chatsUsers.intra_user_id, UserInfo.intra_user_id)
+          ));
+      console.log(`DB - updated ChatsUser: `, UserInfo.intra_user_id);
 
       return true;
     } catch (error) {

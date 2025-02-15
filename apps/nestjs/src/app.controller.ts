@@ -28,7 +28,7 @@ import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(private dbservice: DbService) {}
+  constructor(private dbservice: DbService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -178,7 +178,10 @@ export class AppController {
 
     for (let i: number = 0; i < chatSettings.userInfo.length; i++) {
       const chatUser = chatSettings.userInfo[i];
-      if (chatUser.intra_user_id == user.intra_user_id) return chatSettings;
+      if (chatUser.intra_user_id === user.intra_user_id) {
+        res.status(200).send(chatSettings);
+        return;
+      }
     }
     console.log("We've not seen user in chatsUsers");
     res.status(422).send('User not in chat');
@@ -263,16 +266,81 @@ export class AppController {
           chat_id: -1,
           message: `Failed to add user[${user}] to chat[${chat_id}]`,
         });
-        return;
       }
     }
-    res.status(201).send({
-      chat_id: chat_id,
-      message: 'Chat created successfully',
-    });
+    res.status(201).send(res);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Post('updateChatSettings')
+  async updateChatSettings(
+    @Headers('authorization') token: string,
+    @Body('chatId') chatId: number,
+    @Body('oldPWD') oldPWD: string,
+    @Body('newPWD') newPWD: string,
+    @Body('updatedChatSettings') updatedChatSettings: ChatSettings,
+    @Body('addedUsers') addedUsers: number[],
+    @Body('removedUsers') removedUsers: number[],
+    @Res() res: Response
+  ) {
+
+    // updatepassword
+    const hasPassword = await this.dbservice.chatHasPassword(
+      token.split(' ')[1],
+      chatId
+    )
+
+    // console.log(`BE - oldPWD[${oldPWD.length}]: ${oldPWD}`);
+    // console.log(`BE - newPWD[${newPWD.length}]: ${newPWD}`);
+
+    if (!hasPassword) {
+      if (newPWD.length == 0) { }
+      else this.dbservice.setChatPassword(chatId, newPWD);
+    }
+    else if (hasPassword && await this.dbservice.isValidChatPassword(token.split(' ')[1], chatId, oldPWD)) {
+      if (newPWD.length == 0) await this.dbservice.setChatPassword(chatId, null);
+      else await this.dbservice.setChatPassword(chatId, newPWD);
+    }
+    else {
+      res.status(401).send(`Invalid Password`)
+      return
+    }
+
+    // change settings.
+    // change chatUserPermissions ChatSettings
+    await this.dbservice.updateChatSettings(
+      token.split(' ')[1],
+      chatId,
+      updatedChatSettings,
+    );
+
+    // remove users to ChatSettings
+    for (let user of removedUsers) {
+      const status = await this.dbservice.removeChatUsers(
+        token.split(' ')[1],
+        chatId,
+        user,
+      );
+      if (!status) res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
+    }
+
+    // add new users to ChatSettings
+    for (let user of addedUsers) {
+      const chatUser: ChatsUsers = {
+        intra_user_id: user, chat_id: chatId, chat_user_id: 0,
+        is_owner: false, is_admin: false, is_banned: false, mute_untill: null, joined: false,
+        joined_at: null,
+      };
+
+      const status = await this.dbservice.createChatUsers(
+        token.split(' ')[1],
+        chatId,
+        chatUser,
+      );
+
+      if (!status) res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
+    }
+  }
+
   @Post('joinChat')
   async joinChat(
     @Headers('authorization') token: string,
@@ -565,7 +633,7 @@ export class AppController {
     const id = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const users = await this.dbservice.getAllExternalUsers(token.split(' ')[1]);
 
-    for (let i: number = 0; i < users.length; i++) {}
+    for (let i: number = 0; i < users.length; i++) { }
     if (!users) {
       res.status(404).send('No users found');
       return;
