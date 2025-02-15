@@ -670,8 +670,8 @@ export class AppController {
     res.status(200).send({
       ...externalUser,
       blocked: await this.dbservice.checkIfUserIsBlocked(
-        user.intra_user_id,
         externalUser.intra_user_id,
+        user.intra_user_id,
       ),
     });
   }
