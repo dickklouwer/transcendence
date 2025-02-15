@@ -257,30 +257,31 @@ export class AppController {
     @Body('removedUsers') removedUsers: number[],
     @Res() res: Response
   ) {
-    // [x] updatepassword
-    // [x] change settings.
-    // [x] add new users to ChatSettings
-    // [x] change chatUserPermissions ChatSettings
+
+    // updatepassword
     const hasPassword = await this.dbservice.chatHasPassword(
       token.split(' ')[1],
       chatId
     )
 
-    if (!hasPassword && newPWD.length == 0) { }
-    else if (!hasPassword && !newPWD.length)
+    console.log(`BE - oldPWD[${oldPWD.length}]: ${oldPWD}`);
+    console.log(`BE - newPWD[${newPWD.length}]: ${newPWD}`);
+
+    if (!hasPassword) {
+      if (newPWD.length == 0) return;
       this.dbservice.setChatPassword(chatId, newPWD);
-    else if (hasPassword && await this.dbservice.isValidChatPassword(
-      token.split(' ')[1],
-      chatId,
-      oldPWD)) {
-      if (newPWD.length == 0) { }
-      else this.dbservice.setChatPassword(chatId, newPWD);
+    }
+    else if (hasPassword && await this.dbservice.isValidChatPassword(token.split(' ')[1], chatId, oldPWD)) {
+      if (newPWD.length == 0) await this.dbservice.setChatPassword(chatId, null);
+      else await this.dbservice.setChatPassword(chatId, newPWD);
     }
     else {
       res.status(401).send(`Invalid Password`)
       return
     }
 
+    // change settings.
+    // change chatUserPermissions ChatSettings
     console.log('BE - title: ', updatedChatSettings.title);
     console.log('BE - private: ', updatedChatSettings.isPrivate);
     await this.dbservice.updateChatSettings(
@@ -289,6 +290,7 @@ export class AppController {
       updatedChatSettings,
     );
 
+    // remove users to ChatSettings
     for (let user of removedUsers) {
       const status = await this.dbservice.removeChatUsers(
         token.split(' ')[1],
@@ -298,6 +300,7 @@ export class AppController {
       if (!status) res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
     }
 
+    // add new users to ChatSettings
     for (let user of addedUsers) {
       const chatUser: ChatsUsers = {
         intra_user_id: user, chat_id: chatId, chat_user_id: 0,

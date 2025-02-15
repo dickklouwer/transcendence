@@ -962,7 +962,7 @@ export class DbService implements OnModuleInit {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      console.log('DB - updateChatSettings - ChatSettings: ', settings);
+//      console.log('DB - updateChatSettings - ChatSettings: ', settings);
 
       await this.db
         .update(chats)

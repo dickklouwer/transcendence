@@ -35,7 +35,6 @@ export default function GroupOptionPage() {
   const [addedUsers, setAddedUsers] = useState<number[]>([]);
   const [removedUsers, setRemovedUsers] = useState<number[]>([]);
 
-  //TODO: isn't working atm e.target.value is set "true"/"false"
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
     setChannelType(event.target.value === "true" ? true : false);
@@ -129,11 +128,23 @@ export default function GroupOptionPage() {
 
   function UpdateSettings() {
 
+
+    if (!updatedChatSettings) return;
+    const sendChatSettings: ChatSettings = {
+      title: title,
+      isDirect: false,
+      isPrivate: isPrivate,
+      userInfo: updatedChatSettings?.userInfo,
+      password: null,
+      image: null,
+    };
+
+    console.log("USC: ", sendChatSettings);
     fetchPost("api/updateChatSettings", {
       chatId: chatId,
       oldPWD: oldPassword,
       newPWD: newPassword,
-      updatedChatSettings: updatedChatSettings,
+      updatedChatSettings: sendChatSettings,
       addedUsers: addedUsers,
       removedUsers: removedUsers,
     })
