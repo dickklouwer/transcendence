@@ -357,7 +357,7 @@ export default function GroupOptionPage() {
         </div >
       </div >
 
-      {/* Debug Box */}
+      {/* Debug Box
       < div className="flex flex-col text-left justify-center" >
         <p>PageSettings:</p>
         <p>| ChatUsers: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
@@ -373,7 +373,7 @@ export default function GroupOptionPage() {
         <p>| Added Users: {addedUsers.join(", ")}</p>
         <p>| Removed Users: {removedUsers.join(", ")}</p>
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
-      </div >
+      </div > */}
     </div >
   ); // End of return
 

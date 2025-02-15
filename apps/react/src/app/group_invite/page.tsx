@@ -177,7 +177,7 @@ export default function GroupInvite() {
         </div>
       </div>
 
-      {/* Debug Box*/}
+      {/* Debug Box
       <div className="flex flex-col items-center justify-center">
         <p>Selected Users: {selectedUsers.join(", ")}</p>
 
@@ -186,7 +186,7 @@ export default function GroupInvite() {
 
         <p>Has Password: {hasPassword ? "True" : "False"}</p>
         <p>Show Password : {showPassword ? "True" : "False"}</p>
-      </div>
+      </div>*/}
 
     </div>
   );
