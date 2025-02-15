@@ -1273,13 +1273,14 @@ export class DbService implements OnModuleInit {
           title: chats.title,
           groep_image: chats.image,
           user_image: users.image_url,
+          is_direct: chats.is_direct,
         })
         .from(chatsUsers)
         .innerJoin(users, eq(chatsUsers.intra_user_id, users.intra_user_id))
         .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(eq(chatsUsers.chat_id, chat_id));
 
-      if (chatInfo.length !== 2) {
+      if (chatInfo.length >= 0 && chatInfo[0].is_direct) {
         return {
           isDm: false,
           intraId: null,
