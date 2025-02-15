@@ -28,7 +28,7 @@ import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(private dbservice: DbService) {}
+  constructor(private dbservice: DbService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -271,7 +271,6 @@ export class AppController {
     res.status(201).send(res);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('updateChatSettings')
   async updateChatSettings(
     @Headers('authorization') token: string,
@@ -290,12 +289,12 @@ export class AppController {
       chatId
     )
 
-    console.log(`BE - oldPWD[${oldPWD.length}]: ${oldPWD}`);
-    console.log(`BE - newPWD[${newPWD.length}]: ${newPWD}`);
+    // console.log(`BE - oldPWD[${oldPWD.length}]: ${oldPWD}`);
+    // console.log(`BE - newPWD[${newPWD.length}]: ${newPWD}`);
 
     if (!hasPassword) {
-      if (newPWD.length == 0) return;
-      this.dbservice.setChatPassword(chatId, newPWD);
+      if (newPWD.length == 0) { }
+      else this.dbservice.setChatPassword(chatId, newPWD);
     }
     else if (hasPassword && await this.dbservice.isValidChatPassword(token.split(' ')[1], chatId, oldPWD)) {
       if (newPWD.length == 0) await this.dbservice.setChatPassword(chatId, null);
@@ -308,8 +307,6 @@ export class AppController {
 
     // change settings.
     // change chatUserPermissions ChatSettings
-    console.log('BE - title: ', updatedChatSettings.title);
-    console.log('BE - private: ', updatedChatSettings.isPrivate);
     await this.dbservice.updateChatSettings(
       token.split(' ')[1],
       chatId,
@@ -344,7 +341,6 @@ export class AppController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('joinChat')
   async joinChat(
     @Headers('authorization') token: string,
@@ -637,7 +633,7 @@ export class AppController {
     const id = await this.dbservice.getUserFromDataBase(token.split(' ')[1]);
     const users = await this.dbservice.getAllExternalUsers(token.split(' ')[1]);
 
-    for (let i: number = 0; i < users.length; i++) {}
+    for (let i: number = 0; i < users.length; i++) { }
     if (!users) {
       res.status(404).send('No users found');
       return;

@@ -139,7 +139,7 @@ export default function GroupOptionPage() {
       image: null,
     };
 
-    console.log("USC: ", sendChatSettings);
+    // console.log("USC: ", sendChatSettings);
     fetchPost("api/updateChatSettings", {
       chatId: chatId,
       oldPWD: oldPassword,
