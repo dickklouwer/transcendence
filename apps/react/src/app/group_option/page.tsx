@@ -126,9 +126,18 @@ export default function GroupOptionPage() {
     }
   };
 
+  const mutePlayer = (intraID: number) => {
+    fetchPost("api/muteOneDay", {
+      chatID: chatId,
+      intraID: intraID,
+    })
+      .then(() => { { } })
+      .catch((error) => {
+        console.log("Error Creating Group Chat", error);
+      });
+  }
+
   function UpdateSettings() {
-
-
     if (!updatedChatSettings) return;
     const sendChatSettings: ChatSettings = {
       title: title,
@@ -209,6 +218,12 @@ export default function GroupOptionPage() {
                           className={`flex size-15 p-5 w-1/10 rounded ${isOwner(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleOwner(user.intra_user_id)}
                           disabled={!isOwner(pageSettings, pageUser.intra_user_id)} >
+                        </button>
+                        <button // mute
+                          className={`flex size-15 p-5 w-1/10 rounded bg-blue-800`}
+                          onClick={() => mutePlayer(user.intra_user_id)}
+                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)}
+                          style={{ visibility: user.intra_user_id !== pageUser.intra_user_id ? "visible" : "hidden" }}><p className='text-xs'>1 day mute</p>
                         </button>
                         <button // Kick
                           className={`flex size-15 p-5 w-1/10 rounded ${isKicked(user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}

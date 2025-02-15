@@ -1351,6 +1351,27 @@ export class DbService implements OnModuleInit {
     }
   }
 
+  async setMuteOneDay(chatID: number, intraID: number): Promise<boolean> {
+    try {
+      const currentTime = new Date();
+
+      const status = await this.db.update(chatsUsers)
+        .set({ mute_untill: new Date(new Date(currentTime).getTime() + 60 * 60 * 25 * 1000) })
+        .where(
+          and(
+            eq(chatsUsers.intra_user_id, intraID),
+            eq(chatsUsers.chat_id, chatID)
+          )
+        )
+
+      return true;
+    }
+    catch (error) {
+      console.log('Error: ', error);
+      return false;
+    }
+  }
+
   async getNumberOfUnreadChats(jwtToken: string): Promise<number> {
     try {
       const user = await this.getUserFromDataBase(jwtToken);
