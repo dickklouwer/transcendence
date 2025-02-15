@@ -81,6 +81,20 @@ export class AppController {
     }
   }
 
+  @Post('muteOneDay')
+  async muteOneDay(
+    @Headers('authorization') token: string,
+    @Body('intraID') intraID: number,
+    @Body('chatID') chatID: number,
+    @Res() res: Response,
+  ) {
+
+    const status = await this.dbservice.setMuteOneDay(chatID, intraID);
+   
+    res.status(201).send(status);
+  }
+
+
   @Post('setNickname')
   async setNickname(
     @Headers('authorization') token: string,
