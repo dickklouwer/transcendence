@@ -90,7 +90,7 @@ export class AppController {
   ) {
 
     const status = await this.dbservice.setMuteOneDay(chatID, intraID);
-   
+
     res.status(201).send(status);
   }
 
@@ -180,8 +180,8 @@ export class AppController {
       chatId,
     );
 
-    console.log('BE - getChatSettings: ', user);
-    console.log('BE - getChatSettings: ', chatSettings);
+    // console.log('BE - getChatSettings: ', user);
+    // console.log('BE - getChatSettings: ', chatSettings);
 
     if (!user) {
       throw Error('Failed to fetch user');
@@ -285,6 +285,57 @@ export class AppController {
     res.status(201).send(res);
   }
 
+  @Post('removeChatUser')
+  async removeChatUser(
+    @Headers('authorization') token: string,
+    @Body('chatID') chatID: number,
+    @Body('userID') userID: number,
+    @Res() res: Response
+  ) {
+    try {
+      const user = await this.dbservice.getUserFromDataBase(
+        token.split(' ')[1],
+      );
+      if (!user) {
+        res.status(422).send('user is not push');
+        return;
+      }
+
+      if (user.intra_user_id != userID) {
+        res.status(401).send('userID is not you');
+        return;
+      }
+
+      var chatSettings: ChatSettings = await this.dbservice.getChatSettings(token.split(' ')[1], chatID,);
+      if (!chatSettings) {
+        res.status(422).send('chatSettings is not here');
+        return;
+      }
+
+      let moreOwner = false;
+      for (let i = chatSettings.userInfo.length - 1; i >= 0; i--) {
+        const user = chatSettings.userInfo[i];
+
+        if (user.intra_user_id == userID)
+          chatSettings.userInfo.splice(i, 1);
+        if (user.is_owner && user.intra_user_id != userID)
+          moreOwner = true;
+      }
+
+      await this.dbservice.removeChatUsers(
+        token.split(' ')[1], chatID, userID,);
+
+      if (!moreOwner) {
+        chatSettings.userInfo[0].is_owner = true;
+        await this.dbservice.updateChatSettings(token.split(' ')[1], chatID, chatSettings,)
+      }
+
+      res.status(201).send(res);
+    } catch {
+      res.status(422).send('Failed to Leave chat');
+    }
+  }
+
   @Post('updateChatSettings')
   async updateChatSettings(
     @Headers('authorization') token: string,
@@ -334,7 +385,7 @@ export class AppController {
         chatId,
         user,
       );
-      if (!status) res.status(422).send(`Failed to add user[${user}] to chat[${chatId}]`);
+      if (!status) res.status(422).send(`Failed to remove user[${user}] to chat[${chatId}]`);
     }
 
     // add new users to ChatSettings

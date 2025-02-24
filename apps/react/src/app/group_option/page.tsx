@@ -128,9 +128,6 @@ export default function GroupOptionPage() {
   };
 
   const mutePlayer = (intraID: number) => {
-    // console.log("muted: ", muted);
-    // console.log("includes: ", muted.includes(intraID));
-    // console.log(`${muted.includes(intraID) ? "bg-green-800" : "bg-blue-800"}`)
 
     if (!muted.includes(intraID))
       setMuted((prevMuted) => [...prevMuted, intraID]);
@@ -143,6 +140,17 @@ export default function GroupOptionPage() {
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
       });
+  }
+
+  function LeaveChat() {
+    fetchPost("api/removeChatUser", {
+      chatID: chatId,
+      intraID: pageUser?.intra_user_id,
+    })
+    .then(() => {{}})
+    .catch((error) => {
+      console.log("Error Creating Group Chat", error);
+    });
   }
 
   function UpdateSettings() {
@@ -351,6 +359,10 @@ export default function GroupOptionPage() {
             </div>
 
             {/* Action Buttons */}
+            <Link className="flex justify-center p-4 m-2 w-1/2 bg-red-800 text-white rounded-lg hover:bg-red-600"
+                onClick={LeaveChat()} href={'/chats'}>
+                Leave Chat
+            </Link>
             < div className="flex flex-row justify-center">
               {/* Cancel Button should just go back */}
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 "
@@ -365,6 +377,7 @@ export default function GroupOptionPage() {
                 </Link>
               }
             </div>
+
           </div>
         </div >
       </div >
