@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 import PongAnimation from './pong_animation';
-
+import { fetchPost } from './fetch_functions';
 interface TwoFactorVerificationProps {
   tempToken: string;
   onVerificationComplete: (token: string) => void;
@@ -15,23 +14,24 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ te
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, {
-        tempToken,
-        twoFactorCode
-      });
 
-      if (response.status === 200) {
-        const { token } = response.data;
-        onVerificationComplete(token);
-      } else {
-        setError('Invalid 2FA code');
-      }
-    } catch (error) {
-      console.error('Error during 2FA verification:', error);
-      setError('Error verifying 2FA code');
+    type TokenBody = {
+      tempToken: string;
+      twoFactorCode: string;
+    };
+    await fetchPost<TokenBody, string>(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, {
+      tempToken,
+      twoFactorCode
+    }).then((result) => {
+      console.log('result', result);
+      onVerificationComplete(result);
     }
-  };
+    ).catch(() => {
+      console.warn('Error Invalid 2FA Code: ');
+      setError('Invalid 2FA code');
+    }
+    );
+    }
 
   return (
     <div className="min-h-screen flex items-center justify-center w-full">

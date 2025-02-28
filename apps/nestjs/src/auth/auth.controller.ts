@@ -64,7 +64,7 @@ export class AuthController {
         res.status(error.response?.status).send(error.response.data);
         return;
       }
-      res.status(500).send('Authentication Failed Please Try again');
+      res.status(403).send('Authentication Failed Please Try again');
     }
   }
 
@@ -86,14 +86,14 @@ export class AuthController {
         const jwt = await this.authService.CreateJWT(user);
         user.token = jwt;
         await this.dbservice.upsertUserInDataBase(user);
-        res.status(200).json({ token: jwt });
+        res.status(200).send(jwt);
       } else {
-        res.status(400).json({ message: 'Invalid 2FA code' });
+        res.status(403).send('Invalid 2FA code');
       }
     } catch (error) {
       console.log(error);
       res
-        .status(500)
+        .status(403)
         .json({ message: 'Authentication Failed Please Try again' });
     }
   }
