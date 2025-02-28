@@ -34,6 +34,7 @@ export default function GroupOptionPage() {
   const [newPassword, setNewPassword] = useState<string>("");
   const [addedUsers, setAddedUsers] = useState<number[]>([]);
   const [removedUsers, setRemovedUsers] = useState<number[]>([]);
+  const [muted, setMuted] = useState<number[]>([]);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Update the state with the selected value
@@ -127,6 +128,10 @@ export default function GroupOptionPage() {
   };
 
   const mutePlayer = (intraID: number) => {
+
+    if (!muted.includes(intraID))
+      setMuted((prevMuted) => [...prevMuted, intraID]);
+
     fetchPost("api/muteOneDay", {
       chatID: chatId,
       intraID: intraID,
@@ -135,6 +140,17 @@ export default function GroupOptionPage() {
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
       });
+  }
+
+  function LeaveChat() {
+    fetchPost("api/removeChatUser", {
+      chatID: chatId,
+      intraID: pageUser?.intra_user_id,
+    })
+    .then(() => {{}})
+    .catch((error) => {
+      console.log("Error Creating Group Chat", error);
+    });
   }
 
   function UpdateSettings() {
@@ -176,19 +192,23 @@ export default function GroupOptionPage() {
               <h1 className="flex justify-center">Chat Users</h1>
               <div className="flex flex-col gap-4 overflow-y-auto">
                 <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-blue-950 rounded">
-                  <p className="flex justify-center text-1xl w-3/5">User</p>
-                  <div className='flex justify-between w-2/5'>
+                  <p className="flex justify-center text-1xl w-2/5">User</p>
+                  <div className='flex justify-between w-3/5'>
                     <p className="text-xs">Admin</p>
                     <p className="text-xs">Owner</p>
                     <p className="text-xs">Kick</p>
                     <p className="text-xs">Ban</p>
+                    <p className="text-xs">
+                      <span className="block">1 day</span>
+                      <span className="block">Mute</span>
+                    </p>
                   </div>
                 </div>
                 {chatUsers.length === 0 && <p className="text-center text-1xl whitespace-no-rap">No Users</p>}
                 {chatUsers.map((user) => (
                   <div key={user.intra_user_id}>
                     <div className="flex flex-row justify-between items-center p-2 px-4 space-x-2 bg-slate-950 rounded">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col w-2/5">
                         <div className="flex items-center space-x-4">
                           <div className="relative">
                             <Image
@@ -208,7 +228,7 @@ export default function GroupOptionPage() {
                           </div>
                         </div>
                       </div>
-                      <div className='flex flex-row justify-around w-2/5 space-x-10'>
+                      <div className='flex flex-row justify-around w-3/5 space-x-10'>
                         <button // Admin
                           className={`flex size-15 p-5 w-1/10 rounded ${isAdmin(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleAdmin(user.intra_user_id)}
@@ -219,12 +239,6 @@ export default function GroupOptionPage() {
                           onClick={() => toggleOwner(user.intra_user_id)}
                           disabled={!isOwner(pageSettings, pageUser.intra_user_id)} >
                         </button>
-                        <button // mute
-                          className={`flex size-15 p-5 w-1/10 rounded bg-blue-800`}
-                          onClick={() => mutePlayer(user.intra_user_id)}
-                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)}
-                          style={{ visibility: user.intra_user_id !== pageUser.intra_user_id ? "visible" : "hidden" }}><p className='text-xs'>1 day mute</p>
-                        </button>
                         <button // Kick
                           className={`flex size-15 p-5 w-1/10 rounded ${isKicked(user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleKick(user.intra_user_id)}
@@ -234,6 +248,12 @@ export default function GroupOptionPage() {
                         <button // Ban
                           className={`flex size-15 p-5 w-1/10 rounded ${isBanned(updatedChatSettings, user.intra_user_id) ? "bg-green-800" : "bg-red-800"}`}
                           onClick={() => toggleBanned(user.intra_user_id)}
+                          disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)}
+                          style={{ visibility: user.intra_user_id !== pageUser.intra_user_id ? "visible" : "hidden" }}>
+                        </button>
+                        <button // mute
+                          className={`flex size-15 p-5 w-1/10 rounded ${muted.includes(user.intra_user_id) ? "bg-teal-800" : "bg-blue-800"}`}
+                          onClick={() => mutePlayer(user.intra_user_id)}
                           disabled={!isEditor(updatedChatSettings, pageUser.intra_user_id)}
                           style={{ visibility: user.intra_user_id !== pageUser.intra_user_id ? "visible" : "hidden" }}>
                         </button>
@@ -339,6 +359,10 @@ export default function GroupOptionPage() {
             </div>
 
             {/* Action Buttons */}
+            <Link className="flex justify-center p-4 m-2 w-1/2 bg-red-800 text-white rounded-lg hover:bg-red-600"
+                onClick={LeaveChat()} href={'/chats'}>
+                Leave Chat
+            </Link>
             < div className="flex flex-row justify-center">
               {/* Cancel Button should just go back */}
               <Link className="flex justify-center p-4 m-2 w-11/12 bg-slate-800 text-white rounded-lg hover:bg-slate-600 "
@@ -353,11 +377,13 @@ export default function GroupOptionPage() {
                 </Link>
               }
             </div>
+
           </div>
         </div >
       </div >
 
       {/* Debug Box
+      */}
       < div className="flex flex-col text-left justify-center" >
         <p>PageSettings:</p>
         <p>| ChatUsers: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
@@ -373,7 +399,7 @@ export default function GroupOptionPage() {
         <p>| Added Users: {addedUsers.join(", ")}</p>
         <p>| Removed Users: {removedUsers.join(", ")}</p>
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
-      </div > */}
+      </div >
     </div >
   ); // End of return
 
