@@ -370,11 +370,11 @@ export class MultiplayerPongGateway
     client: Socket,
     payload: { key: string; state: 'down' | 'up' },
   ): void {
-    this.logger.log(
-      `Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`,
-    );
+    // this.logger.log(
+    //   `Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`,
+    // );
     const roomId = this.clientRoomMap.get(client.id);
-    this.logger.log(`room id: ${roomId}`);
+    // this.logger.log(`room id: ${roomId}`);
     if (roomId) {
       let room;
       if (this.privateRooms.has(roomId)) {
