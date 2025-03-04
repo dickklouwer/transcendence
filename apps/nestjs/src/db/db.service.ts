@@ -804,8 +804,8 @@ export class DbService implements OnModuleInit {
         if (chatsInfo.length === 0) {
           continue;
         }
-        console.log('otherUsers:', otherUsers);
-        console.log('lastSenderName:', lastSenderName);
+        // console.log('otherUsers:', otherUsers);
+        // console.log('lastSenderName:', lastSenderName);
         const field: UserChats = {
           chatid: chat_ids[i].chats.chat_id,
           title: chatsInfo[0].isDirect
@@ -955,7 +955,7 @@ export class DbService implements OnModuleInit {
         })
         .returning({ chat_id: chats.chat_id });
 
-      console.log('DB - Chat Created: ', chat[0].chat_id);
+      // console.log('DB - Chat Created: ', chat[0].chat_id);
       return chat[0].chat_id;
     } catch (error) {
       console.log('Error: ', error);
@@ -1000,7 +1000,7 @@ export class DbService implements OnModuleInit {
         .from(chatsUsers)
         .where(eq(chatsUsers.chat_id, chat_id));
       if (users.length === 0) throw Error('Failed to fetch Chatusers!');
-      console.log('DB - users: ', users);
+      // console.log('DB - users: ', users);
 
       const settings: ChatSettings = {
         title: chat[0].title,
@@ -1010,7 +1010,7 @@ export class DbService implements OnModuleInit {
         image: chat[0].image,
         password: chat[0].password,
       };
-      console.log('DB - settingsz: ', settings);
+      // console.log('DB - settingsz: ', settings);
       return settings;
     } catch (error) {
       console.log('Error: ', error);
@@ -1037,7 +1037,7 @@ export class DbService implements OnModuleInit {
         })
         .where(eq(chats.chat_id, chat_id));
 
-      console.log('DB - updated Chat: ', chat_id);
+      // console.log('DB - updated Chat: ', chat_id);
 
       for (const chatUser of settings.userInfo)
         this.updateChatUsers(jwtToken, chat_id, chatUser);
@@ -1065,9 +1065,6 @@ export class DbService implements OnModuleInit {
             eq(chatsUsers.intra_user_id, chatUser),
           ),
         );
-      console.log(
-        `DB - removed ChatsUser (${user.intra_user_id}) from ${chatId}: `,
-      );
 
       return true;
     } catch (error) {
@@ -1093,10 +1090,10 @@ export class DbService implements OnModuleInit {
         is_banned: false,
         joined: UserInfo.joined,
       });
-      console.log(
-        `DB - created ChatsUser (${UserInfo.joined ? 'Host' : 'User'}): `,
-        UserInfo.intra_user_id,
-      );
+      // console.log(
+      //   `DB - created ChatsUser (${UserInfo.joined ? 'Host' : 'User'}): `,
+      //   UserInfo.intra_user_id,
+      // );
 
       return true;
     } catch (error) {
@@ -1129,7 +1126,7 @@ export class DbService implements OnModuleInit {
             eq(chatsUsers.intra_user_id, UserInfo.intra_user_id),
           ),
         );
-      console.log(`DB - updated ChatsUser: `, UserInfo.intra_user_id);
+      // console.log(`DB - updated ChatsUser: `, UserInfo.intra_user_id);
 
       return true;
     } catch (error) {
@@ -1161,7 +1158,7 @@ export class DbService implements OnModuleInit {
           ),
         );
 
-      console.log('Joined ', user.intra_user_id, ' to chat ', chat_id);
+      // console.log('Joined ', user.intra_user_id, ' to chat ', chat_id);
       return true;
     } catch (error) {
       console.log('Error: ', error);
@@ -1471,8 +1468,8 @@ export class DbService implements OnModuleInit {
 
       const muteUntill = new Date(result[0].mute_untill);
 
-      console.log('currentTime:', new Date(currentTime));
-      console.log('muteUntill: ', muteUntill);
+      // console.log('currentTime:', new Date(currentTime));
+      // console.log('muteUntill: ', muteUntill);
       if (new Date(currentTime) < muteUntill) {
         // console.log('User is muted');
         return true;
@@ -1707,7 +1704,7 @@ export class DbService implements OnModuleInit {
         )
         .map(([chat_id]) => Number(chat_id));
 
-      console.log(validChatIds);
+      // console.log(validChatIds);
 
       if (validChatIds.length === 0) {
         return -1;

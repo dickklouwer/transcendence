@@ -145,12 +145,12 @@ export default function GroupOptionPage() {
   function LeaveChat() {
     fetchPost("api/removeChatUser", {
       chatID: chatId,
-      intraID: pageUser?.intra_user_id,
+      userID: pageUser?.intra_user_id,
     })
-    .then(() => {{}})
-    .catch((error) => {
-      console.log("Error Creating Group Chat", error);
-    });
+      .then(() => { { } })
+      .catch((error) => {
+        console.log("Error Creating Group Chat", error);
+      });
   }
 
   function UpdateSettings() {
@@ -360,8 +360,8 @@ export default function GroupOptionPage() {
 
             {/* Action Buttons */}
             <Link className="flex justify-center p-4 m-2 w-1/2 bg-red-800 text-white rounded-lg hover:bg-red-600"
-                onClick={LeaveChat()} href={'/chats'}>
-                Leave Chat
+              onClick={() => LeaveChat()} href={'/chats'}>
+              Leave Chat
             </Link>
             < div className="flex flex-row justify-center">
               {/* Cancel Button should just go back */}
@@ -383,7 +383,6 @@ export default function GroupOptionPage() {
       </div >
 
       {/* Debug Box
-      */}
       < div className="flex flex-col text-left justify-center" >
         <p>PageSettings:</p>
         <p>| ChatUsers: {joinUserID(pageSettings?.userInfo).join(", ")}</p>
@@ -400,6 +399,7 @@ export default function GroupOptionPage() {
         <p>| Removed Users: {removedUsers.join(", ")}</p>
         <p>| Permissions: {joinPerms(updatedChatSettings?.userInfo).join(", ")}</p>
       </div >
+      */}
     </div >
   ); // End of return
 

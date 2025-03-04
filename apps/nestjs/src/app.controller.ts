@@ -219,7 +219,7 @@ export class AppController {
       return;
     }
 
-    console.log('BE - host:', user.intra_user_id);
+    // console.log('BE - host:', user.intra_user_id);
 
     const chat_id = await this.dbservice.createChat(
       token.split(' ')[1],
@@ -265,7 +265,7 @@ export class AppController {
     userSettings.is_banned = false;
     userSettings.joined = false;
 
-    console.log('BE - ChatSettings:', ChatSettings);
+    // console.log('BE - ChatSettings:', ChatSettings);
 
     // add other users to chat
     for (const user of ChatSettings.userInfo) {
