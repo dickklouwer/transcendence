@@ -194,6 +194,17 @@ export class DbService implements OnModuleInit {
   }
 
   async upsertUserInDataBase(fortyTwoUser: FortyTwoUser): Promise<User> {
+    if (!process.env.SALT_ROUNDS) {
+      console.log('Env SALT_ROUNDS is undefined');
+      return null;
+    }
+
+    const saltRounds = parseInt(process.env.SALT_ROUNDS);
+
+    if (fortyTwoUser.token) {
+      fortyTwoUser.token = bycrypt.hashSync(fortyTwoUser.token, saltRounds);
+    }
+
     const result = await this.db
       .insert(users)
       .values({
@@ -218,12 +229,16 @@ export class DbService implements OnModuleInit {
 
   async getUserFromDataBase(jwtToken: string) {
     try {
-      const user = await this.db
-        .select()
-        .from(users)
-        .where(eq(users.token, jwtToken));
+      const user = await this.db.select().from(users);
 
-      return user[0];
+      let myUser: User = null;
+
+      user.forEach((element) => {
+        if (bycrypt.compareSync(jwtToken, element.token)) {
+          myUser = element;
+        }
+      });
+      return myUser;
     } catch (error) {
       console.log('Error: ', error);
       return null;
@@ -296,10 +311,12 @@ export class DbService implements OnModuleInit {
 
   async setUserNickname(jwtToken: string, nickname: string): Promise<boolean> {
     try {
+      const user = await this.getUserFromDataBase(jwtToken);
+
       await this.db
         .update(users)
         .set({ nick_name: nickname })
-        .where(eq(users.token, jwtToken));
+        .where(eq(users.intra_user_id, user.intra_user_id));
 
       console.log('Nickname Set!');
       return true;
@@ -329,6 +346,8 @@ export class DbService implements OnModuleInit {
 
   async getAllExternalUsers(jwtToken: string) {
     try {
+      const myUser = await this.getUserFromDataBase(jwtToken);
+
       const user = await this.db
         .select({
           intra_user_id: users.intra_user_id,
@@ -341,7 +360,7 @@ export class DbService implements OnModuleInit {
           losses: users.losses,
         })
         .from(users)
-        .where(not(eq(users.token, jwtToken)));
+        .where(not(eq(users.intra_user_id, myUser.intra_user_id)));
 
       return user;
     } catch (error) {
@@ -644,6 +663,7 @@ export class DbService implements OnModuleInit {
       }
 
       if (bycrypt.compareSync(password, chat[0].password)) return true;
+
       return false;
     } catch (error) {
       console.log('Error: ', error);
@@ -750,7 +770,7 @@ export class DbService implements OnModuleInit {
           .where(
             and(
               eq(chatsUsers.chat_id, chat_ids[i].chats.chat_id),
-              not(eq(users.token, jwtToken)),
+              not(eq(users.intra_user_id, user.intra_user_id)),
             ),
           );
 
@@ -825,6 +845,8 @@ export class DbService implements OnModuleInit {
     const result: InvitedChats[] = [];
 
     try {
+      const user = await this.getUserFromDataBase(jwtToken);
+
       await this.db
         .update(chatsUsers)
         .set({ joined: false })
@@ -839,7 +861,7 @@ export class DbService implements OnModuleInit {
         .innerJoin(chats, eq(chatsUsers.chat_id, chats.chat_id))
         .where(
           and(
-            eq(users.token, jwtToken),
+            eq(users.intra_user_id, user.intra_user_id),
             and(eq(chatsUsers.joined, false), eq(chats.is_direct, false)),
           ),
         );
@@ -1005,7 +1027,7 @@ export class DbService implements OnModuleInit {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-//      console.log('DB - updateChatSettings - ChatSettings: ', settings);
+      //      console.log('DB - updateChatSettings - ChatSettings: ', settings);
 
       await this.db
         .update(chats)
@@ -1035,11 +1057,12 @@ export class DbService implements OnModuleInit {
       const user = await this.getUserFromDataBase(jwtToken);
       if (!user) throw Error('Failed to fetch User!');
 
-      await this.db.delete(chatsUsers)
+      await this.db
+        .delete(chatsUsers)
         .where(
           and(
             eq(chatsUsers.chat_id, chatId),
-            eq(chatsUsers.intra_user_id, chatUser)
+            eq(chatsUsers.intra_user_id, chatUser),
           ),
         );
       console.log(
@@ -1103,8 +1126,9 @@ export class DbService implements OnModuleInit {
         .where(
           and(
             eq(chatsUsers.chat_id, chatId),
-            eq(chatsUsers.intra_user_id, UserInfo.intra_user_id)
-          ));
+            eq(chatsUsers.intra_user_id, UserInfo.intra_user_id),
+          ),
+        );
       console.log(`DB - updated ChatsUser: `, UserInfo.intra_user_id);
 
       return true;
@@ -1355,18 +1379,22 @@ export class DbService implements OnModuleInit {
     try {
       const currentTime = new Date();
 
-      const status = await this.db.update(chatsUsers)
-        .set({ mute_untill: new Date(new Date(currentTime).getTime() + 60 * 60 * 25 * 1000) })
+      const status = await this.db
+        .update(chatsUsers)
+        .set({
+          mute_untill: new Date(
+            new Date(currentTime).getTime() + 60 * 60 * 25 * 1000,
+          ),
+        })
         .where(
           and(
             eq(chatsUsers.intra_user_id, intraID),
-            eq(chatsUsers.chat_id, chatID)
-          )
-        )
+            eq(chatsUsers.chat_id, chatID),
+          ),
+        );
 
       return true;
-    }
-    catch (error) {
+    } catch (error) {
       console.log('Error: ', error);
       return false;
     }

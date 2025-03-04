@@ -30,7 +30,6 @@ export class AuthController {
     try {
       console.log('Starting code validation ...');
       const token = await this.authService.validateCode(code);
-      console.log('Token:', token);
       const fortyTwoUser = await this.authService.validateToken(token);
       console.log('User:', fortyTwoUser);
 
@@ -51,11 +50,10 @@ export class AuthController {
       } else {
         // If 2FA is not enabled, create and return the JWT
         const jwt = await this.authService.CreateJWT(dbUser);
-        console.log('JWT::', jwt);
         dbUser.token = jwt;
         await this.dbservice.upsertUserInDataBase(dbUser);
         return res.redirect(
-          `http://${process.env.HOST_NAME}:4433/?token=${dbUser.token}`,
+          `http://${process.env.HOST_NAME}:4433/?token=${jwt}`,
         );
       }
     } catch (error) {
@@ -129,7 +127,6 @@ export class AuthController {
       }
 
       dbUser.token = await this.authService.CreateJWT(dbUser);
-      console.log('JWT::', dbUser.token);
 
       // Update the user with the new token
       await this.dbservice.upsertUserInDataBase({

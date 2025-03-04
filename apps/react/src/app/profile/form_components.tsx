@@ -232,7 +232,6 @@ export const AddFriendsForm = () => {
 
 const DisplayBlockedOrInvite = ({ user, setIsSent }: { user: ExternalUser, setIsSent: Dispatch<SetStateAction<boolean>>}) => {
 
-    console.log("User:", user);
     const sendFriendRequest = async (user_intra_id: number) => {
         try {
             await fetchPost<{ user_intra_id: number }, boolean>("/api/sendFriendRequest", { user_intra_id: user_intra_id })

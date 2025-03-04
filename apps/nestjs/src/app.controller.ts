@@ -36,6 +36,8 @@ export class AppController {
     @Headers('authorization') token: string,
     @Res() res: Response,
   ): Promise<User> {
+
+    console.log('BE - getProfile token: ', token);
     const user: User | null = await this.dbservice.getUserFromDataBase(
       token.split(' ')[1],
     );
