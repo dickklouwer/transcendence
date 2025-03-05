@@ -539,7 +539,7 @@ export class DbService implements OnModuleInit {
         );
 
       if (friendList.length > 0) {
-        this.z(user.intra_user_id, userId);
+        this.acceptFriendRequest(user.intra_user_id, userId);
         return true;
       }
 
