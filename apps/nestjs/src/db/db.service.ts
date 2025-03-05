@@ -537,6 +537,7 @@ export class DbService implements OnModuleInit {
             ),
           ),
         );
+      this.removeBlockedUser(user.intra_user_id, userId);
 
       if (friendList.length > 0) {
         this.acceptFriendRequest(user.intra_user_id, userId);

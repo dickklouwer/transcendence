@@ -112,13 +112,7 @@ export default function Profile() {
                             />
                         </div>
                     </div>
-                    <div className="mb-6">
-                        <h2 className="text-xl mb-4">Achievements</h2>
-                        <ul className="list-disc list-inside">
-                            <li>Achievement Speed Deamon</li>
-                            <li>Achievement Skill Shot</li>
-                            <li>Achievement Streak King</li>
-                        </ul>
+                    <div className="mb-6 h-9">
                     </div>
                     <div className="mb-6">
                         <h2 className="text-xl mb-4">Wins and Losses</h2>
@@ -129,12 +123,14 @@ export default function Profile() {
                             <div className="flex items-center space-x-2">
                                 <span className="text-lg">Losses: {user.losses}</span>{" "}
                             </div>
-                            <div className="flex items-center space-x-2">
                                 {(user.wins / user.losses).toFixed(2) === "NaN" || (user.wins / user.losses).toFixed(2) === "Infinity" ?
                                     (<span></span>) :
                                     (<span className="text-lg">Ratio: {(user.wins / user.losses).toFixed(2)} </span>)
                                 }
                             </div>
+                    <div className="mb-6 h-9">
+                    </div>
+                            <div className="flex items-center space-x-2">
                         </div>
                     </div>
                     <div className="space-y-4">
