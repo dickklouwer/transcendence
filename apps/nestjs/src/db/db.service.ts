@@ -522,6 +522,27 @@ export class DbService implements OnModuleInit {
 
       if (!user) throw Error('Failed to fetch User!');
 
+      const friendList = await this.db
+        .select()
+        .from(friends)
+        .where(
+          and(
+            or(
+              eq(friends.user_id_send, user.intra_user_id),
+              eq(friends.user_id_receive, user.intra_user_id),
+            ),
+            or(
+              eq(friends.user_id_send, userId),
+              eq(friends.user_id_receive, userId),
+            ),
+          ),
+        );
+
+      if (friendList.length > 0) {
+        this.z(user.intra_user_id, userId);
+        return true;
+      }
+
       await this.db.insert(friends).values({
         user_id_send: user.intra_user_id,
         user_id_receive: userId,

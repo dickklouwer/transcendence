@@ -19,19 +19,22 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ te
       tempToken: string;
       twoFactorCode: string;
     };
-    await fetchPost<TokenBody, string>(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, {
-      tempToken,
-      twoFactorCode
-    }).then((result) => {
-      console.log('result', result);
-      onVerificationComplete(result);
-    }
-    ).catch(() => {
-      console.warn('Error Invalid 2FA Code: ');
+
+    type TokenResponse = {
+      jwt: string;
+    };
+    try {
+    const result = await fetchPost<TokenBody, TokenResponse>(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, {
+      tempToken: tempToken,
+      twoFactorCode: twoFactorCode,
+    })
+      const { jwt } = result;
+      onVerificationComplete(jwt);
+    } catch (error) {
+      console.error('Error during 2FA verification:', error);
       setError('Invalid 2FA code');
     }
-    );
-    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center w-full">

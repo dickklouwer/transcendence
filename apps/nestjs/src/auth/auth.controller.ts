@@ -84,15 +84,14 @@ export class AuthController {
         const jwt = await this.authService.CreateJWT(user);
         user.token = jwt;
         await this.dbservice.upsertUserInDataBase(user);
-        res.status(200).send(jwt);
+        console.log('2FA verification successful', jwt);
+        return res.status(201).send({ jwt: jwt });
       } else {
-        res.status(403).send('Invalid 2FA code');
+        return res.status(403).send('Invalid 2FA code');
       }
     } catch (error) {
       console.log(error);
-      res
-        .status(403)
-        .json({ message: 'Authentication Failed Please Try again' });
+      res.status(403).send('Authentication Failed Please Try again');
     }
   }
 

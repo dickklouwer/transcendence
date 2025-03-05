@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
+import { fetchPost } from "../../fetch_functions"
 
 const TwoFactorAuth = () => {
     const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -12,11 +12,14 @@ const TwoFactorAuth = () => {
     if (!searchParams)
         throw new Error('SearchParams is undefined');
 
+    type TwoFactorAuthParams = {
+        tempToken: string | null;
+        twoFactorCode: string;
+    };
     const tempToken = searchParams.get('tempToken');
-    console.log("Temp Token = ", tempToken);
 
     useEffect(() => {
-        if (!tempToken) {
+        if (tempToken === null) {
             router.push('/login');
         }
     }, [tempToken, router]);
@@ -24,21 +27,18 @@ const TwoFactorAuth = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, {
-                tempToken,
-                twoFactorCode
-            });
-
-            if (response.status === 200) {
-                const { token } = response.data;
-                localStorage.setItem('token', token);
-                router.push('/');
-            } else {
-                setMessage('Invalid 2FA code');
-            }
+            const response = await fetchPost<TwoFactorAuthParams, string>(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4242/auth/2fa/login-verify`, 
+                {
+                    tempToken: tempToken,
+                    twoFactorCode: twoFactorCode,
+                }
+            )         
+            console.log('Token:', response);
+            localStorage.setItem('token', response);
+            router.push('/');      
         } catch (error) {
             console.error('Error during 2FA verification:', error);
-            setMessage('Error verifying 2FA code');
+            setMessage('Invalid 2FA code');
         }
     };
 
