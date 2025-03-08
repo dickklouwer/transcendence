@@ -30,95 +30,120 @@ const ScoreBoard = ({ score }: { score: [number, number] }): JSX.Element => {
 
 export default function PongGame() {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	const [gameManager, setGameManager] = useState<GameManager | null>(null);
+	const gameManagerRef = useRef<GameManager | null>(null); // Use useRef instead of useState for GameManager
 	const [score, setScore] = useState<[number, number]>([0, 0]);
-	const [Gamestate, SetGameState] = useState<string>("Playing");
+	const [gameState, setGameState] = useState<string>("Playing");
 	const [socket, setSocket] = useState<Socket | null>(null);
 
 	useEffect(() => {
-		if (socket) return;
-		setSocket(io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`, { path: "/ws/socket.io" }));
-	}, [])
-	
+		// Connect to socket.io server only once when the component mounts
+		const newSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`, { path: "/ws/socket.io" });
+		setSocket(newSocket);
+
+		// Clean up when the component unmounts
+		return () => {
+			console.log("Disconnecting socket");
+			newSocket.disconnect();
+		};
+	}, []); // Empty dependency array ensures this effect runs only once
+
+
 	useEffect(() => {
+		if (!socket) return; // Ensure socket is initialized before proceeding
 		if (canvasRef.current === null) return;
 		const context = canvasRef.current.getContext("2d");
 		if (context === null) return;
 
-		if (!socket) 
-			return;
-		const manager = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
-		setGameManager(manager);
+		if (!gameManagerRef.current) { // Create GameManager only if it doesn't exist
+			gameManagerRef.current = new GameManager(context, socket, gameWidth, gameHeight, paddleWidth, paddleHeight, ballSize);
+		}
+		const manager = gameManagerRef.current; // Use the ref's current value
 
-		// upon reloading this does not work anymore
-		socket.on('startSetup', ({ball, leftPaddle, rightPaddle, score }: { ball: { x: number, y: number }, leftPaddle: number, rightPaddle: number, score: {left: number, right: number} }) => {
+		const handleStartSetup = ({ball, leftPaddle, rightPaddle, score }: { ball: { x: number, y: number }, leftPaddle: number, rightPaddle: number, score: {left: number, right: number} }) => {
 			manager.updateBallPosition(ball.x, ball.y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
-			setScore([score.left, score.right])
-		});
+			setScore([score.left, score.right]);
+		};
 
-		socket.on('gameUpdate', ({ball, leftPaddle, rightPaddle }: { ball: { x: number, y: number }, leftPaddle: number, rightPaddle: number }) => {
+		const handleGameUpdate = ({ball, leftPaddle, rightPaddle }: { ball: { x: number, y: number }, leftPaddle: number, rightPaddle: number }) => {
 			manager.updateBallPosition(ball.x, ball.y);
 			manager.updatePaddlePosition('left', leftPaddle);
 			manager.updatePaddlePosition('right', rightPaddle);
-		});
+		};
 
-		socket.on('showPowerUp', ({ powerUpType, powerUpHeight }: { powerUpType: number, powerUpHeight: number }) => {
-			// manager.updateSVGString(shieldSVGString);
+		const handleShowPowerUp = ({ powerUpType, powerUpHeight }: { powerUpType: number, powerUpHeight: number }) => {
 			manager.updatePowerUpHeight(powerUpHeight);
 			manager.showPowerUp(powerUpType);
 			console.log("show power up");
-		});
+		};
 
-		socket.on('powerUpHit', (powerUpType: string) => {
+		const handlePowerUpHit = (powerUpType: string) => {
 			manager.showPowerUp(0);
 			console.log("power up hit");
-		});
+		};
 
-		socket.on('enlargePaddle', (paddle: number) => {
+		const handleEnlargePaddle = (paddle: number) => {
 			if (paddle === 1)
 				manager.leftPaddle.updateHeight(150);
 			else
 				manager.rightPaddle.updateHeight(150);
-		});
+		};
 
-		socket.on('score', ({left, right}: {left: number, right: number}) => {
+		const handleScore = ({left, right}: {left: number, right: number}) => {
 			setScore([left, right]);
-		});
+		};
 
-		socket.on('reset', () => {
+		const handleReset = () => {
 			manager.resetGame();
-		});
+		};
 
-		socket.on('gameover', () => {
-			SetGameState("GameOver");
+		const handleGameover = () => {
+			setGameState("GameOver");
 			socket.emit('stop');
-		});
+		};
+
+		socket.on('startSetup', handleStartSetup);
+		socket.on('gameUpdate', handleGameUpdate);
+		socket.on('showPowerUp', handleShowPowerUp);
+		socket.on('powerUpHit', handlePowerUpHit);
+		socket.on('enlargePaddle', handleEnlargePaddle);
+		socket.on('score', handleScore);
+		socket.on('reset', handleReset);
+		socket.on('gameover', handleGameover);
 
 		manager.attachListeners();
 
 		return () => {
+			console.log("Removing socket listeners and game listeners");
+			socket.off('startSetup', handleStartSetup);
+			socket.off('gameUpdate', handleGameUpdate);
+			socket.off('showPowerUp', handleShowPowerUp);
+			socket.off('powerUpHit', handlePowerUpHit);
+			socket.off('enlargePaddle', handleEnlargePaddle);
+			socket.off('score', handleScore);
+			socket.off('reset', handleReset);
+			socket.off('gameover', handleGameover);
 			manager.removeListeners();
 		};
-	}, [canvasRef, socket]);
+	}, [canvasRef, socket]); // Removed gameManager from dependency array
 
 	const startGame = () => {
-		SetGameState("Playing");
-		if (gameManager) {
-			gameManager.startGame();
-			socket.emit('start');
+		setGameState("Playing");
+		if (gameManagerRef.current) { // Access GameManager through ref
+			gameManagerRef.current.startGame();
+			socket?.emit('start'); // Use optional chaining in case socket is null
 		}
 	};
 
 	const stopGame = () => {
-		socket.emit('stop');
+		socket?.emit('stop'); // Use optional chaining in case socket is null
 	};
 
 	return (
 		<div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
 			<div className="flex items-center justify-center mb-6">
-				{Gamestate === "GameOver" && (
+				{gameState === "GameOver" && (
 					<div style={{
 						position: 'absolute',
 						top: 0,
@@ -140,10 +165,6 @@ export default function PongGame() {
 					</div>
 				)}
 			</div>
-			{/* <div className="flex flex-col items-center justify-center mb-6">
-				<h1>Score</h1>
-				{gameManager && <h1 style={{ marginTop: '-5px' }}> {gameManager.score.left} - {gameManager.score.right} </h1>}
-			</div> */}
 			<ScoreBoard score={score} />
 			<div className="flex items-center justify-center">
 				<div style={{ marginRight: '20px', fontSize: '1.5rem', color: 'white' }}>Computer</div>

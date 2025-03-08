@@ -13,7 +13,6 @@ const gameWidth = 400;
 const gameHeight = 400;
 const ballSize = 10;
 const borderWidth = 5;
-// const paddleHeight = 100;
 const paddleWidth = 10;
 const WinScore = 5;
 
@@ -55,10 +54,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	private logger: Logger = new Logger('power-upPongGateway');
 	private leftPaddle: number = 150;
 	private player: Player = { client: null, paddle: 150, movementDirection: null, movementInterval: null };
-	// private rightPaddle: number = 150;
 	private ball: Ball = { x: 200, y: 200, vx: 2, vy: 0 };
 	private score = { left: 0, right: 0 };
-	private gameInterval: NodeJS.Timeout;
+	private gameInterval: NodeJS.Timeout | null = null; // Initialize as null
 	private hits: number = 0;
 	private hitNumber: number = 0;
 	private ShowPowerUp: boolean = false;
@@ -69,9 +67,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	private rightPaddleSize: number = 100;
 	private LeftPaddleSize: number = 100;
 	private speedUpHits: number = 0;
-	// private clients: Socket[] = [];
 
-	// Function to generate a random number between 10 and 20
+	// Function to generate a random number between min and max
 	private getRandomNumber(min: number = 10, max: number = 20): number {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
@@ -88,8 +85,14 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 
 	handleDisconnect(client: Socket) {
 		this.logger.log(`Client disconnected: ${client.id}`);
-		clearInterval(this.gameInterval);
+		if (this.gameInterval) { // Check if gameInterval is set before clearing
+			clearInterval(this.gameInterval);
+			this.gameInterval = null; // Reset gameInterval after clearing
+		}
+		// if (client.connected) { // Check if client is still connected before emitting
+		// }
 		this.resetGame(client);
+		this.player.client = null; // Clear the client
 	}
 
 	@SubscribeMessage('start')
@@ -100,19 +103,6 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 	}
 
-	// @SubscribeMessage('movement')
-	// handleMovement(client: Socket, payload: string): void {
-	// 	if (payload === 'ArrowUp') {
-	// 		// this.logger.log('ArrowUp');
-	// 		this.rightPaddle = Math.max(0, this.rightPaddle - 5);
-	// 		// client.emit('rightPaddle', this.rightPaddle);
-	// 	}
-	// 	if (payload === 'ArrowDown') {
-	// 		// this.logger.log('ArrowDown');
-	// 		this.rightPaddle = Math.min(gameHeight - this.rightPaddleSize, this.rightPaddle + 5);
-	// 		// client.emit('rightPaddle', this.rightPaddle);
-	// 	}
-	// }
 
 	@SubscribeMessage('key_event')
 	handleKeyEvent(client: Socket, payload: { key: string; state: 'down' | 'up' }): void {
@@ -144,7 +134,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				} else if (this.player.movementDirection === 'down') {
 					this.player.paddle = Math.min(gameHeight - this.rightPaddleSize, this.player.paddle + 3);
 				}
-				this.player.client.emit(`right`, this.player.paddle);
+				if (this.player.client && this.player.client.connected) { // Check if client exists and is connected
+					this.player.client.emit(`right`, this.player.paddle);
+				}
 			}, 1000 / 60); // 60 updates per second
 		}
 	}
@@ -161,7 +153,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		if (this.gameInterval) {
 			this.logger.log('Stopping game loop');
 			clearInterval(this.gameInterval);
-			this.gameInterval = undefined;
+			this.gameInterval = null; // Reset gameInterval when stopping game
 		}
 	}
 
@@ -182,7 +174,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		this.powerUpType = this.getRandomNumber(1, 3);
 		this.hitNumber = this.getRandomNumber(2, 6);
 		this.powerUpHeight = this.getRandomNumber(0, 270);
-		client.emit('startSetup', this.getGameState());
+		if (client.connected) { // Check if client is still connected before emitting
+			client.emit('startSetup', this.getGameState());
+		}
 	};
 
 	startGameLoop(client: Socket) {
@@ -200,7 +194,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 	hitCheck = (client: Socket) => {
 		if (this.hits % this.hitNumber === 0) {
 			this.ShowPowerUp = true;
-			client.emit('showPowerUp', { powerUpType: this.powerUpType, powerUpHeight: this.powerUpHeight });
+			if (client.connected) { // Check if client is still connected before emitting
+				client.emit('showPowerUp', { powerUpType: this.powerUpType, powerUpHeight: this.powerUpHeight });
+			}
 			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
 		}
 	}
@@ -242,8 +238,6 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 					this.ball.vx = this.ball.vx * 2;
 					this.logger.log('Speeding up!!!!');
 				}
-				// this.logger.log('Hits: ' + this.hits);
-				// this.logger.log('Hitnumber: ' + this.hitNumber);
 			}
 		}
 		// Ball collision with right paddle
@@ -259,8 +253,6 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 					this.ball.vx = this.ball.vx * 2;
 					this.logger.log('Speeding up!!!!');
 				}
-				// this.logger.log('ball.y: ' + this.ball.y);
-				// this.logger.log('bal.x : ' + this.ball.x);
 			}
 		}
 
@@ -270,7 +262,9 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				if (this.ball.y >= this.powerUpHeight && this.ball.y <= (this.powerUpHeight + 30)) {
 					this.ShowPowerUp = false;
 					this.powerUpHeight = 0;
-					client.emit('powerUpHit', this.powerUpType);
+					if (client.connected) { // Check if client is still connected before emitting
+						client.emit('powerUpHit', this.powerUpType);
+					}
 					this.logger.log('Power up hit ' + this.powerUpType);
 					if (this.powerUpType === PowerUpType.shield) {
 						this.logger.log('Shield hit, setting extra life');
@@ -283,11 +277,13 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 						this.logger.log('Large paddle hit');
 						if (this.ball.vx < 0) {
 							this.rightPaddleSize = 150;
-							client.emit('enlargePaddle', 2);
+							if (client.connected) // Check if client is still connected before emitting
+								client.emit('enlargePaddle', 2);
 						}
 						else {
 							this.LeftPaddleSize = 150;
-							client.emit('enlargePaddle', 1);
+							if (client.connected) // Check if client is still connected before emitting
+								client.emit('enlargePaddle', 1);
 						}
 					}
 					if (this.powerUpType === PowerUpType.speedUp) {
@@ -304,10 +300,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		// AI for left paddle
 		if (this.ball.y > (this.leftPaddle + this.LeftPaddleSize)) {
 			this.leftPaddle = Math.min(gameHeight - this.LeftPaddleSize, this.leftPaddle + 2);
-			// client.emit('leftPaddle', this.leftPaddle);
 		} else if (this.ball.y < this.leftPaddle) {
 			this.leftPaddle = Math.max(0, this.leftPaddle - 2);
-			// client.emit('leftPaddle', this.leftPaddle);
 		}
 
 		// Ball out of bounds
@@ -321,7 +315,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				}
 				else {
 					this.score.right += 1;
-					client.emit('score', { left: this.score.left, right: this.score.right });
+					if (client.connected) // Check if client is still connected before emitting
+						client.emit('score', { left: this.score.left, right: this.score.right });
 				}
 			}
 			else if (this.ball.x >= gameWidth) {
@@ -333,22 +328,26 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				}
 				else {
 					this.score.left += 1;
-					client.emit('score', { left: this.score.left, right: this.score.right });
+					if (client.connected) // Check if client is still connected before emitting
+						client.emit('score', { left: this.score.left, right: this.score.right });
 				}
 			}
 			if (this.score.left == WinScore || this.score.right == WinScore) {
 				this.score = { left: 0, right: 0 };
-				client.emit('score', { left: 0, right: 0 });
-				client.emit('gameover', 'Game Over');
+				if (client.connected) { // Check if client is still connected before emitting
+					client.emit('score', { left: 0, right: 0 });
+					client.emit('gameover', 'Game Over');
+				}
 			}
-			client.emit('reset');
+			if (client.connected) { // Check if client is still connected before emitting
+				client.emit('reset');
+			}
 			this.resetGame(client);
 		}
 
 		// Emit updated state to clients
-		client.emit('gameUpdate', this.getGameState());
-		// client.emit('ball', { x: this.ball.x, y: this.ball.y });
-		// client.emit('rightPaddle', this.rightPaddle);
-		// client.emit('leftPaddle', this.leftPaddle);
+		if (client.connected) { // Check if client is still connected before emitting
+			client.emit('gameUpdate', this.getGameState());
+		}
 	}
 }
