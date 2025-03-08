@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
 import { useRouter } from 'next/navigation';
+
 import { fetchPost } from "../fetch_functions";
 
 import { ChatSettings, ChatsUsers } from "@repo/db";
@@ -73,7 +73,7 @@ export default function GroupInvite() {
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
       });
-    Router.push("/chats"); //NOTE: maybe move this to then on createChat
+    Router.push("/chats");
   }
 
   {/* TODO: Add collor and filler up spaces */ }
@@ -166,9 +166,7 @@ export default function GroupInvite() {
               </div>
               {/* Create Button should create chat and go back to chats */}
               <div className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 ">
-
                 <button onClick={CreateGroupChat} >
-                  {/* TODO: check if all required values are filled in */}
                   Create
                 </button>
               </div>

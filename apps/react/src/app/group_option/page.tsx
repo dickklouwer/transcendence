@@ -1,19 +1,20 @@
 "use client"
 
 import { ChatSettings, ExternalUser, ChatsUsers, User } from '@repo/db';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import Link from 'next/link';
 import Image from "next/image";
 import { DisplayUserStatus } from "../profile/page";
 import { fetchGet, fetchPost } from '../fetch_functions';
 import { useState, useEffect } from 'react';
-import { isAdmin, isOwner, isBanned, isEditor, findChatsUsers, OptionInviteList } from './functions';
+import { isAdmin, hasAdmin, isOwner, hasOwner, isBanned, isEditor, findChatsUsers, OptionInviteList } from './functions';
 
 export default function GroupOptionPage() {
 
+  const Router = useRouter();
   const searchParams = useSearchParams();
-  const chatId = searchParams?.get('chatId');
+  const chatId: number = searchParams?.get('chatId');
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -103,6 +104,7 @@ export default function GroupOptionPage() {
     setUpdatedChatSettings(settings);
   }
 
+  //TODO: check when user gets banned they can be reinvited or unbanned
   function toggleBanned(id: number) {
     if (updatedChatSettings === undefined) return;
     const settings: ChatSettings = { ...updatedChatSettings };
@@ -155,6 +157,7 @@ export default function GroupOptionPage() {
 
   function UpdateSettings() {
     if (!updatedChatSettings) return;
+    
     const sendChatSettings: ChatSettings = {
       title: title,
       isDirect: false,
@@ -163,8 +166,15 @@ export default function GroupOptionPage() {
       password: null,
       image: null,
     };
+    if (!hasOwner(sendChatSettings.userInfo)) {
+      alert("Chat needs to have atleast one Owner");
+      return;
+    }
+    if (!hasAdmin(sendChatSettings.userInfo)) {
+      alert("Chat needs to have atleast one Admin");
+      return;
+    }
 
-    // console.log("USC: ", sendChatSettings);
     fetchPost("api/updateChatSettings", {
       chatId: chatId,
       oldPWD: oldPassword,
@@ -176,7 +186,8 @@ export default function GroupOptionPage() {
       .then(() => { { } })
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
-      });
+      });               
+    Router.push("/messages?chat_id=${chatId}"); 
   }
 
   return (
@@ -371,10 +382,11 @@ export default function GroupOptionPage() {
               </Link>
               {/* Create Button should update chat and go back to the messages */}
               {isEditor(pageSettings, pageUser.intra_user_id) &&
-                <Link className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 "
-                  onClick={() => UpdateSettings()} href={`/messages?chat_id=${chatId}`}>
-                  Apply
-                </Link>
+                <div className="flex justify-center p-4 m-2 w-11/12 bg-blue-500 text-white rounded-lg hover:bg-blue-700 " >
+                  <button onClick={UpdateSettings} >
+                    Apply
+                  </button>
+                </div>
               }
             </div>
 

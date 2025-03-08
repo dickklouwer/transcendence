@@ -30,10 +30,30 @@ export function isOwner(settings: ChatSettings, id: number): boolean {
   return (user.is_owner);
 }
 
+// check if chat has an Owner
+export function hasOwner(userList: ChatsUsers[]): boolean {
+  var ownerFlag: boolean = false;
+  for (const user of userList) {
+    if (user.is_owner) ownerFlag = user.is_owner;
+  }
+  return (ownerFlag);
+}
+
 // check if user is admin
 export function isAdmin(settings: ChatSettings, id: number): boolean {
   const user: ChatsUsers = findChatsUsers(settings, id);
   return (user.is_admin);
+}
+
+// check if chat has an Admin or Owner
+export function hasAdmin(userList: ChatsUsers[]): boolean {
+  var ownerFlag: boolean = false;
+  var adminFlag: boolean = false;
+  for (const user of userList) {
+    if (user.is_owner) ownerFlag = user.is_owner;
+    if (user.is_admin) adminFlag = user.is_admin;
+  }
+  return (ownerFlag || adminFlag);
 }
 
 // check if user is banned

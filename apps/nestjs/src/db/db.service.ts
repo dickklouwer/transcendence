@@ -89,11 +89,11 @@ export class DbService implements OnModuleInit {
         .where(eq(users.intra_user_id, id))
         .limit(1);
 
-      console.log(
+      /*console.log(
         'DB - getExternalUser: ',
         user[0].user_name,
         user[0].intra_user_id,
-      );
+      );*/
 
       return {
         ...user[0],

@@ -5,7 +5,6 @@ RUN npm install -g @nestjs/cli
 # Set the working directory for the backend service
 WORKDIR /nestjs
 
-
 # Copy package.json and package-lock.json to the container
 COPY . .
 # Install project dependencies using npm ci for cleaner

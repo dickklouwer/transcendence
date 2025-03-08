@@ -37,7 +37,7 @@ export class AppController {
     @Res() res: Response,
   ): Promise<User> {
 
-    console.log('BE - getProfile token: ', token);
+    //console.log('BE - getProfile token: ', token);
     const user: User | null = await this.dbservice.getUserFromDataBase(
       token.split(' ')[1],
     );
@@ -655,7 +655,7 @@ export class AppController {
     @Headers('authorization') token: string,
     @Query('external_user_id') external_user_id: number,
   ): Promise<number> {
-    console.log('BE - getChatIdOfDm external_user_id: ', external_user_id);
+    //console.log('BE - getChatIdOfDm external_user_id: ', external_user_id);
 
     const chat_id = await this.dbservice.getChatIdOfDm(
       token.split(' ')[1],
@@ -733,7 +733,7 @@ export class AppController {
       res.status(404).send('No users found');
       return;
     }
-    console.log('BE - getExternalUser: ', externalUser);
+    //console.log('BE - getExternalUser: ', externalUser);
     res.status(200).send({
       ...externalUser,
       blocked: await this.dbservice.checkIfUserIsBlocked(
