@@ -67,7 +67,7 @@ function Footer() {
       <footer className=' bg-blue-600 text-white p-4 mt-auto'>
       <p>ft_transcendence42 a Codam project.
       <br />
-      Created and styled by: tklouwer, bprovoos, jmeruma, vbrouwer, mweverli.
+      Created and styled by: bprovoos, jmeruma, vbrouwer, mweverli.
       </p>
       </footer>
     </div>
