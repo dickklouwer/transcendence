@@ -186,8 +186,8 @@ export default function GroupOptionPage() {
       .then(() => { { } })
       .catch((error) => {
         console.log("Error Creating Group Chat", error);
-      });               
-    Router.push("/messages?chat_id=${chatId}"); 
+      });
+    Router.push(`/messages?chat_id=${chatId}`);
   }
 
   return (
