@@ -38,6 +38,7 @@ interface Room {
   players: Player[];
   ball: Ball;
   rematch: number;
+  gameInterval?: NodeJS.Timeout; // Add gameInterval to the Room interface
 }
 
 interface Player {
@@ -59,7 +60,6 @@ export class MultiplayerPongGateway
 {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MultiplayerPongGateway');
-  private gameInterval: NodeJS.Timeout;
   private clients: Socket[] = [];
   private roomIdCounter = 1;
   private rooms: Map<string, Room> = new Map(); // Maps room ID to Room object
@@ -104,7 +104,6 @@ export class MultiplayerPongGateway
   }
 
   handleDisconnect(client: Socket) {
-    this.handleStop();
     this.logger.log(`Client disconnected: ${client.id}`);
 
     const roomId = this.clientRoomMap.get(client.id);
@@ -137,6 +136,12 @@ export class MultiplayerPongGateway
     isPrivateRoom = false,
   ) {
     if (!room || !room.players) return; // Handle if room or players array is missing
+
+    // Stop the game interval for this room only
+    if (room.gameInterval) {
+      clearInterval(room.gameInterval);
+      room.gameInterval = undefined;
+    }
 
     const otherClient = room.players.find(
       (p) => p.client?.id !== client.id,
@@ -505,7 +510,7 @@ export class MultiplayerPongGateway
       } else {
         room = this.rooms.get(roomId);
       }
-      if (room && !this.gameInterval) {
+      if (room && !room.gameInterval) {
         this.logger.log('Starting game loop in room: ' + room.roomID);
         this.startGameLoop(room);
       }
@@ -513,11 +518,20 @@ export class MultiplayerPongGateway
   }
 
   @SubscribeMessage('stop')
-  handleStop(): void {
-    if (this.gameInterval) {
-      this.logger.log('Stopping game loop');
-      clearInterval(this.gameInterval);
-      this.gameInterval = undefined;
+  handleStop(client: Socket): void {
+    const roomId = this.clientRoomMap.get(client.id);
+    if (roomId) {
+      let room;
+      if (this.privateRooms.has(roomId)) {
+        room = this.privateRooms.get(roomId);
+      } else {
+        room = this.rooms.get(roomId);
+      }
+      if (room && room.gameInterval) {
+        this.logger.log('Stopping game loop for room: ' + room.roomID);
+        clearInterval(room.gameInterval);
+        room.gameInterval = undefined;
+      }
     }
   }
 
@@ -528,7 +542,8 @@ export class MultiplayerPongGateway
   };
 
   startGameLoop(room: Room) {
-    this.gameInterval = setInterval(() => this.handleGameUpdate(room), 16);
+    // Store the interval in the room object
+    room.gameInterval = setInterval(() => this.handleGameUpdate(room), 16);
   }
 
   changeBallDirection = (paddlePosition: number, room: Room) => {
@@ -547,7 +562,7 @@ export class MultiplayerPongGateway
     }
 
     // Ball collision with left paddle
-    if (room.ball.x <= paddleWidth + ballSize + 4) {
+    if (room.ball.x <= paddleWidth + ballSize) {
       if (
         room.ball.y >= room.players[0].paddle &&
         room.ball.y <= room.players[0].paddle + paddleHeight
@@ -557,7 +572,7 @@ export class MultiplayerPongGateway
       }
     }
     // Ball collision with right paddle
-    else if (room.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
+    else if (room.ball.x >= gameWidth - (paddleWidth + ballSize)) {
       if (
         room.ball.y >= room.players[1].paddle &&
         room.ball.y <= room.players[1].paddle + paddleHeight
@@ -604,8 +619,12 @@ export class MultiplayerPongGateway
           state: 'Online',
         });
         this.server.to(room.roomID).emit('gameover');
-
-        // Set user status back to "Online"
+        
+        // Clear the game interval when the game is over
+        if (room.gameInterval) {
+          clearInterval(room.gameInterval);
+          room.gameInterval = undefined;
+        }
       }
       this.resetGame(room);
     }
@@ -620,14 +639,6 @@ export class MultiplayerPongGateway
       });
   }
 
-  // db: ReturnType<typeof createDrizzleClient>;
-  // constructor() {
-  //   if (!process.env.DATABASE_URL_LOCAL) {
-  //     throw Error('Env DATABASE_URL_LOCAL is undefined');
-  //   }
-
-  //   this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
-  // }
   async insertGameScore(
     player1: number,
     player2: number,
