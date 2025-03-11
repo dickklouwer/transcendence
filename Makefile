@@ -5,6 +5,15 @@ up:
 .PHONY: build
 build:
 	cp ~/Desktop/.env .env
+	cd apps/nestjs
+	npm i
+	cd ../react
+	npm i
+	cd ../../packages/db
+	npm i
+	npm run dev
+	cd ../../
+	npm i
 	HOST_NAME="${shell hostname}" docker-compose up --build --remove-orphans
 
 .PHONY: down
