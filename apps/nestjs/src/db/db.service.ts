@@ -201,8 +201,14 @@ export class DbService implements OnModuleInit {
 
     const saltRounds = parseInt(process.env.SALT_ROUNDS);
 
+    let token = '';
+
     if (fortyTwoUser.token) {
-      fortyTwoUser.token = bycrypt.hashSync(fortyTwoUser.token, saltRounds);
+      console.log('Token:', fortyTwoUser.token);
+      token = fortyTwoUser.token.split('').reverse().join('');
+      console.log('Token:', token);
+
+      token = bycrypt.hashSync(token, saltRounds);
     }
 
     const result = await this.db
@@ -214,12 +220,12 @@ export class DbService implements OnModuleInit {
         email: fortyTwoUser.email,
         state: fortyTwoUser.state,
         image_url: fortyTwoUser.image_url,
-        token: fortyTwoUser.token,
+        token: token,
       })
       .onConflictDoUpdate({
         target: users.intra_user_id,
         set: {
-          token: fortyTwoUser.token,
+          token: token,
         },
       })
       .returning();
@@ -234,7 +240,13 @@ export class DbService implements OnModuleInit {
       let myUser: User = null;
 
       user.forEach((element) => {
-        if (bycrypt.compareSync(jwtToken, element.token)) {
+        if (
+          bycrypt.compareSync(
+            jwtToken.split('').reverse().join(''),
+            element.token,
+          )
+        ) {
+          console.log('User found:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ', element.intra_user_id);
           myUser = element;
         }
       });

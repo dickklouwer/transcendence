@@ -28,7 +28,7 @@ import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class AppController {
-  constructor(private dbservice: DbService) { }
+  constructor(private dbservice: DbService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
