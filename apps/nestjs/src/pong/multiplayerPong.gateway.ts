@@ -562,7 +562,7 @@ export class MultiplayerPongGateway
     }
 
     // Ball collision with left paddle
-    if (room.ball.x <= paddleWidth + ballSize + 4) {
+    if (room.ball.x <= paddleWidth + ballSize) {
       if (
         room.ball.y >= room.players[0].paddle &&
         room.ball.y <= room.players[0].paddle + paddleHeight
@@ -572,7 +572,7 @@ export class MultiplayerPongGateway
       }
     }
     // Ball collision with right paddle
-    else if (room.ball.x >= gameWidth - (paddleWidth + ballSize) - 4) {
+    else if (room.ball.x >= gameWidth - (paddleWidth + ballSize)) {
       if (
         room.ball.y >= room.players[1].paddle &&
         room.ball.y <= room.players[1].paddle + paddleHeight
