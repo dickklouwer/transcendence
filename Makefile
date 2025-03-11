@@ -1,14 +1,14 @@
+
 .PHONY: up
 up:
 	cp ~/Desktop/.env .env
 	cd apps/nestjs
 	npm i
-	cd ../react
+	cd apps/react
 	npm i
-	cd ../../packages/db
+	cd packages/db
 	npm i
-	npm run dev
-	cd ../../
+	cd 
 	npm i
 	HOST_NAME="${shell hostname}" docker-compose up
 .PHONY: build
@@ -16,12 +16,11 @@ build:
 	cp ~/Desktop/.env .env
 	cd apps/nestjs
 	npm i
-	cd ../react
+	cd apps/react
 	npm i
-	cd ../../packages/db
+	cd packages/db
 	npm i
-	npm run dev
-	cd ../../
+	cd 
 	npm i
 	HOST_NAME="${shell hostname}" docker-compose up --build --remove-orphans
 
