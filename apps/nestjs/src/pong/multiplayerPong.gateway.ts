@@ -55,7 +55,8 @@ interface Player {
   allowEIO3: true,
 })
 export class MultiplayerPongGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('MultiplayerPongGateway');
   private gameInterval: NodeJS.Timeout;
@@ -74,7 +75,6 @@ export class MultiplayerPongGateway
 
     this.db = createDrizzleClient(createQueryClient(process.env.DATABASE_URL));
   }
-
 
   private createPlayer(client: Socket | null): Player {
     return {
@@ -117,7 +117,7 @@ export class MultiplayerPongGateway
       if (this.privateRooms.has(roomId)) {
         room = this.privateRooms.get(roomId);
         isPrivateRoom = true;
-        this.handleRoomDisconnect(client, room, roomId, true)
+        this.handleRoomDisconnect(client, room, roomId, true);
       } else {
         room = this.rooms.get(roomId);
         this.handleRoomDisconnect(client, room, roomId);
@@ -137,21 +137,34 @@ export class MultiplayerPongGateway
     isPrivateRoom = false,
   ) {
     if (!room || !room.players) return; // Handle if room or players array is missing
-  
-    const otherClient = room.players.find((p) => p.client?.id !== client.id)?.client;
-  
-    this.userGateway.setUserState({ intra_user_id: room.players[0].client.data.intra_id, state: 'Online' });
-    this.userGateway.setUserState({ intra_user_id: room.players[1].client.data.intra_id, state: 'Online' });
-  
-    if (room?.players && room.players.length === 2 && room.players[0]?.client?.id && room.players[1]?.client?.id) {
+
+    const otherClient = room.players.find(
+      (p) => p.client?.id !== client.id,
+    )?.client;
+
+    this.userGateway.setUserState({
+      intra_user_id: room.players[0].client.data.intra_id,
+      state: 'Online',
+    });
+    this.userGateway.setUserState({
+      intra_user_id: room.players[1].client.data.intra_id,
+      state: 'Online',
+    });
+
+    if (
+      room?.players &&
+      room.players.length === 2 &&
+      room.players[0]?.client?.id &&
+      room.players[1]?.client?.id
+    ) {
       const player1Score = room.players[0].score;
       const player2Score = room.players[1].score;
-      
+
       // Only write to DB if neither player has reached WinScore (game didn't complete normally)
       if (player1Score !== WinScore && player2Score !== WinScore) {
         const player1IntraId = room.players[0].client.data.intra_id;
         const player2IntraId = room.players[1].client.data.intra_id;
-  
+
         if (client.id === room.players[0].client.id) {
           this.insertGameScore(player1IntraId, player2IntraId, player1Score, 5);
         } else {
@@ -162,24 +175,24 @@ export class MultiplayerPongGateway
         this.logger.log(`Game Over, skipping DB write for room: ${roomId}`);
       }
     }
-  
+
     // Notify the other client
     if (otherClient) {
       this.logger.log(`Opponent left: ${client.id}`);
       otherClient.emit('opponent_left', 'Your opponent has left the game');
-  
+
       // Remove the other client from the client map
       this.clientRoomMap.delete(otherClient?.id);
       this.clients = this.clients.filter((c) => c.id !== otherClient?.id);
     }
-  
+
     if (isPrivateRoom) {
       this.privateRooms.delete(roomId);
     } else {
       this.rooms.delete(roomId);
     }
     this.logger.log(`Room deleted: ${roomId}`);
-  
+
     this.clientRoomMap.delete(client.id);
   }
 
@@ -203,7 +216,10 @@ export class MultiplayerPongGateway
     }
 
     // Set user status to "In-Game"
-    this.userGateway.setUserState({ intra_user_id: payload.intra_id, state: 'In-Game' });
+    this.userGateway.setUserState({
+      intra_user_id: payload.intra_id,
+      state: 'In-Game',
+    });
     // Store data in client before doing anything
 
     client.data.intra_id = payload.intra_id;
@@ -579,12 +595,17 @@ export class MultiplayerPongGateway
         this.logger.log(
           `writing to DB: ${room.players[0].score} - ${room.players[1].score}`,
         );
+        this.userGateway.setUserState({
+          intra_user_id: room.players[0].client.data.intra_id,
+          state: 'Online',
+        });
+        this.userGateway.setUserState({
+          intra_user_id: room.players[1].client.data.intra_id,
+          state: 'Online',
+        });
         this.server.to(room.roomID).emit('gameover');
-        
-        // Set user status back to "Online"
-        this.userGateway.setUserState({ intra_user_id: room.players[0].client.data.intra_id, state: 'Online' });
-        this.userGateway.setUserState({ intra_user_id: room.players[1].client.data.intra_id, state: 'Online' });
 
+        // Set user status back to "Online"
       }
       this.resetGame(room);
     }
