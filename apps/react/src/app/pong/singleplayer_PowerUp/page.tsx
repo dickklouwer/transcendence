@@ -174,6 +174,9 @@ export default function PongGame() {
 						<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm" onClick={startGame}>
 							New Game
 						</button>
+						<button className="bg-blue-500 text-white font-bold py-1 px-2 rounded mt-5 text-sm">
+							<a href="/pong_menu">Back to Pong Menu</a>
+						</button>
 					</div>
 				)}
 			</div>
@@ -192,6 +195,9 @@ export default function PongGame() {
 				<div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around', width: '100%' }}>
 					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={startGame}>
 						Start
+					</button>
+					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded">
+						<a href="/pong_menu">Leave</a>
 					</button>
 					{/* <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={stopGame}>
 						Stop
