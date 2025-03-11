@@ -6,7 +6,7 @@ dotenv.config({
 });
 
 if (!process.env.DATABASE_URL_LOCAL) {
-  throw new Error('DATABASE_URL_LOCAL not found in environment');
+  throw new Error('cannot read .env OR DATABASE_URL_LOCAL is not set');
 }
 
 export default defineConfig({
