@@ -8,6 +8,7 @@ import { fetchPost } from "../fetch_functions";
 
 import { ChatSettings, ChatsUsers } from "@repo/db";
 import { NewInviteList } from "./functions"
+import { chatSocket } from "../chat_componens";
 
 export default function GroupInvite() {
   const Router = useRouter();
@@ -74,6 +75,7 @@ export default function GroupInvite() {
         console.log("Error Creating Group Chat", error);
       });
     Router.push("/chats");
+    chatSocket.emit('messageUpdate');
   }
 
   {/* TODO: Add collor and filler up spaces */ }
