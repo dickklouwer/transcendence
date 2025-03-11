@@ -13,6 +13,11 @@ const gameHeight = 400;
 const ballSize = 10;
 const borderWidth = 5;
 
+const socket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`, {
+	path: "/ws/socket.io",
+	autoConnect: false, // Prevent automatic connection
+});
+
 const ScoreBoard = ({ score }: { score: [number, number] }): JSX.Element => {
     return (
         <div
@@ -33,19 +38,26 @@ export default function PongGame() {
 	const gameManagerRef = useRef<GameManager | null>(null); // Use useRef instead of useState for GameManager
 	const [score, setScore] = useState<[number, number]>([0, 0]);
 	const [gameState, setGameState] = useState<string>("Playing");
-	const [socket, setSocket] = useState<Socket | null>(null);
+	// const [socket, setSocket] = useState<Socket | null>(null);
+
+	// useEffect(() => {
+	// 	// Connect to socket.io server only once when the component mounts
+	// 	const newSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`, { path: "/ws/socket.io" });
+	// 	setSocket(newSocket);
+
+	// 	// Clean up when the component unmounts
+	// 	return () => {
+	// 		console.log("Disconnecting socket");
+	// 		newSocket.disconnect();
+	// 	};
+	// }, []); // Empty dependency array ensures this effect runs only once
 
 	useEffect(() => {
-		// Connect to socket.io server only once when the component mounts
-		const newSocket = io(`http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`, { path: "/ws/socket.io" });
-		setSocket(newSocket);
-
-		// Clean up when the component unmounts
+		socket.connect();
 		return () => {
-			console.log("Disconnecting socket");
-			newSocket.disconnect();
+			socket.disconnect(); // Clean up connection on unmount
 		};
-	}, []); // Empty dependency array ensures this effect runs only once
+	}, []);
 
 
 	useEffect(() => {
@@ -136,9 +148,9 @@ export default function PongGame() {
 		}
 	};
 
-	const stopGame = () => {
-		socket?.emit('stop'); // Use optional chaining in case socket is null
-	};
+	// const stopGame = () => {
+	// 	socket?.emit('stop'); // Use optional chaining in case socket is null
+	// };
 
 	return (
 		<div className="bg-slate-900 shadow-lg rounded-lg p-8 max-w-2xl w-full">
@@ -181,9 +193,9 @@ export default function PongGame() {
 					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={startGame}>
 						Start
 					</button>
-					<button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={stopGame}>
+					{/* <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded" onClick={stopGame}>
 						Stop
-					</button>
+					</button> */}
 				</div>
 			</div>
 		</div>

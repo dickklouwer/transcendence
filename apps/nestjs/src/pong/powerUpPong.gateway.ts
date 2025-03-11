@@ -106,7 +106,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 
 	@SubscribeMessage('key_event')
 	handleKeyEvent(client: Socket, payload: { key: string; state: 'down' | 'up' }): void {
-		this.logger.log(`Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`);
+		// this.logger.log(`Client id: ${client.id}, Key: ${payload.key}, State: ${payload.state}`);
 		if (payload.state === 'down') {
 			if (payload.key === 'ArrowUp') {
 				this.player.movementDirection = 'up';
@@ -148,14 +148,14 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 		}
 	}
 
-	@SubscribeMessage('stop')
-	handleStop(client: Socket): void {
-		if (this.gameInterval) {
-			this.logger.log('Stopping game loop');
-			clearInterval(this.gameInterval);
-			this.gameInterval = null; // Reset gameInterval when stopping game
-		}
-	}
+	// @SubscribeMessage('stop')
+	// handleStop(client: Socket): void {
+	// 	if (this.gameInterval) {
+	// 		this.logger.log('Stopping game loop');
+	// 		clearInterval(this.gameInterval);
+	// 		this.gameInterval = null; // Reset gameInterval when stopping game
+	// 	}
+	// }
 
 	resetGame = (client: Socket) => {
 		this.ball.vx = 2;
@@ -197,7 +197,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 			if (client.connected) { // Check if client is still connected before emitting
 				client.emit('showPowerUp', { powerUpType: this.powerUpType, powerUpHeight: this.powerUpHeight });
 			}
-			this.logger.log('PowerUpheight: ' + this.powerUpHeight);
+			// this.logger.log('PowerUpheight: ' + this.powerUpHeight);
 		}
 	}
 	getGameState = (): gameState => {
@@ -233,8 +233,8 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				this.changeBallDirection(this.leftPaddle, this.LeftPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
-				this.logger.log('Hits: ' + this.hits);
-				if (this.powerUpType === PowerUpType.speedUp && this.hits === this.speedUpHits) {
+				// this.logger.log('Hits: ' + this.hits);
+				if (this.hits === this.speedUpHits) {
 					this.ball.vx = this.ball.vx * 2;
 					this.logger.log('Speeding up!!!!');
 				}
@@ -248,7 +248,7 @@ export class PowerUpPongGateway implements OnGatewayInit, OnGatewayConnection, O
 				this.changeBallDirection(this.player.paddle, this.rightPaddleSize);
 				this.hits += 1;
 				this.hitCheck(client);
-				this.logger.log('Hits: ' + this.hits);
+				// this.logger.log('Hits: ' + this.hits);
 				if (this.hits === this.speedUpHits) {
 					this.ball.vx = this.ball.vx * 2;
 					this.logger.log('Speeding up!!!!');

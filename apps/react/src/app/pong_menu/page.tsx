@@ -2,28 +2,28 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import io, { Socket } from 'socket.io-client';
+// import io, { Socket } from 'socket.io-client';
 
 const Menu = () => {
-  const [pSock, setPSock] = useState<Socket | null>(null);
+  // const [pSock, setPSock] = useState<Socket | null>(null);
   const router = useRouter(); // Get the router object
 
-  const connectToSocket = (url: string) => {
-    // console.log(`pSock: ${pSock ? pSock.toString() : 'null'}`);
-    let sock = io(url, {
-      transports: ['websocket'],
-      query: {
-        currentPath: window.location.pathname,
-      },
-      withCredentials: true,
-    });
-    setPSock(sock);
-    // console.log(`sock: ${sock.id ? sock.toString() : 'null'}`);
-  };
+  // const connectToSocket = (url: string) => {
+  //   // console.log(`pSock: ${pSock ? pSock.toString() : 'null'}`);
+  //   let sock = io(url, {
+  //     transports: ['websocket'],
+  //     query: {
+  //       currentPath: window.location.pathname,
+  //     },
+  //     withCredentials: true,
+  //   });
+  //   setPSock(sock);
+  //   // console.log(`sock: ${sock.id ? sock.toString() : 'null'}`);
+  // };
 
   const handleSinglePlayerClick = () => {
-    const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`;
-    connectToSocket(url);
+    // const url = `http://${process.env.NEXT_PUBLIC_HOST_NAME}:4433/power-up`;
+    // connectToSocket(url);
     router.push('/pong/singleplayer_PowerUp'); // Navigate to single player page
   };
 
