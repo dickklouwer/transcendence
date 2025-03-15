@@ -1448,6 +1448,7 @@ export class DbService implements OnModuleInit {
             eq(chatsUsers.intra_user_id, user.intra_user_id),
             eq(messageStatus.receiver_id, user.intra_user_id),
             isNull(messageStatus.read_at),
+            eq(chatsUsers.joined, true)
           ),
         );
 
