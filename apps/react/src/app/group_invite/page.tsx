@@ -60,10 +60,6 @@ export default function GroupInvite() {
       alert("Chat needs a title");
       return;
     }
-    if (Settings.title.length > 30) {
-      alert("Title is too long");
-      return;
-    }
     if (Settings.userInfo.length === 0) {
       alert("Chat needs at least one member");
       return;

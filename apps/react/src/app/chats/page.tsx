@@ -160,18 +160,12 @@ function InvitedChatField({ chatField: invitedChatField, setInvitedChats, setUse
         <button onClick={() => alert('Showing image of ' + invitedChatField.title + ' groep')}>
           <Image src={userImage} alt="User or Group" width={48} height={48} className="w-12 h-12 rounded-full" />
         </button>
-        <div className="flex-grow">
-          <div className="flex justify-between w-full">
-            <div>
-              <h3 className="font-bold text-left">{invitedChatField.title}</h3>
-            </div>
-            <div className="text-right px-4">
-              <button className="text-blue-500" onClick={() => joinChat(invitedChatField.chatid)}>
-                Join
-              </button>
-            </div>
+        <button className="flex flex-grow justify-between w-full" onClick={() => joinChat(invitedChatField.chatid)}>
+          <h3 className="font-bold text-left truncate">{invitedChatField.title}</h3>
+          <div className="text-right px-4 flex-shrink-0 text-blue-500" >
+            Join
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );
