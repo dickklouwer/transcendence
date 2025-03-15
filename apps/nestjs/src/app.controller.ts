@@ -284,7 +284,11 @@ export class AppController {
         });
       }
     }
-    res.status(201).send(res);
+    // res.status(201).send(res);
+    res.status(201).send({ 
+      chat_id: chat_id, 
+      message: 'Chat created successfully' 
+    });    
   }
 
   @Post('removeChatUser')
