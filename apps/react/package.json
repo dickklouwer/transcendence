@@ -13,7 +13,7 @@
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.1",
     "i": "^0.3.7",
-    "next": "latest",
+    "next": "14.2.24",
     "next-auth": "^4.24.7",
     "react": "latest",
     "react-dom": "latest",
