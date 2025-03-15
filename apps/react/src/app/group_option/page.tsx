@@ -104,7 +104,6 @@ export default function GroupOptionPage() {
     setUpdatedChatSettings(settings);
   }
 
-  //TODO: check when user gets banned they can be reinvited or unbanned
   function toggleBanned(id: number) {
     if (updatedChatSettings === undefined) return;
     const settings: ChatSettings = { ...updatedChatSettings };
@@ -157,7 +156,7 @@ export default function GroupOptionPage() {
 
   function UpdateSettings() {
     if (!updatedChatSettings) return;
-    
+
     const sendChatSettings: ChatSettings = {
       title: title,
       isDirect: false,
