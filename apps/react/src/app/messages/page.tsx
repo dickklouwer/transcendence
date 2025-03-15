@@ -28,28 +28,21 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
 
     const renderMessageWithLineBreaks = (text: string) => {
         return text.split('\n').map((str, index) => (
-            <div key={index}>{str}</div>
+            <div className='break-all' key={index}>
+                <p>{str}</p>
+                </div>
         ));
     };
 
-    // useEffect(() => {
 
-    //     chatSocket.on('statusUpdate', () => {
-    //         setReload(prev => !prev);
-    //     });
-    //     return () => {
-    //         chatSocket.off('statusUpdate');
-    //     }
-    // }, [reload, fullStatus]);
 
     return (
         <button className='w-full'>
             <div className={`mb-2 flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                 <div className={`p-2 rounded-lg ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} ${bubbleClass} max-w-xs`}>
                     {!isMyMessage && <div className="text-xs text-gray-600">{message.sender_name}</div>}
-                    {message.is_muted ? <div className="text-red-800">You are muted in this chat</div> : renderMessageWithLineBreaks(message.message)}
+                    {message.is_muted ? <div className="text-red-800">You are muted in this chat</div>: renderMessageWithLineBreaks(message.message)}
                     <div className="text-xs text-right text-gray-600">{renderDate(message.sent_at)}</div>
-                    {isMyMessage && <div className="text-xs text-right text-gray-600">{status}</div>}
                 </div>
             </div>
         </button>
