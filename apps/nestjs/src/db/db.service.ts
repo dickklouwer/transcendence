@@ -246,7 +246,6 @@ export class DbService implements OnModuleInit {
             element.token,
           )
         ) {
-          console.log('User found:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ', element.intra_user_id);
           myUser = element;
         }
       });

@@ -18,11 +18,14 @@ function FriendsInbox() {
     const [numberOfRequests, setNumberOfRequests] = useState<number>(0);
 
     useEffect(() => {
-        fetchGet<ExternalUser[]>('api/incomingFriendRequests')
+        fetchGet<ExternalUser[]>('/api/incomingFriendRequests')
             .then((res) => {
                 setFriendsRequests(res);
                 setNumberOfRequests(res.length);
             })
+            .catch((error) => {
+                console.log('Error fetching friend requests: ', error);
+            });
 
         userSocket.on('sendFriendRequest', handleFriendRequest);
 
@@ -134,7 +137,7 @@ export default function LoadProfile({ setNickname }: { setNickname: Dispatch<Set
 
       const storedToken = localStorage.getItem('token');
       if (storedToken) { // Only fetch user data if a token is present
-        fetchGet<User>('api/profile')
+        fetchGet<User>('/api/profile')
           .then((res) => {
               setUser(res);
               if (res.nick_name !== nicknameProps.nickname && res.nick_name !== null)
