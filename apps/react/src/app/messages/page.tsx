@@ -32,14 +32,15 @@ function Message({ message, intra_id }: { message: ChatMessages, intra_id: numbe
         ));
     };
 
-    useEffect(() => {
-        chatSocket.on('statusUpdate', () => {
-            setReload(prev => !prev);
-        });
-        return () => {
-            chatSocket.off('statusUpdate');
-        }
-    }, [reload, fullStatus]);
+    // useEffect(() => {
+
+    //     chatSocket.on('statusUpdate', () => {
+    //         setReload(prev => !prev);
+    //     });
+    //     return () => {
+    //         chatSocket.off('statusUpdate');
+    //     }
+    // }, [reload, fullStatus]);
 
     return (
         <button className='w-full'>
